@@ -27,9 +27,9 @@ export function SiteFooter() {
           {/* Brand */}
           <div>
             <img
-              src={logoAsset.url}
+              src="/talktoguruji-logo-dark.png"
               alt="Talk To Guruji"
-              className="h-12 w-auto brand-logo mb-4"
+              className="h-12 w-auto mb-4"
             />
             <p className="font-body-md text-body-md text-on-surface-variant max-w-xs">
               Ancient numerology, decoded for modern seekers. Discover the cosmic

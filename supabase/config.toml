@@ -1,1 +1,10 @@
 project_id = "qcykgqkeuvrywhvjdykc"
+
+[functions.create-love-match-order]
+verify_jwt = false
+
+[functions.love-match-generate]
+verify_jwt = false
+
+[functions.love-match-finalize]
+verify_jwt = false

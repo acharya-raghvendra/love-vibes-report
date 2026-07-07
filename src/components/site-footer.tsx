@@ -37,10 +37,6 @@ export function SiteFooter() {
               blueprint between two souls.
             </p>
           </div>
-              Ancient numerology, decoded for modern seekers. Discover the cosmic
-              blueprint between two souls.
-            </p>
-          </div>
 
           {/* Quick links */}
           <nav aria-label="Footer" className="flex flex-col gap-3">

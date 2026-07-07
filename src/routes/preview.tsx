@@ -254,6 +254,20 @@ function PreviewPage() {
     );
   }, [state]);
 
+  // Pre-fetch pricing once the preview is ready so we can display server-authoritative price.
+  useEffect(() => {
+    if (state.kind !== "ready" || !input || quote) return;
+    let cancelled = false;
+    (async () => {
+      const q = await createOrder(null);
+      if (!cancelled && q) setQuote(q);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.kind, input]);
+
   const createOrder = useCallback(
     async (couponCode: string | null): Promise<OrderQuote | null> => {
       if (!input) return null;

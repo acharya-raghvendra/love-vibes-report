@@ -9,7 +9,7 @@ const NAV_LINKS = [
 
 function Logo() {
   return (
-    <a href="#hero" className="flex items-center gap-2 group" aria-label="Love Match home">
+    <Link to="/" className="flex items-center gap-2 group" aria-label="Love Match home">
       <span className="text-primary text-xl leading-none group-hover:rotate-12 transition-transform">✦</span>
       <span
         className="text-gold-gradient text-xl leading-none"
@@ -17,7 +17,7 @@ function Logo() {
       >
         Love Match
       </span>
-    </a>
+    </Link>
   );
 }
 

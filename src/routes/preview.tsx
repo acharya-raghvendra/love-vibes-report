@@ -191,6 +191,10 @@ function PreviewPage() {
   >({ kind: "loading" });
   const [paying, setPaying] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [quote, setQuote] = useState<OrderQuote | null>(null);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = useCallback((m: string) => {

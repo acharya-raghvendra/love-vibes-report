@@ -72,27 +72,59 @@ function Index() {
         />
       </div>
 
-      <div className="relative mx-auto max-w-container-max">
-        <main className="pt-24 pb-32">
+      <div className="relative mx-auto max-w-container-max lg:max-w-[1200px] lg:px-6">
+        <main className="pt-20 pb-24 lg:pt-32 lg:pb-16">
           {/* Hero */}
-          <section className="px-margin-mobile relative mb-16 text-center">
-            <h1 className="font-display-lg-mobile text-display-lg-mobile text-on-surface mb-6 leading-tight">
-              Discover if Your Souls are Aligned by the{" "}
-              <span className="text-gold-gradient">Numbers</span>
-            </h1>
-            <p className="font-body-lg text-body-lg text-on-surface-variant mx-auto mb-10 max-w-sm">
-              Enter your destinies to reveal the cosmic connection between you.
-            </p>
-            <button
-              type="button"
-              className="w-full rounded-xl bg-gradient-to-r from-primary-container to-primary py-5 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-transform hover:scale-[0.98] active:scale-95"
-            >
-              Check Your Compatibility
-            </button>
+          <section
+            id="hero"
+            className="px-margin-mobile relative mb-16 text-center lg:px-0 lg:mb-24 lg:grid lg:grid-cols-2 lg:items-center lg:gap-16 lg:text-left"
+          >
+            <div>
+              <h1 className="font-display-lg-mobile text-display-lg-mobile text-on-surface mb-6 leading-tight lg:text-display-lg">
+                Discover if Your Souls are Aligned by the{" "}
+                <span className="text-gold-gradient">Numbers</span>
+              </h1>
+              <p className="font-body-lg text-body-lg text-on-surface-variant mx-auto mb-10 max-w-sm lg:mx-0 lg:max-w-md">
+                Enter your destinies to reveal the cosmic connection between you.
+              </p>
+              <button
+                type="button"
+                className="w-full rounded-xl bg-gradient-to-r from-primary-container to-primary py-5 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-transform hover:scale-[0.98] active:scale-95 lg:w-auto lg:px-10"
+              >
+                Check Your Compatibility
+              </button>
+            </div>
+
+            {/* Desktop-only score dial visual */}
+            <div className="hidden lg:flex items-center justify-center" aria-hidden="true">
+              <div className="glass-card relative flex h-[420px] w-[420px] items-center justify-center rounded-full border border-primary/20 shadow-2xl">
+                <div className="absolute inset-6 rounded-full border border-primary/30" />
+                <div className="absolute inset-12 rounded-full border border-primary/40" />
+                <div
+                  className="absolute -left-6 top-16 h-16 w-16 rounded-full border border-primary/30 bg-cover bg-center opacity-60 blur-[1px]"
+                  style={{ backgroundImage: `url('${SEEKER_1}')` }}
+                />
+                <div
+                  className="absolute -right-6 bottom-16 h-16 w-16 rounded-full border border-primary/30 bg-cover bg-center opacity-60 blur-[1px]"
+                  style={{ backgroundImage: `url('${SEEKER_2}')` }}
+                />
+                <div className="text-center">
+                  <div
+                    className="text-gold-gradient leading-none"
+                    style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "5rem" }}
+                  >
+                    88%
+                  </div>
+                  <div className="mt-2 text-[11px] uppercase tracking-[0.25em] text-primary">
+                    Compatibility
+                  </div>
+                </div>
+              </div>
+            </div>
           </section>
 
           {/* Social proof */}
-          <section className="px-margin-mobile mb-20 flex flex-col items-center">
+          <section className="px-margin-mobile mb-20 flex flex-col items-center lg:px-0 lg:mb-28">
             <div className="mb-4 flex -space-x-3">
               {AVATARS.map((src, i) => (
                 <div
@@ -119,19 +151,22 @@ function Index() {
           </section>
 
           {/* Path to Clarity */}
-          <section className="px-margin-mobile mb-24">
-            <h2 className="font-headline-sm text-headline-sm mb-12 text-center text-on-surface">
+          <section id="how-it-works" className="px-margin-mobile mb-24 lg:px-0 lg:mb-28 scroll-mt-24">
+            <h2 className="font-headline-sm text-headline-sm mb-12 text-center text-on-surface lg:text-headline-md">
               The Path to Clarity
             </h2>
-            <div className="relative space-y-12">
-              <div className="absolute top-6 bottom-6 left-6 w-px bg-gradient-to-b from-primary/40 via-primary/10 to-transparent" />
+            <div className="relative space-y-12 lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0">
+              <div className="absolute top-6 bottom-6 left-6 w-px bg-gradient-to-b from-primary/40 via-primary/10 to-transparent lg:hidden" />
               {[
                 { icon: "edit_calendar", title: "1. Enter Details", body: "Share your birth dates and names for precise cosmic calculation." },
                 { icon: "analytics", title: "2. Get Score", body: "See your instant affinity score based on ancient numerology." },
                 { icon: "lock_open", title: "3. Unlock Full Report", body: "Deep dive into destiny numbers, soul urges, and future paths." },
               ].map((step) => (
-                <div key={step.title} className="relative flex gap-6">
-                  <div className="glass-card z-10 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-primary/30">
+                <div
+                  key={step.title}
+                  className="relative flex gap-6 lg:flex-col lg:gap-4 lg:glass-card lg:rounded-2xl lg:p-8 lg:border lg:border-outline-variant/30"
+                >
+                  <div className="glass-card z-10 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-primary/30 lg:h-14 lg:w-14">
                     <Icon name={step.icon} className="text-primary" />
                   </div>
                   <div>

@@ -47,13 +47,14 @@ export function SiteFooter() {
               Quick Links
             </h3>
             {QUICK_LINKS.map((l) => (
-              <a
+              <Link
                 key={l.label}
-                href={l.href}
+                to={l.to}
+                params={l.params as never}
                 className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors w-fit"
               >
                 {l.label}
-              </a>
+              </Link>
             ))}
           </nav>
 

@@ -1,9 +1,11 @@
+import { Link } from "@tanstack/react-router";
+
 const QUICK_LINKS = [
-  { href: "#hero", label: "Home" },
-  { href: "#", label: "Privacy Policy" },
-  { href: "#", label: "Terms" },
-  { href: "#", label: "Refund Policy" },
-  { href: "#", label: "Contact" },
+  { to: "/" as const, label: "Home" },
+  { to: "/legal/$slug" as const, params: { slug: "privacy" }, label: "Privacy Policy" },
+  { to: "/legal/$slug" as const, params: { slug: "terms" }, label: "Terms" },
+  { to: "/legal/$slug" as const, params: { slug: "refund" }, label: "Refund Policy" },
+  { to: "/legal/$slug" as const, params: { slug: "contact" }, label: "Contact" },
 ];
 
 function TrustChip({ icon, label }: { icon: string; label: string }) {

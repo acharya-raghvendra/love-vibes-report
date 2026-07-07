@@ -213,6 +213,47 @@
   border-bottom-color: var(--primary);
 }
 
+/* Ornate corner decorations for cards */
+.ornate-corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+  opacity: 0.55;
+}
+.ornate-corner.top-left {
+  top: 10px;
+  left: 10px;
+  border-top: 1px solid color-mix(in oklab, var(--primary) 70%, transparent);
+  border-left: 1px solid color-mix(in oklab, var(--primary) 70%, transparent);
+  border-top-left-radius: 8px;
+}
+.ornate-corner.bottom-right {
+  bottom: 10px;
+  right: 10px;
+  border-bottom: 1px solid color-mix(in oklab, var(--primary) 70%, transparent);
+  border-right: 1px solid color-mix(in oklab, var(--primary) 70%, transparent);
+  border-bottom-right-radius: 8px;
+}
+
+/* Shimmering gold CTA */
+@keyframes gold-shimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.shimmer {
+  background-image: linear-gradient(
+    100deg,
+    var(--primary-container) 0%,
+    var(--primary) 40%,
+    var(--primary-fixed) 55%,
+    var(--primary) 70%,
+    var(--primary-container) 100%
+  );
+  background-size: 200% 100%;
+  animation: gold-shimmer 4s linear infinite;
+}
+
 .material-symbols-outlined {
   font-family: "Material Symbols Outlined";
   font-weight: normal;

@@ -287,7 +287,7 @@ function PreviewPage() {
         },
         theme: { color: "#f2ca50" },
         handler: () => {
-          navigate({ to: "/success" });
+          navigate({ to: "/success", search: { order_id: data.internalOrderId } });
         },
         modal: {
           ondismiss: () => {

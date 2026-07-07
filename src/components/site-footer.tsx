@@ -1,9 +1,11 @@
+import { Link } from "@tanstack/react-router";
+
 const QUICK_LINKS = [
-  { href: "#hero", label: "Home" },
-  { href: "#", label: "Privacy Policy" },
-  { href: "#", label: "Terms" },
-  { href: "#", label: "Refund Policy" },
-  { href: "#", label: "Contact" },
+  { to: "/" as const, label: "Home" },
+  { to: "/legal/$slug" as const, params: { slug: "privacy" }, label: "Privacy Policy" },
+  { to: "/legal/$slug" as const, params: { slug: "terms" }, label: "Terms" },
+  { to: "/legal/$slug" as const, params: { slug: "refund" }, label: "Refund Policy" },
+  { to: "/legal/$slug" as const, params: { slug: "contact" }, label: "Contact" },
 ];
 
 function TrustChip({ icon, label }: { icon: string; label: string }) {
@@ -45,13 +47,14 @@ export function SiteFooter() {
               Quick Links
             </h3>
             {QUICK_LINKS.map((l) => (
-              <a
+              <Link
                 key={l.label}
-                href={l.href}
+                to={l.to}
+                params={l.params as never}
                 className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors w-fit"
               >
                 {l.label}
-              </a>
+              </Link>
             ))}
           </nav>
 

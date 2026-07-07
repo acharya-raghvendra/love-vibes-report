@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 
 const NAV_LINKS = [
-  { href: "#hero", label: "Home" },
-  { href: "#how-it-works", label: "How It Works" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/#hero", label: "Home" },
+  { href: "/#how-it-works", label: "How It Works" },
+  { href: "/#faq", label: "FAQ" },
 ];
 
 function Logo() {
   return (
-    <a href="#hero" className="flex items-center gap-2 group" aria-label="Love Match home">
+    <Link to="/" className="flex items-center gap-2 group" aria-label="Love Match home">
       <span className="text-primary text-xl leading-none group-hover:rotate-12 transition-transform">✦</span>
       <span
         className="text-gold-gradient text-xl leading-none"
@@ -16,7 +17,7 @@ function Logo() {
       >
         Love Match
       </span>
-    </a>
+    </Link>
   );
 }
 
@@ -59,12 +60,12 @@ export function SiteHeader() {
           </nav>
 
           {/* Desktop CTA */}
-          <a
-            href="#hero"
+          <Link
+            to="/input"
             className="hidden lg:inline-flex items-center rounded-xl bg-gradient-to-r from-primary-container to-primary px-5 py-2.5 font-label-md text-label-md uppercase tracking-wider text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.25)] hover:scale-[0.98] active:scale-95 transition-transform"
           >
             Check Compatibility
-          </a>
+          </Link>
 
           {/* Mobile hamburger */}
           <button
@@ -122,13 +123,13 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="p-5 pb-8">
-            <a
-              href="#hero"
+            <Link
+              to="/input"
               onClick={() => setOpen(false)}
               className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-lg"
             >
               Check Compatibility
-            </a>
+            </Link>
           </div>
         </aside>
       </div>

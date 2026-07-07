@@ -254,16 +254,9 @@ function PreviewPage() {
     );
   }, [state]);
 
-  async function onUnlock() {
-    if (!input || paying) return;
-    setPaying(true);
-    try {
-      const ok = await loadRazorpay();
-      if (!ok) {
-        showToast("Couldn't load payment. Please try again.");
-        setPaying(false);
-        return;
-      }
+  const createOrder = useCallback(
+    async (couponCode: string | null): Promise<OrderQuote | null> => {
+      if (!input) return null;
       const { data, error } = await supabase.functions.invoke("create-love-match-order", {
         body: {
           person_a: {
@@ -278,28 +271,73 @@ function PreviewPage() {
             dob: input.person_b.dob,
           },
           language: "en",
+          couponCode: couponCode ?? undefined,
         },
       });
-      if (error || !data?.orderId) {
+      if (error || !data?.orderId) return null;
+      return data as OrderQuote;
+    },
+    [input],
+  );
+
+  async function onApplyCoupon() {
+    const code = couponInput.trim().toUpperCase();
+    if (!code || applyingCoupon || paying) return;
+    setApplyingCoupon(true);
+    const q = await createOrder(code);
+    setApplyingCoupon(false);
+    if (!q) {
+      showToast("Couldn't apply coupon. Try again.");
+      return;
+    }
+    setQuote(q);
+    if (q.discountApplied > 0) {
+      setAppliedCoupon(code);
+      showToast(`Coupon applied — you saved ₹${q.discountApplied}`);
+    } else {
+      setAppliedCoupon(null);
+      showToast("Invalid or expired coupon");
+    }
+  }
+
+  function onRemoveCoupon() {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setQuote(null);
+  }
+
+  async function onUnlock() {
+    if (!input || paying) return;
+    setPaying(true);
+    try {
+      const ok = await loadRazorpay();
+      if (!ok) {
+        showToast("Couldn't load payment. Please try again.");
+        setPaying(false);
+        return;
+      }
+      const q = quote ?? (await createOrder(appliedCoupon));
+      if (!q) {
         showToast("Payment could not start. Try again.");
         setPaying(false);
         return;
       }
+      setQuote(q);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rzp = new (window as any).Razorpay({
-        key: data.keyId,
-        amount: data.amount,
-        currency: data.currency,
+        key: q.keyId,
+        amount: q.amount,
+        currency: q.currency,
         name: "Love Match",
         description: "Compatibility Report",
-        order_id: data.orderId,
+        order_id: q.orderId,
         prefill: {
           name: `${input.person_a.first} ${input.person_a.last}`.trim(),
           contact: input.person_a.phone,
         },
         theme: { color: "#f2ca50" },
         handler: () => {
-          navigate({ to: "/success", search: { order_id: data.internalOrderId, phone: input.person_a.phone } });
+          navigate({ to: "/success", search: { order_id: q.internalOrderId, phone: input.person_a.phone } });
         },
         modal: {
           ondismiss: () => {

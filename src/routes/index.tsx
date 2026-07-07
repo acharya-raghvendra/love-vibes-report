@@ -227,12 +227,12 @@ function Index() {
                   <p className="font-body-md text-on-surface-variant mb-6">
                     Unlock your personalized 12-page compatibility report today.
                   </p>
-                  <button
-                    type="button"
-                    className="rounded-xl bg-primary px-8 py-3 font-label-md text-label-md text-on-primary-fixed"
+                  <Link
+                    to="/input"
+                    className="inline-flex rounded-xl bg-primary px-8 py-3 font-label-md text-label-md text-on-primary-fixed"
                   >
                     Unlock Now
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

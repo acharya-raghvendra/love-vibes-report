@@ -203,6 +203,16 @@
   }
 }
 
+@utility nav-link {
+  position: relative;
+  padding-bottom: 2px;
+  border-bottom: 1px solid transparent;
+  transition: border-color 200ms ease, color 200ms ease;
+}
+.nav-link:hover {
+  border-bottom-color: var(--primary);
+}
+
 .material-symbols-outlined {
   font-family: "Material Symbols Outlined";
   font-weight: normal;

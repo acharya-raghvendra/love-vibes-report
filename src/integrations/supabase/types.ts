@@ -14,7 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      love_match_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          payload: Json
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          payload: Json
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          payload?: Json
+        }
+        Relationships: []
+      }
+      love_match_orders: {
+        Row: {
+          created_at: string
+          language: string
+          order_id: string
+          pdf_url: string | null
+          person_a: Json
+          person_b: Json
+          ref_year: number
+          status: string
+          whatsapp_sent: boolean
+        }
+        Insert: {
+          created_at?: string
+          language?: string
+          order_id: string
+          pdf_url?: string | null
+          person_a: Json
+          person_b: Json
+          ref_year: number
+          status?: string
+          whatsapp_sent?: boolean
+        }
+        Update: {
+          created_at?: string
+          language?: string
+          order_id?: string
+          pdf_url?: string | null
+          person_a?: Json
+          person_b?: Json
+          ref_year?: number
+          status?: string
+          whatsapp_sent?: boolean
+        }
+        Relationships: []
+      }
+      love_match_prose_cache: {
+        Row: {
+          created_at: string
+          prose_key: string
+          sections: Json
+        }
+        Insert: {
+          created_at?: string
+          prose_key: string
+          sections: Json
+        }
+        Update: {
+          created_at?: string
+          prose_key?: string
+          sections?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

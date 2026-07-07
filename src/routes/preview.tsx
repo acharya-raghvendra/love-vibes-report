@@ -67,8 +67,6 @@ const CHEMISTRY_TEASERS: Record<string, string> = {
     "The tension between your charts creates the classic opposites-attract pattern — full of friction, growth, and unexpected fireworks.",
 };
 
-const BASE_PRICE = 599;
-const STRIKE_PRICE = 999;
 
 function loadRazorpay(): Promise<boolean> {
   return new Promise((resolve) => {

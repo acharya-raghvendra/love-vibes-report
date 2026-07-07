@@ -1,107 +1,119 @@
 ## Scope
 
-Replace the placeholder home route (`src/routes/index.tsx`) with a pixel-faithful build of the provided landing HTML: a mobile-first, dark mystical landing page for the Love Match numerology report. CTA buttons are stubs (no navigation yet) — you'll send the next-screen prompt after this lands.
+Add a shared Header + Footer, and make the landing page (`/`) fully responsive with a distinct desktop layout at ≥1024px while keeping the mobile layout exactly as-is below 1024px. Same visual system (dark purple midnight + gold). Input / Preview / Success pages get the same treatment when their prompts arrive.
 
-Backend, edge functions, migrations, and Razorpay wiring are untouched.
+## Breakpoint contract
 
-## What gets built
+- Single breakpoint: `lg` (1024px).
+- Mobile (`< 1024px`): existing single-column landing, unchanged.
+- Desktop (`≥ 1024px`): distinct multi-column layouts, container capped at 1200px centered.
+- No intermediate `md` breakpoint tweaks — clean binary switch.
 
-Single-page landing (`/`) with these sections, in order:
-1. Fixed nebula background glows (top-right tertiary, bottom-left primary blobs)
-2. Hero: headline "Discover if Your Souls are Aligned by the Numbers" (with gold-gradient on "Numbers"), subcopy, primary CTA "CHECK YOUR COMPATIBILITY"
-3. Social proof: 3 overlapping avatars + "+50k" chip, 5 gold stars, "Trusted by 50,000+ Seekers"
-4. "The Path to Clarity" 3-step timeline with glass icon bubbles and a vertical gold gradient connector line
-5. Blurred sample-preview card (glassmorphism) with "Unlock Now" overlay
-6. Two testimonials in glass cards with big translucent quote glyph
-7. FAQ (4 items) using native `<details>` with chevron rotate on open
-8. Sticky bottom CTA bar (backdrop-blurred) with heart icon + "CHECK YOUR COMPATIBILITY"
+## New shared components
 
-All hero images (avatars, testimonial portraits, seeker silhouettes) are hotlinked from the provided `lh3.googleusercontent.com/aida-public/...` URLs. Material Symbols Outlined icons load via a `<link>` in `__root.tsx` head.
+### `src/components/site-header.tsx`
+- Fixed to top, backdrop-blurred, `bg-background/70`, gold-tinted bottom border.
+- Mobile (`< lg`): logo left ("✦ Love Match" — gold gradient wordmark in Cormorant Garamond), hamburger button right. Hamburger opens a slide-in drawer from the right (`fixed inset-y-0 right-0 w-80`, glass-card background, close X in header), containing the three nav links stacked + full-width gold "Check Compatibility" CTA. Backdrop overlay closes on click. State via `useState`; close on `Escape` and on link click.
+- Desktop (`≥ lg`): logo left, three nav links center (Home, How It Works, FAQ — all `<a href="#anchor">` on landing; when we add real routes later they become `<Link>`s), gold CTA button right ("Check Compatibility"). Row uses `max-w-[1200px] mx-auto px-6`, height ~72px.
+- Nav link hover: text-primary + subtle underline via `border-b` animation.
+- The landing page's `<section>`s get anchor ids: `#how-it-works`, `#faq`, plus `#hero` for the logo-click home target.
 
-## Design system
+### `src/components/site-footer.tsx`
+- Sits above the sticky mobile CTA (add `pb-24 lg:pb-0` on `<main>` wrapper so footer isn't covered on mobile). On desktop the mobile sticky CTA is hidden, so the footer sits flush.
+- Content grid:
+  - **Brand column**: gold-gradient wordmark + tagline ("Ancient numerology, decoded for modern seekers.").
+  - **Quick links column**: Home, Privacy Policy, Terms, Refund Policy, Contact. Placeholder `href="#"` for the legal ones until routes exist.
+  - **Support column**: two payment trust chips — a "Razorpay" pill and a "UPI" pill (styled as glass-card small badges with the currency/lock icons from Material Symbols, no logos hotlinked to avoid trademark issues), plus a WhatsApp support link with `whatsapp` icon → `https://wa.me/` placeholder (`#` for now with `data-href` we can wire later).
+- Desktop: 3 columns (`grid-cols-3 gap-12`), container `max-w-[1200px]`, generous vertical padding.
+- Mobile: single column stack, left-aligned, `space-y-8`.
+- Bottom line (both): thin gold-tinted divider then `© 2026 Inno-One Service LLP` centered, small text-on-surface-variant.
 
-Dark theme locked on (add `dark` class to `<html>` via root route). Custom mystical palette added as CSS variables in `src/styles.css` and exposed via `@theme inline` so Tailwind utilities like `bg-primary`, `text-on-surface`, `bg-tertiary`, `bg-primary-container`, `text-on-surface-variant`, `bg-surface-container`, `border-outline-variant` all work.
+### `src/components/mobile-nav-drawer.tsx`
+- Small dedicated component for the drawer body to keep header tidy. Exports `MobileNavDrawer({ open, onClose })`.
 
-Palette (oklch):
-- `background`: near-black midnight `oklch(0.14 0.03 285)`
-- `on-background` / `on-surface`: soft warm white `oklch(0.96 0.01 90)`
-- `on-surface-variant`: muted lilac-gray `oklch(0.72 0.02 285)`
-- `primary`: rich gold `oklch(0.78 0.14 85)` (~#D4AF37)
-- `primary-container`: deeper amber `oklch(0.62 0.14 70)`
-- `on-primary-fixed`: near-black `oklch(0.12 0.02 285)`
-- `tertiary`: deep violet `oklch(0.35 0.12 300)` (nebula glow)
-- `surface-container`: `oklch(0.20 0.03 285)`
-- `surface-variant`: `oklch(0.28 0.03 285)`
-- `outline-variant`: `oklch(0.45 0.02 285)`
+## Landing page responsive changes (`src/routes/index.tsx`)
 
-Typography: **Cormorant Garamond** for display/headline (mystical serif), **Inter** for body/labels. Loaded via `@fontsource/cormorant-garamond` + `@fontsource/inter`, imported in `src/router.tsx` (client-safe entry). Mapped in `@theme inline` as `--font-display` / `--font-body` plus utility classes for the semantic tokens the HTML uses (`font-display-lg-mobile`, `text-display-lg-mobile`, `font-headline-sm`, `text-headline-sm`, `font-body-lg`, `text-body-lg`, `font-body-md`, `text-body-md`, `font-label-md`, `text-label-md`, `text-label-sm`).
+Existing mobile markup is preserved. Desktop overrides are added via `lg:` utilities — never by duplicating markup. Root wrapper gets `pt-[72px]` (header offset) instead of `pt-24`, and `pb-24 lg:pb-16` (space for mobile sticky CTA only).
 
-Custom utilities added to `styles.css`:
-- `.glass-card` → `background: color-mix(in oklab, var(--surface-container) 55%, transparent); backdrop-filter: blur(18px);`
-- `.nebula-glow` → `filter: blur(120px); opacity: 0.35;` with a slow `@keyframes` drift
-- `.text-gold-gradient` → linear-gradient text clip from `--primary-container` to `--primary`
-- `.px-margin-mobile` → `padding-inline: 1.25rem`
-- `.max-w-container-max` → `max-width: 32rem`
+Container width: outer container becomes `max-w-container-max lg:max-w-[1200px] lg:px-6`.
 
-Subtle motion: nebula blobs slowly drift (20s ease-in-out infinite alternate), CTA has hover scale (already in HTML classes), stars have a gentle pulse-in on load, FAQ chevron rotates on open (native `details[open]`).
+1. **Hero (2-column on desktop)**
+   - Wrapper becomes `lg:grid lg:grid-cols-2 lg:items-center lg:gap-16 lg:text-left lg:mb-24`.
+   - Left column: headline (larger on desktop — add `lg:text-[3.75rem]` via `lg:text-display-lg` utility), subcopy, CTA. CTA width changes: `w-full lg:w-auto lg:px-10`.
+   - Right column (new, `lg:block hidden`): decorative score dial — a circular gold-outlined ring with "88%" and "Compatibility" label centered, wrapped by a subtle glass-card with two blurred seeker avatars flanking it (reuse SEEKER_1 / SEEKER_2 URLs already in the file). Purely visual — matches the "preview" aesthetic without duplicating that section verbatim. Rendered as `<div>` with `aria-hidden="true"`.
+
+2. **Social proof**: unchanged; on desktop just center within the wider container.
+
+3. **How-It-Works (3 cards on desktop)**
+   - Wrapper: `lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0`.
+   - Vertical gradient connector: `lg:hidden` (it's a mobile-only motif). Desktop shows three glass cards side by side; each step becomes a full glass-card (`lg:glass-card lg:rounded-2xl lg:p-6 lg:border lg:border-outline-variant/30 lg:flex-col`) with the icon bubble on top instead of left.
+   - Section gets `id="how-it-works"` for the header anchor.
+
+4. **Preview** section
+   - Landing keeps the blurred sample-preview card; on desktop cap it at `lg:max-w-[720px] lg:mx-auto` so it doesn't stretch across 1200px.
+   - Nothing else changes — this section IS the preview page equivalent inside the landing.
+
+5. **Testimonials (2-up on desktop)**
+   - `space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-8`.
+
+6. **FAQ**
+   - Section gets `id="faq"`. Mobile stack unchanged. Desktop caps the accordion at `lg:max-w-[820px] lg:mx-auto` for readability (a wide accordion looks bad).
+
+7. **Sticky bottom CTA**
+   - Add `lg:hidden` — hidden entirely on desktop, since desktop has the header CTA and the hero CTA.
+
+## Theme additions (`src/styles.css`)
+
+- Add a utility for a subtle underline effect on desktop nav links (`.nav-link` — 1px bottom border transitioning from transparent to `--primary` on hover).
+- Add `text-display-lg` (~3.75rem) that we're already referencing for the hero on desktop.
+- Add a very light `--color-primary/*` utility variant is unnecessary — Tailwind's `bg-primary/20` etc. already handle opacity.
+
+## `__root.tsx`
+
+- Wrap `<Outlet />` in a fragment with `<SiteHeader />` above and `<SiteFooter />` below, so every route inherits chrome. Keep them outside the QueryClientProvider is not needed — leave them inside so future auth/state can use hooks freely.
 
 ## Files touched
 
-- `src/styles.css` — add palette tokens (light + dark, but page forces dark), typography scale utilities, `.glass-card`, `.nebula-glow`, `.text-gold-gradient`, spacing utilities, keyframes.
-- `src/routes/__root.tsx` — set app-specific `<title>` + meta (title: "Love Match — Numerology Compatibility Report"; description referencing soul alignment); add `<link>` for Material Symbols Outlined stylesheet; ensure `<html class="dark">`.
-- `src/router.tsx` — `import '@fontsource/cormorant-garamond/400.css'`, `/600.css`, `/700.css`, `import '@fontsource/inter/400.css'`, `/500.css`, `/600.css`.
-- `src/routes/index.tsx` — replace placeholder with the full landing composition (hero, social proof, path, preview, testimonials, FAQ, sticky CTA). CTA `<button>`s are stubs (no `onClick`, no navigation). Convert HTML `data-alt` background-image divs into `<img>` where semantic, keep as decorative `background-image` divs otherwise. Native `<details>` for FAQ.
-- `package.json` / `bun.lock` — add `@fontsource/cormorant-garamond`, `@fontsource/inter`.
+- `src/components/site-header.tsx` (new)
+- `src/components/site-footer.tsx` (new)
+- `src/components/mobile-nav-drawer.tsx` (new)
+- `src/routes/__root.tsx` (mount header + footer inside `RootComponent`)
+- `src/routes/index.tsx` (add `id` anchors, `lg:` desktop overrides, hide sticky CTA on desktop, hero desktop right column)
+- `src/styles.css` (add `.nav-link` utility + `text-display-lg` scale)
 
-No other files, no route additions, no edge-function changes, no migration changes.
+No route additions this turn (nav links use `#` anchors on landing and `#` placeholders for legal pages until routes exist). No new dependencies.
 
 ## Technical notes
 
-- All images hotlinked from `lh3.googleusercontent.com/aida-public/...` per the user's instruction. No local asset uploads.
-- Icons use Google Material Symbols Outlined via CDN stylesheet in `__root.tsx` head; each icon is a `<span class="material-symbols-outlined">name</span>`.
-- Mobile-first only — this is the design as given. Container capped at ~32rem and centered on wider viewports so it still looks intentional on desktop.
-- SEO: proper `<h1>` (one), semantic `<section>` + `<h2>`, meta description, og/twitter cards on `__root`. No og:image (leaf-only; skipping since no cover art yet).
-- No new dependencies beyond the two fontsource packages.
+- Header height 72px on desktop, 64px on mobile — pages compensate via `pt-16 lg:pt-[72px]` on the top wrapper.
+- Drawer uses fixed positioning + Tailwind transitions (`translate-x-full` → `translate-x-0`), no headless-ui/radix dependency.
+- Accessibility: hamburger button `aria-label="Open menu"`, drawer has `role="dialog" aria-modal="true"`, `Escape` closes, focus not trapped (single-page nav, low risk — noted for future hardening).
+- SEO: header nav uses semantic `<nav aria-label="Primary">`, footer uses `<footer>` with `<nav aria-label="Footer">`, headings unchanged.
 
 ```text
-Layout wireframe (mobile)
-┌───────────────────────────────┐
-│  ✦ nebula glow (bg)           │
-│                               │
-│  ★ Hero headline (serif)      │
-│  Subcopy                      │
-│  [ CHECK COMPATIBILITY ]      │
-│                               │
-│  ◉◉◉ +50k    ★★★★★           │
-│  Trusted by 50,000+           │
-│                               │
-│  The Path to Clarity          │
-│  │  ●  1. Enter Details       │
-│  │  ●  2. Get Score           │
-│  │  ●  3. Unlock Full Report  │
-│                               │
-│  ┌─ glass preview ─┐          │
-│  │ 88% (blurred)   │          │
-│  │  Unlock Now     │          │
-│  └─────────────────┘          │
-│                               │
-│  Whispers of Truth            │
-│  ❝ testimonial ❞              │
-│  ❝ testimonial ❞              │
-│                               │
-│  Common Inquiries             │
-│  ▸ How accurate…              │
-│  ▸ What do I need…            │
-│  ▸ Is it private…             │
-│  ▸ Refund…                    │
-│                               │
-├───────────────────────────────┤
-│ [ ♥ CHECK COMPATIBILITY ]     │ ← sticky
-└───────────────────────────────┘
+Desktop layout (≥1024px)                Mobile (<1024px)
+┌────────────────────────────────────┐   ┌──────────────┐
+│ ✦ Love Match  Home HowIt FAQ [CTA] │   │ ✦   ☰        │  ← header
+├────────────────────────────────────┤   ├──────────────┤
+│                                    │   │ (existing    │
+│ Headline …    │   ◯ 88%             │   │  mobile      │
+│ Sub + CTA     │   Compat ring       │   │  landing     │
+├───────────────┴────────────────────┤   │  unchanged)  │
+│  ★★★★★  Trusted by 50,000+          │   │              │
+│  ┌───┐  ┌───┐  ┌───┐                │   │              │
+│  │ 1 │  │ 2 │  │ 3 │  ← 3-up cards │   │              │
+│  └───┘  └───┘  └───┘                │   │              │
+│  (preview card, capped 720)         │   │              │
+│  ┌────┐  ┌────┐  ← 2-up testis      │   │              │
+│  FAQ (capped 820)                   │   │              │
+├────────────────────────────────────┤   │[Sticky CTA]  │
+│ Brand │ Quick links │ Support       │   ├──────────────┤
+│ © 2026 Inno-One Service LLP         │   │ Footer stack │
+└────────────────────────────────────┘   └──────────────┘
 ```
 
-## Out of scope (this turn)
+## Out of scope
 
-- Input form screen, score/preview screen, success screen — you'll prompt next.
-- Wiring landing CTAs to any route or edge function.
-- Header/nav and full footer (HTML shows placeholders only; leaving minimal).
+- Building /input, /preview, /success — you'll prompt next; same responsive rules will apply.
+- Wiring nav CTAs / legal-page routes.
+- Localization, dark/light toggle (site is dark-only).

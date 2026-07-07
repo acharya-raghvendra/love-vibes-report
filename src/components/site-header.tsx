@@ -123,13 +123,13 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="p-5 pb-8">
-            <a
-              href="#hero"
+            <Link
+              to="/input"
               onClick={() => setOpen(false)}
               className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-lg"
             >
               Check Compatibility
-            </a>
+            </Link>
           </div>
         </aside>
       </div>

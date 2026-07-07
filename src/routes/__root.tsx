@@ -77,25 +77,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Calculates love compatibility using numerology to reveal relationship insights." },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Calculates love compatibility using numerology to reveal relationship insights." },
+      { title: "Love Match — Numerology Compatibility Report" },
+      { name: "description", content: "Discover if your souls are aligned. A cosmic numerology compatibility report revealing your destiny numbers, soul urges, and shared path." },
+      { property: "og:title", content: "Love Match — Numerology Compatibility Report" },
+      { property: "og:description", content: "Discover if your souls are aligned by the numbers. Ancient Vedic numerology, decoded for modern seekers." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Lovable App" },
-      { name: "twitter:description", content: "Calculates love compatibility using numerology to reveal relationship insights." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8e7fe72e-dbde-490b-8a87-68b37ba84d2b/id-preview-9e551375--163c0296-9f06-4c18-81ab-8a9f6f4efb74.lovable.app-1783334829762.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8e7fe72e-dbde-490b-8a87-68b37ba84d2b/id-preview-9e551375--163c0296-9f06-4c18-81ab-8a9f6f4efb74.lovable.app-1783334829762.png" },
+      { name: "twitter:title", content: "Love Match — Numerology Compatibility Report" },
+      { name: "twitter:description", content: "Discover if your souls are aligned by the numbers." },
     ],
     links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: appCss,
+        href: "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
   }),
   shellComponent: RootShell,
@@ -106,7 +105,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <HeadContent />
       </head>

@@ -27,16 +27,16 @@ export function SiteFooter() {
         <div className="grid gap-10 lg:grid-cols-3 lg:gap-12">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-primary text-2xl leading-none">✦</span>
-              <span
-                className="text-gold-gradient text-2xl leading-none"
-                style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
-              >
-                Love Match
-              </span>
-            </div>
+            <img
+              src={logoAsset.url}
+              alt="Talk To Guruji"
+              className="h-12 w-auto brand-logo mb-4"
+            />
             <p className="font-body-md text-body-md text-on-surface-variant max-w-xs">
+              Ancient numerology, decoded for modern seekers. Discover the cosmic
+              blueprint between two souls.
+            </p>
+          </div>
               Ancient numerology, decoded for modern seekers. Discover the cosmic
               blueprint between two souls.
             </p>

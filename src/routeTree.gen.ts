@@ -9,10 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SuccessRouteImport } from './routes/success'
+import { Route as PreviewRouteImport } from './routes/preview'
 import { Route as InputRouteImport } from './routes/input'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
 
+const SuccessRoute = SuccessRouteImport.update({
+  id: '/success',
+  path: '/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PreviewRoute = PreviewRouteImport.update({
+  id: '/preview',
+  path: '/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InputRoute = InputRouteImport.update({
   id: '/input',
   path: '/input',
@@ -32,35 +44,57 @@ const LegalSlugRoute = LegalSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/input': typeof InputRoute
+  '/preview': typeof PreviewRoute
+  '/success': typeof SuccessRoute
   '/legal/$slug': typeof LegalSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/input': typeof InputRoute
+  '/preview': typeof PreviewRoute
+  '/success': typeof SuccessRoute
   '/legal/$slug': typeof LegalSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/input': typeof InputRoute
+  '/preview': typeof PreviewRoute
+  '/success': typeof SuccessRoute
   '/legal/$slug': typeof LegalSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/input' | '/legal/$slug'
+  fullPaths: '/' | '/input' | '/preview' | '/success' | '/legal/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/input' | '/legal/$slug'
-  id: '__root__' | '/' | '/input' | '/legal/$slug'
+  to: '/' | '/input' | '/preview' | '/success' | '/legal/$slug'
+  id: '__root__' | '/' | '/input' | '/preview' | '/success' | '/legal/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   InputRoute: typeof InputRoute
+  PreviewRoute: typeof PreviewRoute
+  SuccessRoute: typeof SuccessRoute
   LegalSlugRoute: typeof LegalSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/success': {
+      id: '/success'
+      path: '/success'
+      fullPath: '/success'
+      preLoaderRoute: typeof SuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preview': {
+      id: '/preview'
+      path: '/preview'
+      fullPath: '/preview'
+      preLoaderRoute: typeof PreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/input': {
       id: '/input'
       path: '/input'
@@ -88,6 +122,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   InputRoute: InputRoute,
+  PreviewRoute: PreviewRoute,
+  SuccessRoute: SuccessRoute,
   LegalSlugRoute: LegalSlugRoute,
 }
 export const routeTree = rootRouteImport

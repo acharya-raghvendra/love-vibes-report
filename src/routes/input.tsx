@@ -139,8 +139,24 @@ function InputPage() {
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    // Wiring to preview screen comes in the next prompt.
-    navigate({ to: "/" });
+    if (!p1Name.trim() || !p1Dob || !p2Name.trim() || !p2Dob || phone.replace(/\D/g, "").length < 10) return;
+
+    const splitName = (n: string) => {
+      const parts = n.trim().split(/\s+/);
+      return { first: parts[0], last: parts.slice(1).join(" ") };
+    };
+    const a = splitName(p1Name);
+    const b = splitName(p2Name);
+    const payload = {
+      person_a: { ...a, dob: p1Dob, gender: p1Gender, phone: phone.replace(/\D/g, "") },
+      person_b: { ...b, dob: p2Dob, gender: p2Gender },
+    };
+    try {
+      sessionStorage.setItem("loveMatch:input", JSON.stringify(payload));
+    } catch {
+      /* ignore */
+    }
+    navigate({ to: "/preview" });
   }
 
   return (

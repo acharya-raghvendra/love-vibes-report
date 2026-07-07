@@ -87,12 +87,12 @@ function Index() {
               <p className="font-body-lg text-body-lg text-on-surface-variant mx-auto mb-10 max-w-sm lg:mx-0 lg:max-w-md">
                 Enter your destinies to reveal the cosmic connection between you.
               </p>
-              <button
-                type="button"
-                className="w-full rounded-xl bg-gradient-to-r from-primary-container to-primary py-5 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-transform hover:scale-[0.98] active:scale-95 lg:w-auto lg:px-10"
+              <Link
+                to="/input"
+                className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-5 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-transform hover:scale-[0.98] active:scale-95 lg:w-auto lg:px-10"
               >
                 Check Your Compatibility
-              </button>
+              </Link>
             </div>
 
             {/* Desktop-only score dial visual */}

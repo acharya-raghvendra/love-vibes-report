@@ -19,7 +19,7 @@ function TrustChip({ icon, label }: { icon: string; label: string }) {
 
 export function SiteFooter() {
   return (
-    <footer className="relative border-t border-primary/15 bg-background/60 backdrop-blur-xl">
+    <footer className="relative border-t border-primary/15 bg-background/60 backdrop-blur-xl pb-24 lg:pb-0">
       <div className="mx-auto max-w-[1200px] px-5 py-14 lg:px-6 lg:py-20">
         <div className="grid gap-10 lg:grid-cols-3 lg:gap-12">
           {/* Brand */}

@@ -447,6 +447,11 @@ function PreviewPage() {
               <div className="mt-6 rounded-full border border-primary/30 bg-primary-container/20 px-5 py-2 font-label-md text-label-md uppercase tracking-widest text-primary-fixed">
                 {state.data.data.band}
               </div>
+              {state.data.data.shared && state.data.data.shared.length > 0 && (
+                <p className="mt-4 max-w-md px-4 text-center font-body-md text-body-md text-on-surface-variant">
+                  You share: {state.data.data.shared.join(" · ")}
+                </p>
+              )}
             </section>
 
             {/* Chemistry teaser */}

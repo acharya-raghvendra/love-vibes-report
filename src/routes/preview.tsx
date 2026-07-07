@@ -27,8 +27,20 @@ type PreviewData = {
     score: number;
     band: string;
     names: { a: string; b: string };
+    shared?: string[];
     chemistry_teaser: { level: string };
   };
+};
+
+type OrderQuote = {
+  orderId: string;
+  internalOrderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  originalPrice: number;
+  discountApplied: number;
+  finalPrice: number;
 };
 
 const LOCKED_SECTIONS = [

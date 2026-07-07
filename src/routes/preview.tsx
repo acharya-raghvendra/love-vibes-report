@@ -27,8 +27,20 @@ type PreviewData = {
     score: number;
     band: string;
     names: { a: string; b: string };
+    shared?: string[];
     chemistry_teaser: { level: string };
   };
+};
+
+type OrderQuote = {
+  orderId: string;
+  internalOrderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  originalPrice: number;
+  discountApplied: number;
+  finalPrice: number;
 };
 
 const LOCKED_SECTIONS = [
@@ -55,8 +67,6 @@ const CHEMISTRY_TEASERS: Record<string, string> = {
     "The tension between your charts creates the classic opposites-attract pattern — full of friction, growth, and unexpected fireworks.",
 };
 
-const BASE_PRICE = 599;
-const STRIKE_PRICE = 999;
 
 function loadRazorpay(): Promise<boolean> {
   return new Promise((resolve) => {
@@ -181,6 +191,10 @@ function PreviewPage() {
   >({ kind: "loading" });
   const [paying, setPaying] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [quote, setQuote] = useState<OrderQuote | null>(null);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = useCallback((m: string) => {
@@ -208,19 +222,17 @@ function PreviewPage() {
     try {
       const { data, error } = await supabase.functions.invoke("love-match-generate", {
         body: {
-          input_data: {
-            person_a: {
-              first: payload.person_a.first,
-              last: payload.person_a.last,
-              dob: payload.person_a.dob,
-            },
-            person_b: {
-              first: payload.person_b.first,
-              last: payload.person_b.last,
-              dob: payload.person_b.dob,
-            },
-            locale: "en",
+          person_a: {
+            first: payload.person_a.first,
+            last: payload.person_a.last,
+            dob: payload.person_a.dob,
           },
+          person_b: {
+            first: payload.person_b.first,
+            last: payload.person_b.last,
+            dob: payload.person_b.dob,
+          },
+          language: "en",
         },
       });
       if (error || !data?.data) throw new Error("preview_failed");
@@ -242,16 +254,23 @@ function PreviewPage() {
     );
   }, [state]);
 
-  async function onUnlock() {
-    if (!input || paying) return;
-    setPaying(true);
-    try {
-      const ok = await loadRazorpay();
-      if (!ok) {
-        showToast("Couldn't load payment. Please try again.");
-        setPaying(false);
-        return;
-      }
+  // Pre-fetch pricing once the preview is ready so we can display server-authoritative price.
+  useEffect(() => {
+    if (state.kind !== "ready" || !input || quote) return;
+    let cancelled = false;
+    (async () => {
+      const q = await createOrder(null);
+      if (!cancelled && q) setQuote(q);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.kind, input]);
+
+  const createOrder = useCallback(
+    async (couponCode: string | null): Promise<OrderQuote | null> => {
+      if (!input) return null;
       const { data, error } = await supabase.functions.invoke("create-love-match-order", {
         body: {
           person_a: {
@@ -266,28 +285,73 @@ function PreviewPage() {
             dob: input.person_b.dob,
           },
           language: "en",
+          couponCode: couponCode ?? undefined,
         },
       });
-      if (error || !data?.orderId) {
+      if (error || !data?.orderId) return null;
+      return data as OrderQuote;
+    },
+    [input],
+  );
+
+  async function onApplyCoupon() {
+    const code = couponInput.trim().toUpperCase();
+    if (!code || applyingCoupon || paying) return;
+    setApplyingCoupon(true);
+    const q = await createOrder(code);
+    setApplyingCoupon(false);
+    if (!q) {
+      showToast("Couldn't apply coupon. Try again.");
+      return;
+    }
+    setQuote(q);
+    if (q.discountApplied > 0) {
+      setAppliedCoupon(code);
+      showToast(`Coupon applied — you saved ₹${q.discountApplied}`);
+    } else {
+      setAppliedCoupon(null);
+      showToast("Invalid or expired coupon");
+    }
+  }
+
+  function onRemoveCoupon() {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setQuote(null);
+  }
+
+  async function onUnlock() {
+    if (!input || paying) return;
+    setPaying(true);
+    try {
+      const ok = await loadRazorpay();
+      if (!ok) {
+        showToast("Couldn't load payment. Please try again.");
+        setPaying(false);
+        return;
+      }
+      const q = quote ?? (await createOrder(appliedCoupon));
+      if (!q) {
         showToast("Payment could not start. Try again.");
         setPaying(false);
         return;
       }
+      setQuote(q);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rzp = new (window as any).Razorpay({
-        key: data.keyId,
-        amount: data.amount,
-        currency: data.currency,
+        key: q.keyId,
+        amount: q.amount,
+        currency: q.currency,
         name: "Love Match",
         description: "Compatibility Report",
-        order_id: data.orderId,
+        order_id: q.orderId,
         prefill: {
           name: `${input.person_a.first} ${input.person_a.last}`.trim(),
           contact: input.person_a.phone,
         },
         theme: { color: "#f2ca50" },
         handler: () => {
-          navigate({ to: "/success", search: { order_id: data.internalOrderId, phone: input.person_a.phone } });
+          navigate({ to: "/success", search: { order_id: q.internalOrderId, phone: input.person_a.phone } });
         },
         modal: {
           ondismiss: () => {
@@ -383,6 +447,11 @@ function PreviewPage() {
               <div className="mt-6 rounded-full border border-primary/30 bg-primary-container/20 px-5 py-2 font-label-md text-label-md uppercase tracking-widest text-primary-fixed">
                 {state.data.data.band}
               </div>
+              {state.data.data.shared && state.data.data.shared.length > 0 && (
+                <p className="mt-4 max-w-md px-4 text-center font-body-md text-body-md text-on-surface-variant">
+                  You share: {state.data.data.shared.join(" · ")}
+                </p>
+              )}
             </section>
 
             {/* Chemistry teaser */}
@@ -445,22 +514,66 @@ function PreviewPage() {
             <section className="hidden lg:block">
               <div className="glass-card rounded-2xl border border-primary/25 p-8 text-center shadow-2xl">
                 <div className="mb-2 text-label-sm uppercase tracking-widest text-primary">
-                  Limited introductory price
+                  {quote && quote.discountApplied > 0 ? "Coupon applied" : "Limited introductory price"}
                 </div>
                 <div className="mb-1 flex items-baseline justify-center gap-3">
-                  <span
-                    className="text-gold-gradient"
-                    style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "3rem" }}
-                  >
-                    ₹{BASE_PRICE}
-                  </span>
-                  <span className="text-body-lg text-on-surface-variant line-through">
-                    ₹{STRIKE_PRICE}
-                  </span>
+                  {quote ? (
+                    <>
+                      <span
+                        className="text-gold-gradient"
+                        style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "3rem" }}
+                      >
+                        ₹{quote.finalPrice}
+                      </span>
+                      {quote.discountApplied > 0 && (
+                        <span className="text-body-lg text-on-surface-variant line-through">
+                          ₹{quote.originalPrice}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="h-[3rem] w-32 animate-pulse rounded-full bg-surface-container" />
+                  )}
                 </div>
+                {quote && quote.discountApplied > 0 && (
+                  <div className="mb-2 text-label-sm text-primary">
+                    You save ₹{quote.discountApplied}
+                  </div>
+                )}
                 <p className="mx-auto mb-6 max-w-md font-body-md text-on-surface-variant">
                   One-time payment. Instant access to your full 12-page numerology compatibility report.
                 </p>
+
+                {/* Coupon input */}
+                <div className="mx-auto mb-6 flex max-w-sm items-center gap-2">
+                  <input
+                    type="text"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                    placeholder="Coupon code"
+                    disabled={applyingCoupon || paying || !!appliedCoupon}
+                    className="flex-1 rounded-full border border-outline-variant/30 bg-background/60 px-4 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary/60 focus:outline-none disabled:opacity-60"
+                  />
+                  {appliedCoupon ? (
+                    <button
+                      type="button"
+                      onClick={onRemoveCoupon}
+                      className="rounded-full border border-outline-variant/40 px-4 py-2.5 font-label-md text-label-md text-on-surface-variant"
+                    >
+                      Remove
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={onApplyCoupon}
+                      disabled={applyingCoupon || paying || !couponInput.trim()}
+                      className="rounded-full border border-primary/40 bg-primary-container/20 px-4 py-2.5 font-label-md text-label-md text-primary disabled:opacity-50"
+                    >
+                      {applyingCoupon ? "…" : "Apply"}
+                    </button>
+                  )}
+                </div>
+
                 <button
                   type="button"
                   onClick={onUnlock}
@@ -484,40 +597,81 @@ function PreviewPage() {
       {/* Mobile sticky CTA */}
       {state.kind === "ready" && (
         <div className="lg:hidden fixed inset-x-0 bottom-0 z-[60] border-t border-primary/20 bg-background/85 p-4 backdrop-blur-2xl">
-          <div className="mx-auto flex max-w-container-max items-center gap-3">
-            <div className="flex flex-col leading-tight">
-              <span className="flex items-baseline gap-2">
-                <span
-                  className="text-gold-gradient"
-                  style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "1.5rem" }}
+          <div className="mx-auto flex max-w-container-max flex-col gap-3">
+            {/* Coupon input row */}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                placeholder="Coupon code"
+                disabled={applyingCoupon || paying || !!appliedCoupon}
+                className="flex-1 rounded-full border border-outline-variant/30 bg-background/60 px-4 py-2 text-label-md text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary/60 focus:outline-none disabled:opacity-60"
+              />
+              {appliedCoupon ? (
+                <button
+                  type="button"
+                  onClick={onRemoveCoupon}
+                  className="rounded-full border border-outline-variant/40 px-3 py-2 text-label-sm text-on-surface-variant"
                 >
-                  ₹{BASE_PRICE}
-                </span>
-                <span className="text-label-sm text-on-surface-variant line-through">
-                  ₹{STRIKE_PRICE}
-                </span>
-              </span>
-              <span className="text-[10px] uppercase tracking-widest text-primary">
-                Full Report
-              </span>
+                  Remove
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onApplyCoupon}
+                  disabled={applyingCoupon || paying || !couponInput.trim()}
+                  className="rounded-full border border-primary/40 bg-primary-container/20 px-3 py-2 text-label-sm text-primary disabled:opacity-50"
+                >
+                  {applyingCoupon ? "…" : "Apply"}
+                </button>
+              )}
             </div>
-            <button
-              type="button"
-              onClick={onUnlock}
-              disabled={paying}
-              className="shimmer flex flex-1 items-center justify-center gap-2 rounded-full py-3.5 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-lg disabled:opacity-70"
-            >
-              <span
-                className="material-symbols-outlined text-base"
-                style={{ fontVariationSettings: "'FILL' 1" }}
+
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col leading-tight">
+                <span className="flex items-baseline gap-2">
+                  {quote ? (
+                    <>
+                      <span
+                        className="text-gold-gradient"
+                        style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "1.5rem" }}
+                      >
+                        ₹{quote.finalPrice}
+                      </span>
+                      {quote.discountApplied > 0 && (
+                        <span className="text-label-sm text-on-surface-variant line-through">
+                          ₹{quote.originalPrice}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="h-6 w-16 animate-pulse rounded-full bg-surface-container" />
+                  )}
+                </span>
+                <span className="text-[10px] uppercase tracking-widest text-primary">
+                  {quote && quote.discountApplied > 0 ? `Saved ₹${quote.discountApplied}` : "Full Report"}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={onUnlock}
+                disabled={paying}
+                className="shimmer flex flex-1 items-center justify-center gap-2 rounded-full py-3.5 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-lg disabled:opacity-70"
               >
-                lock_open
-              </span>
-              {paying ? "…" : "Unlock"}
-            </button>
+                <span
+                  className="material-symbols-outlined text-base"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
+                  lock_open
+                </span>
+                {paying ? "…" : "Unlock"}
+              </button>
+            </div>
           </div>
         </div>
       )}
+
 
       {toast && <Toast msg={toast} />}
 

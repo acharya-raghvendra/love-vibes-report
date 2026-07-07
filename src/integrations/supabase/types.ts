@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      coupon_codes: {
+        Row: {
+          code: string
+          created_at: string
+          discount_amount: number
+          discount_type: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          usage_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          discount_amount: number
+          discount_type: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          usage_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          discount_amount?: number
+          discount_type?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          usage_count?: number
+        }
+        Relationships: []
+      }
       love_match_cache: {
         Row: {
           cache_key: string
@@ -40,6 +76,7 @@ export type Database = {
           pdf_url: string | null
           person_a: Json
           person_b: Json
+          razorpay_order_id: string | null
           ref_year: number
           status: string
           whatsapp_sent: boolean
@@ -51,6 +88,7 @@ export type Database = {
           pdf_url?: string | null
           person_a: Json
           person_b: Json
+          razorpay_order_id?: string | null
           ref_year: number
           status?: string
           whatsapp_sent?: boolean
@@ -62,6 +100,7 @@ export type Database = {
           pdf_url?: string | null
           person_a?: Json
           person_b?: Json
+          razorpay_order_id?: string | null
           ref_year?: number
           status?: string
           whatsapp_sent?: boolean

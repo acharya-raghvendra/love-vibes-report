@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import logoAsset from "@/assets/talktoguruji-logo.png.asset.json";
 
 const NAV_LINKS = [
   { href: "/#hero", label: "Home" },
@@ -9,14 +10,12 @@ const NAV_LINKS = [
 
 function Logo() {
   return (
-    <Link to="/" className="flex items-center gap-2 group" aria-label="Love Match home">
-      <span className="text-primary text-xl leading-none group-hover:rotate-12 transition-transform">✦</span>
-      <span
-        className="text-gold-gradient text-xl leading-none"
-        style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
-      >
-        Love Match
-      </span>
+    <Link to="/" className="flex items-center" aria-label="Talk To Guruji home">
+      <img
+        src={logoAsset.url}
+        alt="Talk To Guruji"
+        className="h-9 w-auto brand-logo lg:h-10"
+      />
     </Link>
   );
 }

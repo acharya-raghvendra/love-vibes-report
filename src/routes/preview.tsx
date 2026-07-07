@@ -514,22 +514,66 @@ function PreviewPage() {
             <section className="hidden lg:block">
               <div className="glass-card rounded-2xl border border-primary/25 p-8 text-center shadow-2xl">
                 <div className="mb-2 text-label-sm uppercase tracking-widest text-primary">
-                  Limited introductory price
+                  {quote && quote.discountApplied > 0 ? "Coupon applied" : "Limited introductory price"}
                 </div>
                 <div className="mb-1 flex items-baseline justify-center gap-3">
-                  <span
-                    className="text-gold-gradient"
-                    style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "3rem" }}
-                  >
-                    ₹{BASE_PRICE}
-                  </span>
-                  <span className="text-body-lg text-on-surface-variant line-through">
-                    ₹{STRIKE_PRICE}
-                  </span>
+                  {quote ? (
+                    <>
+                      <span
+                        className="text-gold-gradient"
+                        style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "3rem" }}
+                      >
+                        ₹{quote.finalPrice}
+                      </span>
+                      {quote.discountApplied > 0 && (
+                        <span className="text-body-lg text-on-surface-variant line-through">
+                          ₹{quote.originalPrice}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="h-[3rem] w-32 animate-pulse rounded-full bg-surface-container" />
+                  )}
                 </div>
+                {quote && quote.discountApplied > 0 && (
+                  <div className="mb-2 text-label-sm text-primary">
+                    You save ₹{quote.discountApplied}
+                  </div>
+                )}
                 <p className="mx-auto mb-6 max-w-md font-body-md text-on-surface-variant">
                   One-time payment. Instant access to your full 12-page numerology compatibility report.
                 </p>
+
+                {/* Coupon input */}
+                <div className="mx-auto mb-6 flex max-w-sm items-center gap-2">
+                  <input
+                    type="text"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                    placeholder="Coupon code"
+                    disabled={applyingCoupon || paying || !!appliedCoupon}
+                    className="flex-1 rounded-full border border-outline-variant/30 bg-background/60 px-4 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary/60 focus:outline-none disabled:opacity-60"
+                  />
+                  {appliedCoupon ? (
+                    <button
+                      type="button"
+                      onClick={onRemoveCoupon}
+                      className="rounded-full border border-outline-variant/40 px-4 py-2.5 font-label-md text-label-md text-on-surface-variant"
+                    >
+                      Remove
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={onApplyCoupon}
+                      disabled={applyingCoupon || paying || !couponInput.trim()}
+                      className="rounded-full border border-primary/40 bg-primary-container/20 px-4 py-2.5 font-label-md text-label-md text-primary disabled:opacity-50"
+                    >
+                      {applyingCoupon ? "…" : "Apply"}
+                    </button>
+                  )}
+                </div>
+
                 <button
                   type="button"
                   onClick={onUnlock}
@@ -553,40 +597,81 @@ function PreviewPage() {
       {/* Mobile sticky CTA */}
       {state.kind === "ready" && (
         <div className="lg:hidden fixed inset-x-0 bottom-0 z-[60] border-t border-primary/20 bg-background/85 p-4 backdrop-blur-2xl">
-          <div className="mx-auto flex max-w-container-max items-center gap-3">
-            <div className="flex flex-col leading-tight">
-              <span className="flex items-baseline gap-2">
-                <span
-                  className="text-gold-gradient"
-                  style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "1.5rem" }}
+          <div className="mx-auto flex max-w-container-max flex-col gap-3">
+            {/* Coupon input row */}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                placeholder="Coupon code"
+                disabled={applyingCoupon || paying || !!appliedCoupon}
+                className="flex-1 rounded-full border border-outline-variant/30 bg-background/60 px-4 py-2 text-label-md text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary/60 focus:outline-none disabled:opacity-60"
+              />
+              {appliedCoupon ? (
+                <button
+                  type="button"
+                  onClick={onRemoveCoupon}
+                  className="rounded-full border border-outline-variant/40 px-3 py-2 text-label-sm text-on-surface-variant"
                 >
-                  ₹{BASE_PRICE}
-                </span>
-                <span className="text-label-sm text-on-surface-variant line-through">
-                  ₹{STRIKE_PRICE}
-                </span>
-              </span>
-              <span className="text-[10px] uppercase tracking-widest text-primary">
-                Full Report
-              </span>
+                  Remove
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onApplyCoupon}
+                  disabled={applyingCoupon || paying || !couponInput.trim()}
+                  className="rounded-full border border-primary/40 bg-primary-container/20 px-3 py-2 text-label-sm text-primary disabled:opacity-50"
+                >
+                  {applyingCoupon ? "…" : "Apply"}
+                </button>
+              )}
             </div>
-            <button
-              type="button"
-              onClick={onUnlock}
-              disabled={paying}
-              className="shimmer flex flex-1 items-center justify-center gap-2 rounded-full py-3.5 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-lg disabled:opacity-70"
-            >
-              <span
-                className="material-symbols-outlined text-base"
-                style={{ fontVariationSettings: "'FILL' 1" }}
+
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col leading-tight">
+                <span className="flex items-baseline gap-2">
+                  {quote ? (
+                    <>
+                      <span
+                        className="text-gold-gradient"
+                        style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "1.5rem" }}
+                      >
+                        ₹{quote.finalPrice}
+                      </span>
+                      {quote.discountApplied > 0 && (
+                        <span className="text-label-sm text-on-surface-variant line-through">
+                          ₹{quote.originalPrice}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="h-6 w-16 animate-pulse rounded-full bg-surface-container" />
+                  )}
+                </span>
+                <span className="text-[10px] uppercase tracking-widest text-primary">
+                  {quote && quote.discountApplied > 0 ? `Saved ₹${quote.discountApplied}` : "Full Report"}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={onUnlock}
+                disabled={paying}
+                className="shimmer flex flex-1 items-center justify-center gap-2 rounded-full py-3.5 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-lg disabled:opacity-70"
               >
-                lock_open
-              </span>
-              {paying ? "…" : "Unlock"}
-            </button>
+                <span
+                  className="material-symbols-outlined text-base"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
+                  lock_open
+                </span>
+                {paying ? "…" : "Unlock"}
+              </button>
+            </div>
           </div>
         </div>
       )}
+
 
       {toast && <Toast msg={toast} />}
 

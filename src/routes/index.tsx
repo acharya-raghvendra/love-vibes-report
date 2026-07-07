@@ -181,8 +181,8 @@ function Index() {
           </section>
 
           {/* Preview */}
-          <section className="px-margin-mobile mb-24">
-            <div className="glass-card relative overflow-hidden rounded-3xl border border-outline-variant/30 p-8 shadow-2xl">
+          <section className="px-margin-mobile mb-24 lg:px-0 lg:mb-28">
+            <div className="glass-card relative overflow-hidden rounded-3xl border border-outline-variant/30 p-8 shadow-2xl lg:mx-auto lg:max-w-[720px] lg:p-12">
               <div className="absolute top-4 right-4 rounded-full border border-primary/20 bg-primary-container/20 px-3 py-1 font-label-md text-label-sm text-primary-fixed backdrop-blur-md">
                 Sample Preview
               </div>
@@ -239,15 +239,15 @@ function Index() {
           </section>
 
           {/* Testimonials */}
-          <section className="px-margin-mobile mb-24">
-            <h2 className="font-headline-sm text-headline-sm mb-10 text-center">
+          <section className="px-margin-mobile mb-24 lg:px-0 lg:mb-28">
+            <h2 className="font-headline-sm text-headline-sm mb-10 text-center lg:text-headline-md lg:mb-14">
               Whispers of Truth
             </h2>
-            <div className="space-y-6">
+            <div className="space-y-6 lg:grid lg:grid-cols-2 lg:gap-8 lg:space-y-0">
               {TESTIMONIALS.map((t) => (
                 <div
                   key={t.name}
-                  className="glass-card relative rounded-2xl border border-outline-variant/20 p-6"
+                  className="glass-card relative rounded-2xl border border-outline-variant/20 p-6 lg:p-8"
                 >
                   <span
                     className="material-symbols-outlined absolute -top-2 -left-2 rotate-12 scale-150 text-primary/20"
@@ -271,11 +271,11 @@ function Index() {
           </section>
 
           {/* FAQ */}
-          <section className="px-margin-mobile mb-24">
-            <h2 className="font-headline-sm text-headline-sm mb-10 text-center">
+          <section id="faq" className="px-margin-mobile mb-24 lg:px-0 lg:mb-16 scroll-mt-24">
+            <h2 className="font-headline-sm text-headline-sm mb-10 text-center lg:text-headline-md lg:mb-14">
               Common Inquiries
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-4 lg:mx-auto lg:max-w-[820px]">
               {FAQS.map((f) => (
                 <details
                   key={f.q}
@@ -295,8 +295,8 @@ function Index() {
           </section>
         </main>
 
-        {/* Sticky CTA */}
-        <div className="fixed right-0 bottom-0 left-0 z-[60] border-t border-primary/20 bg-background/80 p-4 backdrop-blur-2xl">
+        {/* Sticky CTA — mobile only */}
+        <div className="lg:hidden fixed right-0 bottom-0 left-0 z-[60] border-t border-primary/20 bg-background/80 p-4 backdrop-blur-2xl">
           <div className="mx-auto max-w-container-max">
             <button
               type="button"

@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import logoAsset from "@/assets/talktoguruji-logo.png.asset.json";
 
 const QUICK_LINKS = [
   { to: "/" as const, label: "Home" },

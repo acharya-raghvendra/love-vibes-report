@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 
 const NAV_LINKS = [
-  { href: "#hero", label: "Home" },
-  { href: "#how-it-works", label: "How It Works" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/#hero", label: "Home" },
+  { href: "/#how-it-works", label: "How It Works" },
+  { href: "/#faq", label: "FAQ" },
 ];
 
 function Logo() {

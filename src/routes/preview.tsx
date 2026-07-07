@@ -218,19 +218,17 @@ function PreviewPage() {
     try {
       const { data, error } = await supabase.functions.invoke("love-match-generate", {
         body: {
-          input_data: {
-            person_a: {
-              first: payload.person_a.first,
-              last: payload.person_a.last,
-              dob: payload.person_a.dob,
-            },
-            person_b: {
-              first: payload.person_b.first,
-              last: payload.person_b.last,
-              dob: payload.person_b.dob,
-            },
-            locale: "en",
+          person_a: {
+            first: payload.person_a.first,
+            last: payload.person_a.last,
+            dob: payload.person_a.dob,
           },
+          person_b: {
+            first: payload.person_b.first,
+            last: payload.person_b.last,
+            dob: payload.person_b.dob,
+          },
+          language: "en",
         },
       });
       if (error || !data?.data) throw new Error("preview_failed");

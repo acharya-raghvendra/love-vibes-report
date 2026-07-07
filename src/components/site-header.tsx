@@ -60,12 +60,12 @@ export function SiteHeader() {
           </nav>
 
           {/* Desktop CTA */}
-          <a
-            href="#hero"
+          <Link
+            to="/input"
             className="hidden lg:inline-flex items-center rounded-xl bg-gradient-to-r from-primary-container to-primary px-5 py-2.5 font-label-md text-label-md uppercase tracking-wider text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.25)] hover:scale-[0.98] active:scale-95 transition-transform"
           >
             Check Compatibility
-          </a>
+          </Link>
 
           {/* Mobile hamburger */}
           <button

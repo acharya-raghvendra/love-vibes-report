@@ -71,6 +71,7 @@ export type Database = {
       love_match_orders: {
         Row: {
           created_at: string
+          failure_reason: string | null
           language: string
           order_id: string
           pdf_url: string | null
@@ -83,6 +84,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          failure_reason?: string | null
           language?: string
           order_id: string
           pdf_url?: string | null
@@ -95,6 +97,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          failure_reason?: string | null
           language?: string
           order_id?: string
           pdf_url?: string | null
@@ -104,6 +107,30 @@ export type Database = {
           ref_year?: number
           status?: string
           whatsapp_sent?: boolean
+        }
+        Relationships: []
+      }
+      love_match_pricing: {
+        Row: {
+          id: number
+          list_price: number
+          offer_ends_at: string | null
+          offer_price: number
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          list_price?: number
+          offer_ends_at?: string | null
+          offer_price?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          list_price?: number
+          offer_ends_at?: string | null
+          offer_price?: number
+          updated_at?: string
         }
         Relationships: []
       }

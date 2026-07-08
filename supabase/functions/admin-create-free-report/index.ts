@@ -127,93 +127,106 @@ Deno.serve(async (req) => {
     });
     if (insErr) return new Response(JSON.stringify({ error: "order create failed: " + insErr.message }), { status: 500, headers: J });
 
-    const markFail = async (reason: string, status = 502) => {
-      await supabase.from("love_match_orders")
-        .update({ status: "failed", failure_reason: reason }).eq("order_id", orderId);
-      return new Response(JSON.stringify({ error: reason, order_id: orderId }), { status, headers: J });
-    };
-
-    // Recompute facts.
-    const result = scoreMatch(aFirst, aLast, aDob, bFirst, bLast, bDob, refYear);
-    const facts = {
-      language, score: result.score, band: result.band, shared: result.shared,
-      person_a: result.a, person_b: result.b, breakdown: result.breakdown,
-    };
-
-    // Prose cache.
-    const proseKey = await sha256(`prose:v1:${language}:${JSON.stringify(facts)}`);
-    let sections: Record<string, string> | null = null;
-    const { data: cachedProse } = await supabase
-      .from("love_match_prose_cache").select("sections").eq("prose_key", proseKey).maybeSingle();
-    if (cachedProse?.sections) sections = cachedProse.sections as Record<string, string>;
-
-    if (!sections) {
-      const allowed = allowedNumberSet(result);
-      for (let attempt = 0; attempt < 2 && !sections; attempt++) {
-        try {
-          const out = await generateProse(facts, language);
-          if (validateNoInventedNumbers(out, allowed)) sections = out;
-        } catch (_) { /* retry */ }
-      }
-      if (!sections) return await markFail("generation_failed");
-      await supabase.from("love_match_prose_cache").upsert({ prose_key: proseKey, sections });
-    }
-
-    // PDF via Browserless.
-    const printBase = Deno.env.get("LOVE_MATCH_PRINT_URL");
-    const browserlessKey = Deno.env.get("BROWSERLESS_API_KEY");
-    if (!printBase || !browserlessKey) return await markFail("pdf_config", 500);
-    const dataPayload = b64url(new TextEncoder().encode(JSON.stringify({ facts, sections })));
-    const printUrl = `${printBase}?print=1#data=${dataPayload}`;
-    const pdfRes = await fetch(
-      `https://production-sfo.browserless.io/pdf?token=${browserlessKey}&timeout=60000`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: printUrl, options: { printBackground: true, format: "A4" } }),
-      },
-    );
-    if (!pdfRes.ok) return await markFail("pdf_failed");
-    const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
-    if (pdfBytes.length < 10240) return await markFail("pdf_too_small");
-
-    const path = `love-match/${orderId}.pdf`;
-    await supabase.storage.from("love-match-pdfs")
-      .upload(path, pdfBytes, { contentType: "application/pdf", upsert: true });
-    const { data: signed } = await supabase.storage
-      .from("love-match-pdfs").createSignedUrl(path, 60 * 60 * 24 * 30);
-    const pdfUrl = signed?.signedUrl ?? null;
-
-    // AiSensy (optional).
-    let whatsappSent = false;
-    if (sendWhatsapp) {
+    // Kick off the long pipeline in the background so the client isn't waiting
+    // on Gemini + Browserless (30–90s). UI polls love_match_orders by order_id.
+    const runPipeline = async () => {
+      const markFail = async (reason: string) => {
+        await supabase.from("love_match_orders")
+          .update({ status: "failed", failure_reason: reason }).eq("order_id", orderId);
+      };
       try {
-        const aisensyKey = Deno.env.get("AISENSY_API_KEY");
-        if (aisensyKey && phone && pdfUrl) {
-          const wres = await fetch("https://backend.aisensy.com/campaign/t1/api/v2", {
+        const result = scoreMatch(aFirst, aLast, aDob, bFirst, bLast, bDob, refYear);
+        const facts = {
+          language, score: result.score, band: result.band, shared: result.shared,
+          person_a: result.a, person_b: result.b, breakdown: result.breakdown,
+        };
+
+        // Prose cache.
+        const proseKey = await sha256(`prose:v1:${language}:${JSON.stringify(facts)}`);
+        let sections: Record<string, string> | null = null;
+        const { data: cachedProse } = await supabase
+          .from("love_match_prose_cache").select("sections").eq("prose_key", proseKey).maybeSingle();
+        if (cachedProse?.sections) sections = cachedProse.sections as Record<string, string>;
+
+        if (!sections) {
+          const allowed = allowedNumberSet(result);
+          for (let attempt = 0; attempt < 2 && !sections; attempt++) {
+            try {
+              const out = await generateProse(facts, language);
+              if (validateNoInventedNumbers(out, allowed)) sections = out;
+            } catch (_) { /* retry */ }
+          }
+          if (!sections) { await markFail("generation_failed"); return; }
+          await supabase.from("love_match_prose_cache").upsert({ prose_key: proseKey, sections });
+        }
+
+        // PDF via Browserless.
+        const printBase = Deno.env.get("LOVE_MATCH_PRINT_URL");
+        const browserlessKey = Deno.env.get("BROWSERLESS_API_KEY");
+        if (!printBase || !browserlessKey) { await markFail("pdf_config"); return; }
+        const dataPayload = b64url(new TextEncoder().encode(JSON.stringify({ facts, sections })));
+        const printUrl = `${printBase}?print=1#data=${dataPayload}`;
+        const pdfRes = await fetch(
+          `https://production-sfo.browserless.io/pdf?token=${browserlessKey}&timeout=60000`,
+          {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              apiKey: aisensyKey,
-              campaignName: "love_match_delivery",
-              destination: phone,
-              userName: aFirst,
-              media: { url: pdfUrl, filename: "Love-Match-Report.pdf" },
-            }),
-          });
-          whatsappSent = wres.ok;
+            body: JSON.stringify({ url: printUrl, options: { printBackground: true, format: "A4" } }),
+          },
+        );
+        if (!pdfRes.ok) { await markFail("pdf_failed"); return; }
+        const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
+        if (pdfBytes.length < 10240) { await markFail("pdf_too_small"); return; }
+
+        const path = `love-match/${orderId}.pdf`;
+        await supabase.storage.from("love-match-pdfs")
+          .upload(path, pdfBytes, { contentType: "application/pdf", upsert: true });
+        const { data: signed } = await supabase.storage
+          .from("love-match-pdfs").createSignedUrl(path, 60 * 60 * 24 * 30);
+        const pdfUrl = signed?.signedUrl ?? null;
+
+        // AiSensy (optional).
+        let whatsappSent = false;
+        if (sendWhatsapp) {
+          try {
+            const aisensyKey = Deno.env.get("AISENSY_API_KEY");
+            if (aisensyKey && phone && pdfUrl) {
+              const wres = await fetch("https://backend.aisensy.com/campaign/t1/api/v2", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  apiKey: aisensyKey,
+                  campaignName: "love_match_delivery",
+                  destination: phone,
+                  userName: aFirst,
+                  media: { url: pdfUrl, filename: "Love-Match-Report.pdf" },
+                }),
+              });
+              whatsappSent = wres.ok;
+            }
+          } catch (_) { /* non-fatal */ }
         }
-      } catch (_) { /* non-fatal */ }
+
+        await supabase.from("love_match_orders")
+          .update({ status: "delivered", pdf_url: pdfUrl, whatsapp_sent: whatsappSent })
+          .eq("order_id", orderId);
+      } catch (err) {
+        await markFail(err instanceof Error ? err.message.slice(0, 200) : "internal");
+      }
+    };
+
+    // deno-lint-ignore no-explicit-any
+    const runtime = (globalThis as any).EdgeRuntime;
+    if (runtime?.waitUntil) {
+      runtime.waitUntil(runPipeline());
+    } else {
+      // Local/dev fallback: run without awaiting.
+      runPipeline();
     }
 
-    await supabase.from("love_match_orders")
-      .update({ status: "delivered", pdf_url: pdfUrl, whatsapp_sent: whatsappSent })
-      .eq("order_id", orderId);
-
-    return new Response(JSON.stringify({
-      order_id: orderId, status: "delivered", pdf_url: pdfUrl, whatsapp_sent: whatsappSent, score: result.score, band: result.band,
-    }), { headers: J, status: 200 });
+    return new Response(JSON.stringify({ order_id: orderId, status: "processing" }), { headers: J, status: 202 });
   } catch (err) {
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "internal" }), { status: 500, headers: J });
   }
 });
+

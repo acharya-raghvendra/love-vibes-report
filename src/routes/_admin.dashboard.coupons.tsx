@@ -124,6 +124,7 @@ function CouponsPage() {
               <th className="px-4 py-3">Code</th>
               <th className="px-4 py-3">Type</th>
               <th className="px-4 py-3">Amount</th>
+              <th className="px-4 py-3">Affiliate</th>
               <th className="px-4 py-3">Uses</th>
               <th className="px-4 py-3">Revenue</th>
               <th className="px-4 py-3">Discount Given</th>
@@ -141,6 +142,9 @@ function CouponsPage() {
                   <td className="px-4 py-3 font-mono">{c.code}</td>
                   <td className="px-4 py-3">{c.discount_type}</td>
                   <td className="px-4 py-3">{c.discount_type === "percentage" ? `${c.discount_amount}%` : `₹${c.discount_amount}`}</td>
+                  <td className="px-4 py-3 text-on-surface-variant">
+                    {c.affiliate_user_id ? (affiliateEmailById.get(c.affiliate_user_id) ?? c.affiliate_user_id.slice(0, 8) + "…") : "—"}
+                  </td>
                   <td className="px-4 py-3">{s?.uses ?? 0}</td>
                   <td className="px-4 py-3">₹{(s?.revenue ?? 0).toLocaleString("en-IN")}</td>
                   <td className="px-4 py-3">₹{(s?.discount ?? 0).toLocaleString("en-IN")}</td>
@@ -160,7 +164,7 @@ function CouponsPage() {
               );
             })}
             {(coupons ?? []).length === 0 && (
-              <tr><td colSpan={10} className="px-4 py-8 text-center text-on-surface-variant">No coupons yet</td></tr>
+              <tr><td colSpan={11} className="px-4 py-8 text-center text-on-surface-variant">No coupons yet</td></tr>
             )}
           </tbody>
         </table>
@@ -169,6 +173,7 @@ function CouponsPage() {
       {editing && (
         <CouponEditor
           coupon={editing}
+          affiliates={affiliates ?? []}
           onSave={(payload) => saveMut.mutate(payload)}
           onCancel={() => setEditing(null)}
           saving={saveMut.isPending}
@@ -180,9 +185,10 @@ function CouponsPage() {
 }
 
 function CouponEditor({
-  coupon, onSave, onCancel, saving, error,
+  coupon, affiliates, onSave, onCancel, saving, error,
 }: {
   coupon: Partial<Coupon>;
+  affiliates: Affiliate[];
   onSave: (p: Partial<Coupon>) => void;
   onCancel: () => void;
   saving: boolean;
@@ -192,7 +198,7 @@ function CouponEditor({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-title-md font-semibold">{coupon.id ? "Edit coupon" : "New coupon"}</h2>
         <Field label="Code">
           <input value={form.code ?? ""} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} className="w-full rounded-md border border-border bg-background px-3 py-2 font-mono uppercase" />
@@ -205,6 +211,18 @@ function CouponEditor({
         </Field>
         <Field label="Amount">
           <input type="number" value={form.discount_amount ?? 0} onChange={(e) => setForm({ ...form, discount_amount: Number(e.target.value) })} className="w-full rounded-md border border-border bg-background px-3 py-2" />
+        </Field>
+        <Field label="Affiliate (optional)">
+          <select
+            value={form.affiliate_user_id ?? ""}
+            onChange={(e) => setForm({ ...form, affiliate_user_id: e.target.value || null })}
+            className="w-full rounded-md border border-border bg-background px-3 py-2"
+          >
+            <option value="">— None —</option>
+            {affiliates.map((a) => (
+              <option key={a.user_id} value={a.user_id}>{a.email ?? a.user_id}</option>
+            ))}
+          </select>
         </Field>
         <Field label="Max uses (blank = unlimited)">
           <input type="number" value={form.max_uses ?? ""} onChange={(e) => setForm({ ...form, max_uses: e.target.value === "" ? null : Number(e.target.value) })} className="w-full rounded-md border border-border bg-background px-3 py-2" />

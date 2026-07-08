@@ -21,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardLoginRouteImport } from './routes/dashboard.login'
 import { Route as AdminDashboardRouteImport } from './routes/_admin.dashboard'
 import { Route as AdminDashboardIndexRouteImport } from './routes/_admin.dashboard.index'
+import { Route as AdminDashboardSettingsRouteImport } from './routes/_admin.dashboard.settings'
 import { Route as AdminDashboardPricingRouteImport } from './routes/_admin.dashboard.pricing'
 import { Route as AdminDashboardOrdersRouteImport } from './routes/_admin.dashboard.orders'
 import { Route as AdminDashboardFailuresRouteImport } from './routes/_admin.dashboard.failures'
@@ -85,6 +86,11 @@ const AdminDashboardIndexRoute = AdminDashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminDashboardRoute,
 } as any)
+const AdminDashboardSettingsRoute = AdminDashboardSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminDashboardRoute,
+} as any)
 const AdminDashboardPricingRoute = AdminDashboardPricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/failures': typeof AdminDashboardFailuresRoute
   '/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/dashboard/pricing': typeof AdminDashboardPricingRoute
+  '/dashboard/settings': typeof AdminDashboardSettingsRoute
   '/dashboard/': typeof AdminDashboardIndexRoute
 }
 export interface FileRoutesByTo {
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/dashboard/failures': typeof AdminDashboardFailuresRoute
   '/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/dashboard/pricing': typeof AdminDashboardPricingRoute
+  '/dashboard/settings': typeof AdminDashboardSettingsRoute
   '/dashboard': typeof AdminDashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/_admin/dashboard/failures': typeof AdminDashboardFailuresRoute
   '/_admin/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/_admin/dashboard/pricing': typeof AdminDashboardPricingRoute
+  '/_admin/dashboard/settings': typeof AdminDashboardSettingsRoute
   '/_admin/dashboard/': typeof AdminDashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/dashboard/failures'
     | '/dashboard/orders'
     | '/dashboard/pricing'
+    | '/dashboard/settings'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/dashboard/failures'
     | '/dashboard/orders'
     | '/dashboard/pricing'
+    | '/dashboard/settings'
     | '/dashboard'
   id:
     | '__root__'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/_admin/dashboard/failures'
     | '/_admin/dashboard/orders'
     | '/_admin/dashboard/pricing'
+    | '/_admin/dashboard/settings'
     | '/_admin/dashboard/'
   fileRoutesById: FileRoutesById
 }
@@ -311,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardIndexRouteImport
       parentRoute: typeof AdminDashboardRoute
     }
+    '/_admin/dashboard/settings': {
+      id: '/_admin/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof AdminDashboardSettingsRouteImport
+      parentRoute: typeof AdminDashboardRoute
+    }
     '/_admin/dashboard/pricing': {
       id: '/_admin/dashboard/pricing'
       path: '/pricing'
@@ -347,6 +366,7 @@ interface AdminDashboardRouteChildren {
   AdminDashboardFailuresRoute: typeof AdminDashboardFailuresRoute
   AdminDashboardOrdersRoute: typeof AdminDashboardOrdersRoute
   AdminDashboardPricingRoute: typeof AdminDashboardPricingRoute
+  AdminDashboardSettingsRoute: typeof AdminDashboardSettingsRoute
   AdminDashboardIndexRoute: typeof AdminDashboardIndexRoute
 }
 
@@ -355,6 +375,7 @@ const AdminDashboardRouteChildren: AdminDashboardRouteChildren = {
   AdminDashboardFailuresRoute: AdminDashboardFailuresRoute,
   AdminDashboardOrdersRoute: AdminDashboardOrdersRoute,
   AdminDashboardPricingRoute: AdminDashboardPricingRoute,
+  AdminDashboardSettingsRoute: AdminDashboardSettingsRoute,
   AdminDashboardIndexRoute: AdminDashboardIndexRoute,
 }
 

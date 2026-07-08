@@ -16,6 +16,7 @@ type Coupon = {
   expires_at: string | null;
   is_active: boolean;
   usage_count: number;
+  affiliate_user_id: string | null;
   created_at: string;
 };
 
@@ -25,6 +26,8 @@ type OrderForCoupon = {
   discount_applied: number;
   status: string;
 };
+
+type Affiliate = { user_id: string; email: string | null };
 
 async function invokeEdge(fn: string, body: Record<string, unknown>) {
   const { data: { session } } = await supabase.auth.getSession();

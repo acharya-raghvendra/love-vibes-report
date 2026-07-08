@@ -233,6 +233,7 @@ Deno.serve(async (req: Request) => {
       language: order.language,
       score: result.score, band: result.band, shared: result.shared,
       person_a: result.a, person_b: result.b, chemistry,
+      names: { a: a.first, b: b.first },
     };
 
     // 4. Prose cache.

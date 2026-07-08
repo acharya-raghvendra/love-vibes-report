@@ -38,6 +38,7 @@ type OrderQuote = {
   amount: number;
   currency: string;
   keyId: string;
+  listPrice: number;
   originalPrice: number;
   discountApplied: number;
   finalPrice: number;

@@ -202,19 +202,45 @@ Deno.serve(async (req) => {
           await supabase.from("love_match_prose_cache").upsert({ prose_key: proseKey, sections });
         }
 
-        // PDF via Browserless.
-        const printBase = Deno.env.get("LOVE_MATCH_PRINT_URL");
+        // PDF via Browserless — server-rendered HTML (Option 3).
         const browserlessKey = Deno.env.get("BROWSERLESS_API_KEY");
-        if (!printBase || !browserlessKey) { await markFail("pdf_config"); return; }
-        const dataPayload = b64url(new TextEncoder().encode(JSON.stringify({ facts, sections })));
-        const printUrl = `${printBase}?print=1#data=${dataPayload}`;
-        console.error(`[free-report] pdf_print_base=${printBase} print_url_len=${printUrl.length}`);
+        if (!browserlessKey) { await markFail("pdf_config"); return; }
+
+        const PLANETS: Record<number, string> = {
+          1: "Sun", 2: "Moon", 3: "Jupiter", 4: "Rahu", 5: "Mercury",
+          6: "Venus", 7: "Ketu", 8: "Saturn", 9: "Mars",
+        };
+        const relationLabel = (points: number): string => {
+          if (points >= 100) return "harmonious";
+          if (points >= 75) return "friendly";
+          if (points >= 50) return "neutral";
+          if (points >= 35) return "strained";
+          return "clashing";
+        };
+        const pairLabel = (k: string): string =>
+          k === "lifePath" ? "Life Path" : k === "soulUrge" ? "Soul Urge"
+          : k === "personality" ? "Personality" : "Destiny";
+        const chemistry = result.breakdown.map((p) => ({
+          pair: pairLabel(p.key),
+          a_planet: PLANETS[p.aScore] ?? "",
+          b_planet: PLANETS[p.bScore] ?? "",
+          relation: relationLabel(p.points),
+        }));
+
+        const pdfFacts = {
+          language, score: result.score, band: result.band, shared: result.shared,
+          person_a: result.a, person_b: result.b,
+          names: { a: aFirst, b: bFirst },
+          chemistry,
+        };
+        const html = buildReportHtml(pdfFacts, sections);
+
         const pdfRes = await fetch(
           `https://production-sfo.browserless.io/pdf?token=${browserlessKey}&timeout=60000`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: printUrl, options: { printBackground: true, format: "A4" } }),
+            body: JSON.stringify({ html, options: { printBackground: true, format: "A4" } }),
           },
         );
         if (!pdfRes.ok) {

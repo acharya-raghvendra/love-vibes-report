@@ -1,26 +1,19 @@
-## Plan
+## Add 6 Edge Function secrets to Love Match
 
-### 1. Create admin user + seed role (new)
-- Add a one-off server function `src/lib/admin-seed.functions.ts` (or inline SQL via the insert tool) to:
-  - Create auth user `info@talktoguruji.com` via Auth Admin API with a temporary password (email pre-confirmed).
-  - Insert `('<new user id>', 'admin')` into `public.user_roles`.
-- Show the temporary password once in the response so you can sign in at `/dashboard/login` and change it.
-- This runs BEFORE disabling public sign-ups so we don't lock ourselves out.
+I'll request the following secrets via `add_secret`, which opens a single secure form for you to paste values (I never see them):
 
-Alternative if you'd rather skip an admin-API call: I run only the `user_roles` INSERT and you set the password by triggering "Forgot password" on `/dashboard/login`. Tell me which you prefer.
+1. `GEMINI_API_KEY` — same as numerology project
+2. `BROWSERLESS_API_KEY` — same as numerology project
+3. `RESEND_API_KEY` — same as numerology project
+4. `RAZORPAY_KEY_ID` — same Razorpay account
+5. `RAZORPAY_KEY_SECRET` — same Razorpay account
+6. `LOVE_MATCH_PRINT_URL` — fixed value `https://love.talktoguruji.com/print-report`
 
-### 2. Replace `create-love-match-order` edge function
-- Overwrite `supabase/functions/create-love-match-order/index.ts` verbatim with the attached file (164 lines). No logic changes.
-- Confirm `verify_jwt = false` in `supabase/config.toml` for this function.
+### Technical detail
 
-### 3. Confirm `/dashboard/login` is login-only
-- Read `src/routes/dashboard.login.tsx` and confirm no signup UI. Leave untouched.
+- Secrets 1–5 go through `add_secret` (secure form; I cannot cross-copy values from another project).
+- `LOVE_MATCH_PRINT_URL` is a non-secret fixed string, so I'll use `set_secret` to write it directly with no form.
+- Skipping `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (auto-injected).
+- `RAZORPAY_WEBHOOK_SECRET` deferred until you create the webhook.
 
-### 4. Disable public sign-ups
-- Call `supabase--configure_auth` with `disable_signup: true` (keep other settings as-is).
-
-### 5. Verify
-- Confirm admin can sign in at `/dashboard/login` and reach `/dashboard`.
-- Confirm sign-ups are disabled (new signup attempts rejected).
-
-No engine/payment logic changes. No client price changes. No migration changes.
+After you submit the form, I'll call `fetch_secrets` and confirm all six names are present.

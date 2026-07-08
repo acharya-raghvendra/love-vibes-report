@@ -299,20 +299,39 @@ function PreviewPage() {
     const code = couponInput.trim().toUpperCase();
     if (!code || applyingCoupon || paying) return;
     setApplyingCoupon(true);
-    const q = await createOrder(code);
+    const { data, error } = await supabase.functions.invoke("validate-coupon", { body: { code } });
     setApplyingCoupon(false);
-    if (!q) {
+    if (error || !data) {
       showToast("Couldn't apply coupon. Try again.");
       return;
     }
-    setQuote(q);
-    if (q.discountApplied > 0) {
-      setAppliedCoupon(code);
-      showToast(`Coupon applied — you saved ₹${q.discountApplied}`);
-    } else {
+    if (!data.valid) {
       setAppliedCoupon(null);
-      showToast("Invalid or expired coupon");
+      showToast(data.error ?? "Invalid coupon code");
+      return;
     }
+    // Update display price; blank orderId marks the current quote as stale so
+    // onUnlock creates a fresh Razorpay order with the coupon applied.
+    setQuote((prev) => prev ? {
+      ...prev,
+      orderId: "",
+      finalPrice: data.finalPrice,
+      originalPrice: data.originalPrice,
+      listPrice: data.listPrice,
+      discountApplied: data.calculatedDiscount,
+    } : {
+      orderId: "",
+      internalOrderId: "",
+      amount: 0,
+      currency: "INR",
+      keyId: "",
+      listPrice: data.listPrice,
+      originalPrice: data.originalPrice,
+      finalPrice: data.finalPrice,
+      discountApplied: data.calculatedDiscount,
+    });
+    setAppliedCoupon(code);
+    showToast(`Coupon applied — you saved ₹${data.calculatedDiscount}`);
   }
 
   function onRemoveCoupon() {

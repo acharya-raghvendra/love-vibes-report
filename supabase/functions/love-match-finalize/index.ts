@@ -137,7 +137,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: order } = await supabase
       .from("love_match_orders")
-      .select("person_a, person_b, language, ref_year, status")
+      .select("person_a, person_b, language, ref_year, status, coupon_code")
       .eq("order_id", orderId).maybeSingle();
     if (!order) return ok({ error: "unknown_order" }, 404);
     if (order.status === "delivered") return ok({ already: true }, 200); // idempotent
@@ -230,6 +230,14 @@ Deno.serve(async (req: Request) => {
     await supabase.from("love_match_orders")
       .update({ status: "delivered", pdf_url: pdfUrl, whatsapp_sent: whatsappSent })
       .eq("order_id", orderId);
+
+    // Bump coupon usage_count post-delivery (non-fatal). The status-guard above
+    // makes redelivery idempotent, so this never double-counts.
+    if (order.coupon_code) {
+      try {
+        await supabase.rpc("increment_coupon_usage", { _code: order.coupon_code });
+      } catch (_) { /* non-fatal */ }
+    }
 
     return ok({ order_id: orderId, status: "delivered", pdf_url: pdfUrl, whatsapp_sent: whatsappSent });
   } catch (_err) {

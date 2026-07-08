@@ -218,30 +218,32 @@ Deno.serve(async (req) => {
           .from("love-match-pdfs").createSignedUrl(path, 60 * 60 * 24 * 30);
         const pdfUrl = signed?.signedUrl ?? null;
 
-        // AiSensy (optional).
-        let whatsappSent = false;
-        if (sendWhatsapp) {
+        // Resend email delivery (optional).
+        let delivered = false;
+        if (sendEmail) {
           try {
-            const aisensyKey = Deno.env.get("AISENSY_API_KEY");
-            if (aisensyKey && phone && pdfUrl) {
-              const wres = await fetch("https://backend.aisensy.com/campaign/t1/api/v2", {
+            const resendKey = Deno.env.get("RESEND_API_KEY");
+            if (resendKey && email && pdfUrl) {
+              const rres = await fetch("https://api.resend.com/emails", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${resendKey}`,
+                },
                 body: JSON.stringify({
-                  apiKey: aisensyKey,
-                  campaignName: "love_match_delivery",
-                  destination: phone,
-                  userName: aFirst,
-                  media: { url: pdfUrl, filename: "Love-Match-Report.pdf" },
+                  from: "TalkToGuruji <alerts@update.talktoguruji.com>",
+                  to: [email],
+                  subject: "Your Love Match Report is ready — TalkToGuruji",
+                  html: buildReportEmailHtml(aFirst, pdfUrl),
                 }),
               });
-              whatsappSent = wres.ok;
+              delivered = rres.ok;
             }
           } catch (_) { /* non-fatal */ }
         }
 
         await supabase.from("love_match_orders")
-          .update({ status: "delivered", pdf_url: pdfUrl, whatsapp_sent: whatsappSent })
+          .update({ status: "delivered", pdf_url: pdfUrl, whatsapp_sent: delivered })
           .eq("order_id", orderId);
       } catch (err) {
         await markFail(err instanceof Error ? err.message.slice(0, 200) : "internal");

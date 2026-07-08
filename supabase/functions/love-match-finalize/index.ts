@@ -142,6 +142,14 @@ Deno.serve(async (req: Request) => {
     if (!order) return ok({ error: "unknown_order" }, 404);
     if (order.status === "delivered") return ok({ already: true }, 200); // idempotent
 
+    // Mark paid as soon as we have an authentic, matched order.
+    const markFail = async (reason: string, status = 502) => {
+      await supabase.from("love_match_orders")
+        .update({ status: "failed", failure_reason: reason }).eq("order_id", orderId);
+      return ok({ error: reason }, status);
+    };
+    await supabase.from("love_match_orders").update({ status: "paid" }).eq("order_id", orderId);
+
     // 3. Recompute facts server-side (never trust stored numbers).
     const a = order.person_a, b = order.person_b;
     const refYear = order.ref_year ?? new Date().getUTCFullYear();
@@ -169,7 +177,7 @@ Deno.serve(async (req: Request) => {
           if (validateNoInventedNumbers(out, allowed)) sections = out;
         } catch (_) { /* retry */ }
       }
-      if (!sections) return ok({ error: "generation_failed" }, 502);
+      if (!sections) return await markFail("generation_failed");
       await supabase.from("love_match_prose_cache").upsert({ prose_key: proseKey, sections });
     }
 
@@ -187,9 +195,9 @@ Deno.serve(async (req: Request) => {
         body: JSON.stringify({ url: printUrl, options: { printBackground: true, format: "A4" } }),
       },
     );
-    if (!pdfRes.ok) return ok({ error: "pdf_failed" }, 502);
+    if (!pdfRes.ok) return await markFail("pdf_failed");
     const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
-    if (pdfBytes.length < 10240) return ok({ error: "pdf_too_small" }, 502); // guard error pages
+    if (pdfBytes.length < 10240) return await markFail("pdf_too_small"); // guard error pages
 
     const path = `love-match/${orderId}.pdf`;
     await supabase.storage.from("love-match-pdfs")

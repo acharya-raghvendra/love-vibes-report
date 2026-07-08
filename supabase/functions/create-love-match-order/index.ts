@@ -10,7 +10,7 @@ const corsHeaders = {
 };
 const J = { ...corsHeaders, "Content-Type": "application/json" };
 
-const BASE_PRICE = 599; // INR. Server-authoritative.
+// Price is loaded per-request from love_match_pricing (see handler).
 
 function cleanName(v: unknown): string {
   return typeof v === "string" ? v.replace(/[<>]/g, "").replace(/[\u0000-\u001F]/g, "").trim().slice(0, 60) : "";
@@ -51,6 +51,22 @@ Deno.serve(async (req) => {
     const couponCode = typeof body.couponCode === "string" ? body.couponCode.toUpperCase() : null;
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // Server-authoritative price from love_match_pricing (single row).
+    // Offer price applies only while offer_ends_at is in the future.
+    let BASE_PRICE = 599; // fallback offer price if table unset
+    let LIST_PRICE = 999; // fallback list price (strike anchor)
+    try {
+      const { data: pricing } = await supabase
+        .from("love_match_pricing").select("list_price, offer_price, offer_ends_at").limit(1).maybeSingle();
+      if (pricing) {
+        LIST_PRICE = pricing.list_price;
+        const offerLive = pricing.offer_ends_at
+          ? new Date(pricing.offer_ends_at) > new Date()
+          : true;
+        BASE_PRICE = offerLive ? pricing.offer_price : pricing.list_price;
+      }
+    } catch (_) { /* fallback stays */ }
 
     // Coupon (server-side).
     let finalAmount = BASE_PRICE;
@@ -134,7 +150,8 @@ Deno.serve(async (req) => {
       amount: order.amount,
       currency: order.currency,
       keyId,
-      originalPrice: BASE_PRICE,
+      listPrice: LIST_PRICE,       // strike-through anchor (999)
+      originalPrice: BASE_PRICE,   // pre-coupon offer price (599)
       discountApplied,
       finalPrice: finalAmount,
     }), { headers: J, status: 200 });

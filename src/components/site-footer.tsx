@@ -46,7 +46,6 @@ export function SiteFooter() {
               <Link
                 key={l.label}
                 to={l.to}
-                params={l.params as never}
                 className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors w-fit"
               >
                 {l.label}

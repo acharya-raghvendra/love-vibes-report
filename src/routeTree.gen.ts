@@ -9,9 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SuccessRouteImport } from './routes/success'
+import { Route as RefundRouteImport } from './routes/refund'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PreviewRouteImport } from './routes/preview'
 import { Route as InputRouteImport } from './routes/input'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
@@ -23,9 +27,24 @@ import { Route as AdminDashboardOrdersRouteImport } from './routes/_admin.dashbo
 import { Route as AdminDashboardFailuresRouteImport } from './routes/_admin.dashboard.failures'
 import { Route as AdminDashboardCouponsRouteImport } from './routes/_admin.dashboard.coupons'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SuccessRoute = SuccessRouteImport.update({
   id: '/success',
   path: '/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundRoute = RefundRouteImport.update({
+  id: '/refund',
+  path: '/refund',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PreviewRoute = PreviewRouteImport.update({
@@ -36,6 +55,11 @@ const PreviewRoute = PreviewRouteImport.update({
 const InputRoute = InputRouteImport.update({
   id: '/input',
   path: '/input',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -90,9 +114,13 @@ const AdminDashboardCouponsRoute = AdminDashboardCouponsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/contact': typeof ContactRoute
   '/input': typeof InputRoute
   '/preview': typeof PreviewRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund': typeof RefundRoute
   '/success': typeof SuccessRoute
+  '/terms': typeof TermsRoute
   '/dashboard': typeof AdminDashboardRouteWithChildren
   '/dashboard/login': typeof DashboardLoginRoute
   '/legal/$slug': typeof LegalSlugRoute
@@ -104,9 +132,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/contact': typeof ContactRoute
   '/input': typeof InputRoute
   '/preview': typeof PreviewRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund': typeof RefundRoute
   '/success': typeof SuccessRoute
+  '/terms': typeof TermsRoute
   '/dashboard/login': typeof DashboardLoginRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/dashboard/coupons': typeof AdminDashboardCouponsRoute
@@ -119,9 +151,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_admin': typeof AdminRouteWithChildren
+  '/contact': typeof ContactRoute
   '/input': typeof InputRoute
   '/preview': typeof PreviewRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund': typeof RefundRoute
   '/success': typeof SuccessRoute
+  '/terms': typeof TermsRoute
   '/_admin/dashboard': typeof AdminDashboardRouteWithChildren
   '/dashboard/login': typeof DashboardLoginRoute
   '/legal/$slug': typeof LegalSlugRoute
@@ -135,9 +171,13 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/contact'
     | '/input'
     | '/preview'
+    | '/privacy'
+    | '/refund'
     | '/success'
+    | '/terms'
     | '/dashboard'
     | '/dashboard/login'
     | '/legal/$slug'
@@ -149,9 +189,13 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/contact'
     | '/input'
     | '/preview'
+    | '/privacy'
+    | '/refund'
     | '/success'
+    | '/terms'
     | '/dashboard/login'
     | '/legal/$slug'
     | '/dashboard/coupons'
@@ -163,9 +207,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_admin'
+    | '/contact'
     | '/input'
     | '/preview'
+    | '/privacy'
+    | '/refund'
     | '/success'
+    | '/terms'
     | '/_admin/dashboard'
     | '/dashboard/login'
     | '/legal/$slug'
@@ -179,20 +227,45 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  ContactRoute: typeof ContactRoute
   InputRoute: typeof InputRoute
   PreviewRoute: typeof PreviewRoute
+  PrivacyRoute: typeof PrivacyRoute
+  RefundRoute: typeof RefundRoute
   SuccessRoute: typeof SuccessRoute
+  TermsRoute: typeof TermsRoute
   DashboardLoginRoute: typeof DashboardLoginRoute
   LegalSlugRoute: typeof LegalSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/success': {
       id: '/success'
       path: '/success'
       fullPath: '/success'
       preLoaderRoute: typeof SuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refund': {
+      id: '/refund'
+      path: '/refund'
+      fullPath: '/refund'
+      preLoaderRoute: typeof RefundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/preview': {
@@ -207,6 +280,13 @@ declare module '@tanstack/react-router' {
       path: '/input'
       fullPath: '/input'
       preLoaderRoute: typeof InputRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_admin': {
@@ -315,9 +395,13 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  ContactRoute: ContactRoute,
   InputRoute: InputRoute,
   PreviewRoute: PreviewRoute,
+  PrivacyRoute: PrivacyRoute,
+  RefundRoute: RefundRoute,
   SuccessRoute: SuccessRoute,
+  TermsRoute: TermsRoute,
   DashboardLoginRoute: DashboardLoginRoute,
   LegalSlugRoute: LegalSlugRoute,
 }

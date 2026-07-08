@@ -125,7 +125,9 @@ function FreeReportPage() {
             <Field label="First name" value={aFirst} onChange={setAFirst} required />
             <Field label="Last name" value={aLast} onChange={setALast} />
             <Field label="Date of birth" type="date" value={aDob} onChange={setADob} required />
-            <Field label="WhatsApp phone (with country code)" value={phone} onChange={setPhone} placeholder="91XXXXXXXXXX" />
+            <Field label="Phone (optional)" value={phone} onChange={setPhone} placeholder="91XXXXXXXXXX" />
+            <Field label="Recipient email" type="email" value={email} onChange={setEmail} required placeholder="name@example.com" />
+
           </div>
         </fieldset>
 

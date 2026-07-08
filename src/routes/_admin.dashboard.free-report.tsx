@@ -187,9 +187,24 @@ function FreeReportPage() {
 
       {result && (
         <div className="mt-6 space-y-2 rounded-2xl border border-border bg-surface-container-low p-6">
-          <div className="text-title-md font-medium text-on-surface">Delivered ✓</div>
+          {result.status === "delivered" && (
+            <div className="text-title-md font-medium text-on-surface">Delivered ✓</div>
+          )}
+          {result.status === "failed" && (
+            <div className="text-title-md font-medium text-error">
+              Failed: {result.failure_reason ?? "unknown reason"}
+            </div>
+          )}
+          {result.status !== "delivered" && result.status !== "failed" && (
+            <div className="flex items-center gap-2 text-title-md font-medium text-on-surface">
+              <span className="material-symbols-outlined animate-spin">progress_activity</span>
+              {timedOut
+                ? "Still generating — check the Orders page in a minute"
+                : "Generating (30–90s)…"}
+            </div>
+          )}
           <div className="text-body-md text-on-surface-variant">
-            Order <span className="font-mono">{result.order_id}</span> · Score {result.score} ({result.band})
+            Order <span className="font-mono">{result.order_id}</span>
           </div>
           {result.pdf_url && (
             <a
@@ -201,11 +216,14 @@ function FreeReportPage() {
               Open PDF
             </a>
           )}
-          <div className="text-body-sm text-on-surface-variant">
-            WhatsApp: {result.whatsapp_sent ? "sent" : "not sent"}
-          </div>
+          {result.status === "delivered" && (
+            <div className="text-body-sm text-on-surface-variant">
+              WhatsApp: {result.whatsapp_sent ? "sent" : "not sent"}
+            </div>
+          )}
         </div>
       )}
+
     </div>
   );
 }

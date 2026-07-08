@@ -61,6 +61,19 @@ function CouponsPage() {
     },
   });
 
+  const { data: affiliates } = useQuery<Affiliate[]>({
+    queryKey: ["admin-affiliates-lite"],
+    queryFn: async () => {
+      const data = await invokeEdge("admin-list-affiliates", {});
+      return ((data as { affiliates: Affiliate[] })?.affiliates ?? []);
+    },
+  });
+  const affiliateEmailById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const a of affiliates ?? []) if (a.email) map.set(a.user_id, a.email);
+    return map;
+  }, [affiliates]);
+
   const statsByCoupon = useMemo(() => {
     const map = new Map<string, { uses: number; revenue: number; discount: number }>();
     for (const o of orders ?? []) {

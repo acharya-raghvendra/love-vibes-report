@@ -87,12 +87,21 @@ async function generateProse(facts: unknown, language: string): Promise<Record<s
       generationConfig: { temperature: 0.4, responseMimeType: "application/json" },
     }),
   });
-  if (!res.ok) throw new Error("gemini_failed");
-  const data = await res.json();
-  let text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  const rawText = await res.text().catch(() => "");
+  if (!res.ok) {
+    throw new Error(`gemini_http status=${res.status} body=${rawText.slice(0, 500)}`);
+  }
+  let data: unknown;
+  try { data = JSON.parse(rawText); }
+  catch { throw new Error(`gemini_envelope_parse body=${rawText.slice(0, 500)}`); }
+  // deno-lint-ignore no-explicit-any
+  let text = (data as any)?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  if (!text) throw new Error(`gemini_empty_candidates body=${rawText.slice(0, 300)}`);
   text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
-  const parsed = JSON.parse(text);
-  return parsed.sections ?? parsed;
+  let parsed: Record<string, unknown>;
+  try { parsed = JSON.parse(text); }
+  catch { throw new Error(`gemini_content_parse body=${text.slice(0, 500)}`); }
+  return (parsed.sections as Record<string, string>) ?? (parsed as Record<string, string>);
 }
 function validateNoInventedNumbers(sections: Record<string, string>, allowed: Set<string>): boolean {
   const prose = Object.values(sections).join(" ");
@@ -183,14 +192,19 @@ Deno.serve(async (req) => {
         if (cachedProse?.sections) sections = cachedProse.sections as Record<string, string>;
 
         if (!sections) {
+          const geminiKey = Deno.env.get("GEMINI_API_KEY") ?? "";
+          console.error(`[free-report][${orderId}] gemini_key_len=${geminiKey.length}`);
           const allowed = allowedNumberSet(result);
           for (let attempt = 0; attempt < 2 && !sections; attempt++) {
             try {
               const out = await generateProse(facts, language);
               if (validateNoInventedNumbers(out, allowed)) sections = out;
-              else console.error(`[free-report][${orderId}] gemini_validate_failed attempt=${attempt}`);
+              else {
+                const preview = Object.values(out).join(" ").slice(0, 300);
+                console.error(`[free-report][${orderId}] gemini_validate_failed attempt=${attempt} preview=${preview}`);
+              }
             } catch (e) {
-              console.error(`[free-report][${orderId}] gemini_call_failed attempt=${attempt} err=${e instanceof Error ? e.message.slice(0, 300) : String(e).slice(0, 300)}`);
+              console.error(`[free-report][${orderId}] gemini_call_failed attempt=${attempt} err=${e instanceof Error ? e.message.slice(0, 500) : String(e).slice(0, 500)}`);
             }
           }
           if (!sections) { await markFail("generation_failed"); return; }

@@ -20,6 +20,7 @@ import { Route as AdminDashboardRouteImport } from './routes/_admin.dashboard'
 import { Route as AdminDashboardIndexRouteImport } from './routes/_admin.dashboard.index'
 import { Route as AdminDashboardPricingRouteImport } from './routes/_admin.dashboard.pricing'
 import { Route as AdminDashboardOrdersRouteImport } from './routes/_admin.dashboard.orders'
+import { Route as AdminDashboardFailuresRouteImport } from './routes/_admin.dashboard.failures'
 import { Route as AdminDashboardCouponsRouteImport } from './routes/_admin.dashboard.coupons'
 
 const SuccessRoute = SuccessRouteImport.update({
@@ -76,6 +77,11 @@ const AdminDashboardOrdersRoute = AdminDashboardOrdersRouteImport.update({
   path: '/orders',
   getParentRoute: () => AdminDashboardRoute,
 } as any)
+const AdminDashboardFailuresRoute = AdminDashboardFailuresRouteImport.update({
+  id: '/failures',
+  path: '/failures',
+  getParentRoute: () => AdminDashboardRoute,
+} as any)
 const AdminDashboardCouponsRoute = AdminDashboardCouponsRouteImport.update({
   id: '/coupons',
   path: '/coupons',
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/login': typeof DashboardLoginRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/dashboard/coupons': typeof AdminDashboardCouponsRoute
+  '/dashboard/failures': typeof AdminDashboardFailuresRoute
   '/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/dashboard/pricing': typeof AdminDashboardPricingRoute
   '/dashboard/': typeof AdminDashboardIndexRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/dashboard/login': typeof DashboardLoginRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/dashboard/coupons': typeof AdminDashboardCouponsRoute
+  '/dashboard/failures': typeof AdminDashboardFailuresRoute
   '/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/dashboard/pricing': typeof AdminDashboardPricingRoute
   '/dashboard': typeof AdminDashboardIndexRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/dashboard/login': typeof DashboardLoginRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/_admin/dashboard/coupons': typeof AdminDashboardCouponsRoute
+  '/_admin/dashboard/failures': typeof AdminDashboardFailuresRoute
   '/_admin/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/_admin/dashboard/pricing': typeof AdminDashboardPricingRoute
   '/_admin/dashboard/': typeof AdminDashboardIndexRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/dashboard/login'
     | '/legal/$slug'
     | '/dashboard/coupons'
+    | '/dashboard/failures'
     | '/dashboard/orders'
     | '/dashboard/pricing'
     | '/dashboard/'
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
     | '/dashboard/login'
     | '/legal/$slug'
     | '/dashboard/coupons'
+    | '/dashboard/failures'
     | '/dashboard/orders'
     | '/dashboard/pricing'
     | '/dashboard'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '/dashboard/login'
     | '/legal/$slug'
     | '/_admin/dashboard/coupons'
+    | '/_admin/dashboard/failures'
     | '/_admin/dashboard/orders'
     | '/_admin/dashboard/pricing'
     | '/_admin/dashboard/'
@@ -253,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardOrdersRouteImport
       parentRoute: typeof AdminDashboardRoute
     }
+    '/_admin/dashboard/failures': {
+      id: '/_admin/dashboard/failures'
+      path: '/failures'
+      fullPath: '/dashboard/failures'
+      preLoaderRoute: typeof AdminDashboardFailuresRouteImport
+      parentRoute: typeof AdminDashboardRoute
+    }
     '/_admin/dashboard/coupons': {
       id: '/_admin/dashboard/coupons'
       path: '/coupons'
@@ -265,6 +284,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminDashboardRouteChildren {
   AdminDashboardCouponsRoute: typeof AdminDashboardCouponsRoute
+  AdminDashboardFailuresRoute: typeof AdminDashboardFailuresRoute
   AdminDashboardOrdersRoute: typeof AdminDashboardOrdersRoute
   AdminDashboardPricingRoute: typeof AdminDashboardPricingRoute
   AdminDashboardIndexRoute: typeof AdminDashboardIndexRoute
@@ -272,6 +292,7 @@ interface AdminDashboardRouteChildren {
 
 const AdminDashboardRouteChildren: AdminDashboardRouteChildren = {
   AdminDashboardCouponsRoute: AdminDashboardCouponsRoute,
+  AdminDashboardFailuresRoute: AdminDashboardFailuresRoute,
   AdminDashboardOrdersRoute: AdminDashboardOrdersRoute,
   AdminDashboardPricingRoute: AdminDashboardPricingRoute,
   AdminDashboardIndexRoute: AdminDashboardIndexRoute,

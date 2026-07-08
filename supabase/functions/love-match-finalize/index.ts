@@ -111,6 +111,35 @@ function allowedNumberSet(r: MatchResult): Set<string> {
   return s;
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function buildReportEmailHtml(firstName: string, pdfUrl: string): string {
+  const name = escapeHtml(firstName || "there");
+  const url = escapeHtml(pdfUrl);
+  return `<!doctype html>
+<html><body style="margin:0;padding:0;background:#f6f4ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1c1b1f;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f4ef;padding:32px 0;">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;padding:32px;">
+        <tr><td>
+          <h1 style="margin:0 0 16px;font-size:22px;font-weight:600;color:#1c1b1f;">Your Love Match Report is ready</h1>
+          <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#3b3b3b;">Namaste ${name},</p>
+          <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#3b3b3b;">Your personalised Love Match numerology report has been generated. Tap the button below to download your PDF.</p>
+          <p style="margin:0 0 24px;text-align:center;">
+            <a href="${url}" style="display:inline-block;background:#b23a48;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:600;font-size:15px;">Download Your Report</a>
+          </p>
+          <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#6b6b6b;">This download link is valid for <strong>30 days</strong>. Please save the PDF to your device for long-term access.</p>
+          <p style="margin:24px 0 0;font-size:14px;line-height:1.6;color:#3b3b3b;">With blessings,<br/><strong>Acharya Raghvendra Singh</strong><br/>TalkToGuruji</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+}
+
 Deno.serve(async (req: Request) => {
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -206,29 +235,31 @@ Deno.serve(async (req: Request) => {
       .from("love-match-pdfs").createSignedUrl(path, 60 * 60 * 24 * 30); // 30 days
     const pdfUrl = signed?.signedUrl ?? null;
 
-    // 8. AiSensy send (best-effort; delivery status tracked on order).
-    let whatsappSent = false;
+    // 8. Resend email delivery (best-effort; delivered flag tracked on order).
+    let delivered = false;
     try {
-      const aisensyKey = Deno.env.get("AISENSY_API_KEY");
-      const phone = order.person_a?.phone ?? null;
-      if (aisensyKey && phone && pdfUrl) {
-        const wres = await fetch("https://backend.aisensy.com/campaign/t1/api/v2", {
+      const resendKey = Deno.env.get("RESEND_API_KEY");
+      const toEmail = order.person_a?.email ?? null;
+      if (resendKey && toEmail && pdfUrl) {
+        const rres = await fetch("https://api.resend.com/emails", {
           method: "POST",
-          headers: JSON_HEADERS,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${resendKey}`,
+          },
           body: JSON.stringify({
-            apiKey: aisensyKey,
-            campaignName: "love_match_delivery",
-            destination: phone,
-            userName: order.person_a.first,
-            media: { url: pdfUrl, filename: "Love-Match-Report.pdf" },
+            from: "TalkToGuruji <alerts@update.talktoguruji.com>",
+            to: [toEmail],
+            subject: "Your Love Match Report is ready — TalkToGuruji",
+            html: buildReportEmailHtml(order.person_a?.first ?? "", pdfUrl),
           }),
         });
-        whatsappSent = wres.ok;
+        delivered = rres.ok;
       }
     } catch (_) { /* non-fatal; URL still stored */ }
 
     await supabase.from("love_match_orders")
-      .update({ status: "delivered", pdf_url: pdfUrl, whatsapp_sent: whatsappSent })
+      .update({ status: "delivered", pdf_url: pdfUrl, whatsapp_sent: delivered })
       .eq("order_id", orderId);
 
     // Bump coupon usage_count post-delivery (non-fatal). The status-guard above
@@ -239,7 +270,7 @@ Deno.serve(async (req: Request) => {
       } catch (_) { /* non-fatal */ }
     }
 
-    return ok({ order_id: orderId, status: "delivered", pdf_url: pdfUrl, whatsapp_sent: whatsappSent });
+    return ok({ order_id: orderId, status: "delivered", pdf_url: pdfUrl, whatsapp_sent: delivered });
   } catch (_err) {
     return ok({ error: "internal" }, 500);
   }

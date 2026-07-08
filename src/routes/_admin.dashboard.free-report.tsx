@@ -10,7 +10,7 @@ type Result = {
   order_id: string;
   status: string;
   pdf_url: string | null;
-  whatsapp_sent: boolean;
+  email_sent: boolean;
   failure_reason?: string | null;
 };
 
@@ -20,11 +20,12 @@ function FreeReportPage() {
   const [aLast, setALast] = useState("");
   const [aDob, setADob] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [bFirst, setBFirst] = useState("");
   const [bLast, setBLast] = useState("");
   const [bDob, setBDob] = useState("");
   const [language, setLanguage] = useState<"en" | "hi">("en");
-  const [sendWhatsapp, setSendWhatsapp] = useState(false);
+  const [sendEmail, setSendEmail] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
@@ -51,7 +52,7 @@ function FreeReportPage() {
         order_id: data.order_id,
         status: data.status,
         pdf_url: data.pdf_url,
-        whatsapp_sent: !!data.whatsapp_sent,
+        email_sent: !!data.whatsapp_sent,
         failure_reason: data.failure_reason,
       });
       if (data.status === "delivered" || data.status === "failed") {
@@ -77,10 +78,10 @@ function FreeReportPage() {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await supabase.functions.invoke("admin-create-free-report", {
         body: {
-          person_a: { first: aFirst, last: aLast, dob: aDob, phone },
+          person_a: { first: aFirst, last: aLast, dob: aDob, phone, email },
           person_b: { first: bFirst, last: bLast, dob: bDob },
           language,
-          send_whatsapp: sendWhatsapp,
+          send_email: sendEmail,
         },
         headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
       });
@@ -88,7 +89,7 @@ function FreeReportPage() {
       const data = res.data as { order_id?: string; error?: string };
       if (data?.error) throw new Error(data.error);
       if (!data?.order_id) throw new Error("No order_id returned");
-      setResult({ order_id: data.order_id, status: "processing", pdf_url: null, whatsapp_sent: false });
+      setResult({ order_id: data.order_id, status: "processing", pdf_url: null, email_sent: false });
       startPolling(data.order_id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed");
@@ -99,9 +100,9 @@ function FreeReportPage() {
   function reset() {
     if (pollRef.current) window.clearInterval(pollRef.current);
     pollRef.current = null;
-    setAFirst(""); setALast(""); setADob(""); setPhone("");
+    setAFirst(""); setALast(""); setADob(""); setPhone(""); setEmail("");
     setBFirst(""); setBLast(""); setBDob("");
-    setLanguage("en"); setSendWhatsapp(false);
+    setLanguage("en"); setSendEmail(true);
     setResult(null); setError(null); setTimedOut(false);
     setSubmitting(false);
   }
@@ -124,7 +125,9 @@ function FreeReportPage() {
             <Field label="First name" value={aFirst} onChange={setAFirst} required />
             <Field label="Last name" value={aLast} onChange={setALast} />
             <Field label="Date of birth" type="date" value={aDob} onChange={setADob} required />
-            <Field label="WhatsApp phone (with country code)" value={phone} onChange={setPhone} placeholder="91XXXXXXXXXX" />
+            <Field label="Phone (optional)" value={phone} onChange={setPhone} placeholder="91XXXXXXXXXX" />
+            <Field label="Recipient email" type="email" value={email} onChange={setEmail} required placeholder="name@example.com" />
+
           </div>
         </fieldset>
 
@@ -152,10 +155,10 @@ function FreeReportPage() {
           <label className="mt-6 flex items-center gap-2 text-body-md text-on-surface">
             <input
               type="checkbox"
-              checked={sendWhatsapp}
-              onChange={(e) => setSendWhatsapp(e.target.checked)}
+              checked={sendEmail}
+              onChange={(e) => setSendEmail(e.target.checked)}
             />
-            Send PDF via WhatsApp (requires phone)
+            Send PDF via email (requires recipient email)
           </label>
         </div>
 
@@ -218,7 +221,7 @@ function FreeReportPage() {
           )}
           {result.status === "delivered" && (
             <div className="text-body-sm text-on-surface-variant">
-              WhatsApp: {result.whatsapp_sent ? "sent" : "not sent"}
+              Email: {result.email_sent ? "sent" : "not sent"}
             </div>
           )}
         </div>

@@ -206,10 +206,11 @@ Deno.serve(async (req) => {
           for (let attempt = 0; attempt < 2 && !sections; attempt++) {
             try {
               const out = await generateProse(facts, language);
-              if (validateNoInventedNumbers(out, allowed)) {
+              const invented = validateNoInventedNumbers(out, allowed);
+              if (invented === null) {
                 sections = out;
               } else {
-                console.error(`[free-report] gemini_validate_failed attempt=${attempt + 1} preview=${Object.values(out).join(" ").slice(0, 300)}`);
+                console.error(`[free-report] gemini_invented_number attempt=${attempt + 1} n=${invented} allowed=${Array.from(allowed).join(",")} preview=${Object.values(out).join(" ").slice(0, 800)}`);
               }
             } catch (_) { /* retry */ }
           }

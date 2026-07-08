@@ -7,6 +7,7 @@ const items = [
   { to: "/dashboard/orders", label: "Orders", icon: "receipt_long" },
   { to: "/dashboard/coupons", label: "Coupons", icon: "sell" },
   { to: "/dashboard/affiliates", label: "Affiliates", icon: "group" },
+  { to: "/dashboard/free-report", label: "Free Report", icon: "card_giftcard" },
   { to: "/dashboard/pricing", label: "Pricing", icon: "payments" },
   { to: "/dashboard/failures", label: "Delivery Failures", icon: "error" },
   { to: "/dashboard/settings", label: "Settings", icon: "settings" },

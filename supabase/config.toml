@@ -29,3 +29,6 @@ verify_jwt = true
 
 [functions.admin-create-affiliate]
 verify_jwt = true
+
+[functions.admin-create-free-report]
+verify_jwt = true

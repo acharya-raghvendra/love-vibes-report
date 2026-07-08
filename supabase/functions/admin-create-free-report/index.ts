@@ -114,16 +114,16 @@ async function generateProse(facts: unknown, language: string): Promise<Record<s
   }
   return (parsed.sections as Record<string, string>) ?? (parsed as Record<string, string>);
 }
-function validateNoInventedNumbers(sections: Record<string, string>, allowed: Set<string>): boolean {
+function validateNoInventedNumbers(sections: Record<string, string>, allowed: Set<string>): string | null {
   const prose = Object.values(sections).join(" ");
   const nums = prose.match(/\d+/g) ?? [];
   for (const n of nums) {
     if (allowed.has(n)) continue;
     if (/^(19|20)\d\d$/.test(n)) continue;
     if (n.length >= 4) continue;
-    return false;
+    return n;
   }
-  return true;
+  return null;
 }
 function allowedNumberSet(r: MatchResult): Set<string> {
   const s = new Set<string>();

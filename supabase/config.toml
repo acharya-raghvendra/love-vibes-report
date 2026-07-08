@@ -8,3 +8,15 @@ verify_jwt = false
 
 [functions.love-match-finalize]
 verify_jwt = false
+
+[functions.admin-upsert-coupon]
+verify_jwt = true
+
+[functions.admin-delete-coupon]
+verify_jwt = true
+
+[functions.admin-update-pricing]
+verify_jwt = true
+
+[functions.admin-retry-delivery]
+verify_jwt = true

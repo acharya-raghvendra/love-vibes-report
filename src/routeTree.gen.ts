@@ -16,16 +16,22 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PreviewRouteImport } from './routes/preview'
 import { Route as InputRouteImport } from './routes/input'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as AffiliateRouteImport } from './routes/_affiliate'
 import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardLoginRouteImport } from './routes/dashboard.login'
+import { Route as AffiliatePortalRouteImport } from './routes/_affiliate.portal'
 import { Route as AdminDashboardRouteImport } from './routes/_admin.dashboard'
+import { Route as AffiliatePortalIndexRouteImport } from './routes/_affiliate.portal.index'
 import { Route as AdminDashboardIndexRouteImport } from './routes/_admin.dashboard.index'
+import { Route as AffiliatePortalSalesRouteImport } from './routes/_affiliate.portal.sales'
+import { Route as AffiliatePortalCouponsRouteImport } from './routes/_affiliate.portal.coupons'
 import { Route as AdminDashboardSettingsRouteImport } from './routes/_admin.dashboard.settings'
 import { Route as AdminDashboardPricingRouteImport } from './routes/_admin.dashboard.pricing'
 import { Route as AdminDashboardOrdersRouteImport } from './routes/_admin.dashboard.orders'
 import { Route as AdminDashboardFailuresRouteImport } from './routes/_admin.dashboard.failures'
 import { Route as AdminDashboardCouponsRouteImport } from './routes/_admin.dashboard.coupons'
+import { Route as AdminDashboardAffiliatesRouteImport } from './routes/_admin.dashboard.affiliates'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -62,6 +68,10 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AffiliateRoute = AffiliateRouteImport.update({
+  id: '/_affiliate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/_admin',
   getParentRoute: () => rootRouteImport,
@@ -76,15 +86,35 @@ const DashboardLoginRoute = DashboardLoginRouteImport.update({
   path: '/dashboard/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AffiliatePortalRoute = AffiliatePortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
+  getParentRoute: () => AffiliateRoute,
+} as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AdminRoute,
 } as any)
+const AffiliatePortalIndexRoute = AffiliatePortalIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AffiliatePortalRoute,
+} as any)
 const AdminDashboardIndexRoute = AdminDashboardIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminDashboardRoute,
+} as any)
+const AffiliatePortalSalesRoute = AffiliatePortalSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
+  getParentRoute: () => AffiliatePortalRoute,
+} as any)
+const AffiliatePortalCouponsRoute = AffiliatePortalCouponsRouteImport.update({
+  id: '/coupons',
+  path: '/coupons',
+  getParentRoute: () => AffiliatePortalRoute,
 } as any)
 const AdminDashboardSettingsRoute = AdminDashboardSettingsRouteImport.update({
   id: '/settings',
@@ -111,6 +141,12 @@ const AdminDashboardCouponsRoute = AdminDashboardCouponsRouteImport.update({
   path: '/coupons',
   getParentRoute: () => AdminDashboardRoute,
 } as any)
+const AdminDashboardAffiliatesRoute =
+  AdminDashboardAffiliatesRouteImport.update({
+    id: '/affiliates',
+    path: '/affiliates',
+    getParentRoute: () => AdminDashboardRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -122,13 +158,18 @@ export interface FileRoutesByFullPath {
   '/success': typeof SuccessRoute
   '/terms': typeof TermsRoute
   '/dashboard': typeof AdminDashboardRouteWithChildren
+  '/portal': typeof AffiliatePortalRouteWithChildren
   '/dashboard/login': typeof DashboardLoginRoute
+  '/dashboard/affiliates': typeof AdminDashboardAffiliatesRoute
   '/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/dashboard/failures': typeof AdminDashboardFailuresRoute
   '/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/dashboard/pricing': typeof AdminDashboardPricingRoute
   '/dashboard/settings': typeof AdminDashboardSettingsRoute
+  '/portal/coupons': typeof AffiliatePortalCouponsRoute
+  '/portal/sales': typeof AffiliatePortalSalesRoute
   '/dashboard/': typeof AdminDashboardIndexRoute
+  '/portal/': typeof AffiliatePortalIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -140,17 +181,22 @@ export interface FileRoutesByTo {
   '/success': typeof SuccessRoute
   '/terms': typeof TermsRoute
   '/dashboard/login': typeof DashboardLoginRoute
+  '/dashboard/affiliates': typeof AdminDashboardAffiliatesRoute
   '/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/dashboard/failures': typeof AdminDashboardFailuresRoute
   '/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/dashboard/pricing': typeof AdminDashboardPricingRoute
   '/dashboard/settings': typeof AdminDashboardSettingsRoute
+  '/portal/coupons': typeof AffiliatePortalCouponsRoute
+  '/portal/sales': typeof AffiliatePortalSalesRoute
   '/dashboard': typeof AdminDashboardIndexRoute
+  '/portal': typeof AffiliatePortalIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_admin': typeof AdminRouteWithChildren
+  '/_affiliate': typeof AffiliateRouteWithChildren
   '/contact': typeof ContactRoute
   '/input': typeof InputRoute
   '/preview': typeof PreviewRoute
@@ -159,13 +205,18 @@ export interface FileRoutesById {
   '/success': typeof SuccessRoute
   '/terms': typeof TermsRoute
   '/_admin/dashboard': typeof AdminDashboardRouteWithChildren
+  '/_affiliate/portal': typeof AffiliatePortalRouteWithChildren
   '/dashboard/login': typeof DashboardLoginRoute
+  '/_admin/dashboard/affiliates': typeof AdminDashboardAffiliatesRoute
   '/_admin/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/_admin/dashboard/failures': typeof AdminDashboardFailuresRoute
   '/_admin/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/_admin/dashboard/pricing': typeof AdminDashboardPricingRoute
   '/_admin/dashboard/settings': typeof AdminDashboardSettingsRoute
+  '/_affiliate/portal/coupons': typeof AffiliatePortalCouponsRoute
+  '/_affiliate/portal/sales': typeof AffiliatePortalSalesRoute
   '/_admin/dashboard/': typeof AdminDashboardIndexRoute
+  '/_affiliate/portal/': typeof AffiliatePortalIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -179,13 +230,18 @@ export interface FileRouteTypes {
     | '/success'
     | '/terms'
     | '/dashboard'
+    | '/portal'
     | '/dashboard/login'
+    | '/dashboard/affiliates'
     | '/dashboard/coupons'
     | '/dashboard/failures'
     | '/dashboard/orders'
     | '/dashboard/pricing'
     | '/dashboard/settings'
+    | '/portal/coupons'
+    | '/portal/sales'
     | '/dashboard/'
+    | '/portal/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -197,16 +253,21 @@ export interface FileRouteTypes {
     | '/success'
     | '/terms'
     | '/dashboard/login'
+    | '/dashboard/affiliates'
     | '/dashboard/coupons'
     | '/dashboard/failures'
     | '/dashboard/orders'
     | '/dashboard/pricing'
     | '/dashboard/settings'
+    | '/portal/coupons'
+    | '/portal/sales'
     | '/dashboard'
+    | '/portal'
   id:
     | '__root__'
     | '/'
     | '/_admin'
+    | '/_affiliate'
     | '/contact'
     | '/input'
     | '/preview'
@@ -215,18 +276,24 @@ export interface FileRouteTypes {
     | '/success'
     | '/terms'
     | '/_admin/dashboard'
+    | '/_affiliate/portal'
     | '/dashboard/login'
+    | '/_admin/dashboard/affiliates'
     | '/_admin/dashboard/coupons'
     | '/_admin/dashboard/failures'
     | '/_admin/dashboard/orders'
     | '/_admin/dashboard/pricing'
     | '/_admin/dashboard/settings'
+    | '/_affiliate/portal/coupons'
+    | '/_affiliate/portal/sales'
     | '/_admin/dashboard/'
+    | '/_affiliate/portal/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AffiliateRoute: typeof AffiliateRouteWithChildren
   ContactRoute: typeof ContactRoute
   InputRoute: typeof InputRoute
   PreviewRoute: typeof PreviewRoute
@@ -288,6 +355,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_affiliate': {
+      id: '/_affiliate'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AffiliateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_admin': {
       id: '/_admin'
       path: ''
@@ -309,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_affiliate/portal': {
+      id: '/_affiliate/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof AffiliatePortalRouteImport
+      parentRoute: typeof AffiliateRoute
+    }
     '/_admin/dashboard': {
       id: '/_admin/dashboard'
       path: '/dashboard'
@@ -316,12 +397,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_affiliate/portal/': {
+      id: '/_affiliate/portal/'
+      path: '/'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof AffiliatePortalIndexRouteImport
+      parentRoute: typeof AffiliatePortalRoute
+    }
     '/_admin/dashboard/': {
       id: '/_admin/dashboard/'
       path: '/'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof AdminDashboardIndexRouteImport
       parentRoute: typeof AdminDashboardRoute
+    }
+    '/_affiliate/portal/sales': {
+      id: '/_affiliate/portal/sales'
+      path: '/sales'
+      fullPath: '/portal/sales'
+      preLoaderRoute: typeof AffiliatePortalSalesRouteImport
+      parentRoute: typeof AffiliatePortalRoute
+    }
+    '/_affiliate/portal/coupons': {
+      id: '/_affiliate/portal/coupons'
+      path: '/coupons'
+      fullPath: '/portal/coupons'
+      preLoaderRoute: typeof AffiliatePortalCouponsRouteImport
+      parentRoute: typeof AffiliatePortalRoute
     }
     '/_admin/dashboard/settings': {
       id: '/_admin/dashboard/settings'
@@ -358,10 +460,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardCouponsRouteImport
       parentRoute: typeof AdminDashboardRoute
     }
+    '/_admin/dashboard/affiliates': {
+      id: '/_admin/dashboard/affiliates'
+      path: '/affiliates'
+      fullPath: '/dashboard/affiliates'
+      preLoaderRoute: typeof AdminDashboardAffiliatesRouteImport
+      parentRoute: typeof AdminDashboardRoute
+    }
   }
 }
 
 interface AdminDashboardRouteChildren {
+  AdminDashboardAffiliatesRoute: typeof AdminDashboardAffiliatesRoute
   AdminDashboardCouponsRoute: typeof AdminDashboardCouponsRoute
   AdminDashboardFailuresRoute: typeof AdminDashboardFailuresRoute
   AdminDashboardOrdersRoute: typeof AdminDashboardOrdersRoute
@@ -371,6 +481,7 @@ interface AdminDashboardRouteChildren {
 }
 
 const AdminDashboardRouteChildren: AdminDashboardRouteChildren = {
+  AdminDashboardAffiliatesRoute: AdminDashboardAffiliatesRoute,
   AdminDashboardCouponsRoute: AdminDashboardCouponsRoute,
   AdminDashboardFailuresRoute: AdminDashboardFailuresRoute,
   AdminDashboardOrdersRoute: AdminDashboardOrdersRoute,
@@ -393,9 +504,38 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface AffiliatePortalRouteChildren {
+  AffiliatePortalCouponsRoute: typeof AffiliatePortalCouponsRoute
+  AffiliatePortalSalesRoute: typeof AffiliatePortalSalesRoute
+  AffiliatePortalIndexRoute: typeof AffiliatePortalIndexRoute
+}
+
+const AffiliatePortalRouteChildren: AffiliatePortalRouteChildren = {
+  AffiliatePortalCouponsRoute: AffiliatePortalCouponsRoute,
+  AffiliatePortalSalesRoute: AffiliatePortalSalesRoute,
+  AffiliatePortalIndexRoute: AffiliatePortalIndexRoute,
+}
+
+const AffiliatePortalRouteWithChildren = AffiliatePortalRoute._addFileChildren(
+  AffiliatePortalRouteChildren,
+)
+
+interface AffiliateRouteChildren {
+  AffiliatePortalRoute: typeof AffiliatePortalRouteWithChildren
+}
+
+const AffiliateRouteChildren: AffiliateRouteChildren = {
+  AffiliatePortalRoute: AffiliatePortalRouteWithChildren,
+}
+
+const AffiliateRouteWithChildren = AffiliateRoute._addFileChildren(
+  AffiliateRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  AffiliateRoute: AffiliateRouteWithChildren,
   ContactRoute: ContactRoute,
   InputRoute: InputRoute,
   PreviewRoute: PreviewRoute,

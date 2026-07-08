@@ -21,6 +21,38 @@ function cleanName(v: unknown): string {
 function cleanPhone(v: unknown): string {
   return typeof v === "string" ? v.replace(/[^\d]/g, "").slice(0, 15) : "";
 }
+function cleanEmail(v: unknown): string {
+  if (typeof v !== "string") return "";
+  const s = v.trim().slice(0, 254);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) ? s : "";
+}
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function buildReportEmailHtml(firstName: string, pdfUrl: string): string {
+  const name = escapeHtml(firstName || "there");
+  const url = escapeHtml(pdfUrl);
+  return `<!doctype html>
+<html><body style="margin:0;padding:0;background:#f6f4ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1c1b1f;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f4ef;padding:32px 0;">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;padding:32px;">
+        <tr><td>
+          <h1 style="margin:0 0 16px;font-size:22px;font-weight:600;color:#1c1b1f;">Your Love Match Report is ready</h1>
+          <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#3b3b3b;">Namaste ${name},</p>
+          <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#3b3b3b;">Your personalised Love Match numerology report has been generated. Tap the button below to download your PDF.</p>
+          <p style="margin:0 0 24px;text-align:center;">
+            <a href="${url}" style="display:inline-block;background:#b23a48;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:600;font-size:15px;">Download Your Report</a>
+          </p>
+          <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#6b6b6b;">This download link is valid for <strong>30 days</strong>. Please save the PDF to your device for long-term access.</p>
+          <p style="margin:24px 0 0;font-size:14px;line-height:1.6;color:#3b3b3b;">With blessings,<br/><strong>Acharya Raghvendra Singh</strong><br/>TalkToGuruji</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+}
 function validDob(raw: unknown): string | null {
   if (typeof raw !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
   const [y, m, d] = raw.split("-").map((n) => parseInt(n, 10));

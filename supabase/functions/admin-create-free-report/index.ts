@@ -1,0 +1,219 @@
+// admin-create-free-report — admin-only. Generates a full Love Match report
+// for free (no Razorpay). Mirrors the love-match-finalize pipeline from
+// "recompute facts" onward: prose (cache/Gemini) -> PDF -> storage -> AiSensy.
+// Persists a love_match_orders row with final_price=0 and coupon_code='ADMIN_FREE'.
+
+import { corsHeaders, J, requireAdmin } from "../_shared/admin-auth.ts";
+import { scoreMatch, MatchResult } from "../_shared/engine/scorer.ts";
+
+async function sha256(s: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function b64url(bytes: Uint8Array): string {
+  let bin = "";
+  for (const byte of bytes) bin += String.fromCharCode(byte);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function cleanName(v: unknown): string {
+  return typeof v === "string" ? v.replace(/[<>]/g, "").replace(/[\u0000-\u001F]/g, "").trim().slice(0, 60) : "";
+}
+function cleanPhone(v: unknown): string {
+  return typeof v === "string" ? v.replace(/[^\d]/g, "").slice(0, 15) : "";
+}
+function validDob(raw: unknown): string | null {
+  if (typeof raw !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
+  const [y, m, d] = raw.split("-").map((n) => parseInt(n, 10));
+  if (y < 1900 || y > new Date().getUTCFullYear()) return null;
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return null;
+  if (dt.getTime() > Date.now()) return null;
+  return raw;
+}
+
+async function generateProse(facts: unknown, language: string): Promise<Record<string, string>> {
+  const key = Deno.env.get("GEMINI_API_KEY");
+  if (!key) throw new Error("missing_gemini_key");
+  const model = "gemini-2.0-flash";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+  const system = [
+    "You write a numerology Love Match report. You ONLY write prose from the facts given.",
+    "You NEVER output a number not present in the facts. You never compute.",
+    "Use display numbers; if isMaster, write like '2 (Master 11)'; compound like '19/1' only if it differs.",
+    language === "hi"
+      ? "Write in casual aam-bolchaal Hindi (Devanagari). Not heavy Sanskrit."
+      : "Write in warm, plain English.",
+    "Voice: honest, not flattering. No em dashes or en dashes; use commas or full stops.",
+    "Return ONE JSON object: {\"sections\":{\"s1\":\"...\",...,\"s13\":\"...\"}} and nothing else.",
+  ].join(" ");
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents: [{ role: "user", parts: [{ text: JSON.stringify(facts) }] }],
+      generationConfig: { temperature: 0.4, responseMimeType: "application/json" },
+    }),
+  });
+  if (!res.ok) throw new Error("gemini_failed");
+  const data = await res.json();
+  let text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
+  const parsed = JSON.parse(text);
+  return parsed.sections ?? parsed;
+}
+function validateNoInventedNumbers(sections: Record<string, string>, allowed: Set<string>): boolean {
+  const prose = Object.values(sections).join(" ");
+  const nums = prose.match(/\d+/g) ?? [];
+  for (const n of nums) {
+    if (allowed.has(n)) continue;
+    if (/^(19|20)\d\d$/.test(n)) continue;
+    if (n.length >= 4) continue;
+    return false;
+  }
+  return true;
+}
+function allowedNumberSet(r: MatchResult): Set<string> {
+  const s = new Set<string>();
+  s.add(String(r.score));
+  const add = (cn: typeof r.a) => {
+    for (const k of ["lifePath", "destiny", "soulUrge", "personality", "maturity"] as const) {
+      s.add(String(cn[k].display));
+      s.add(String(cn[k].compound));
+      s.add(String(cn[k].score));
+    }
+    s.add(String(cn.personalYear));
+  };
+  add(r.a); add(r.b);
+  for (let i = 1; i <= 9; i++) s.add(String(i));
+  s.add("11"); s.add("22"); s.add("33");
+  return s;
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const auth = await requireAdmin(req);
+  if (!auth.ok) return auth.response;
+  const supabase = auth.admin;
+
+  try {
+    const body = await req.json().catch(() => ({}));
+    const aFirst = cleanName(body?.person_a?.first);
+    const aLast = cleanName(body?.person_a?.last);
+    const aDob = validDob(body?.person_a?.dob);
+    const phone = cleanPhone(body?.person_a?.phone);
+    const bFirst = cleanName(body?.person_b?.first);
+    const bLast = cleanName(body?.person_b?.last);
+    const bDob = validDob(body?.person_b?.dob);
+    const language = body.language === "hi" ? "hi" : "en";
+    const sendWhatsapp = body.send_whatsapp !== false;
+
+    if (!aFirst || !aDob) return new Response(JSON.stringify({ error: "person_a invalid" }), { status: 422, headers: J });
+    if (!bFirst || !bDob) return new Response(JSON.stringify({ error: "person_b invalid" }), { status: 422, headers: J });
+    if (sendWhatsapp && phone.length < 10) return new Response(JSON.stringify({ error: "phone required to send WhatsApp" }), { status: 422, headers: J });
+
+    const orderId = crypto.randomUUID();
+    const refYear = new Date().getUTCFullYear();
+
+    const { error: insErr } = await supabase.from("love_match_orders").insert({
+      order_id: orderId,
+      person_a: { first: aFirst, last: aLast, dob: aDob, phone },
+      person_b: { first: bFirst, last: bLast, dob: bDob },
+      language, ref_year: refYear, status: "paid",
+      final_price: 0,
+      discount_applied: 0,
+      coupon_code: "ADMIN_FREE",
+    });
+    if (insErr) return new Response(JSON.stringify({ error: "order create failed: " + insErr.message }), { status: 500, headers: J });
+
+    const markFail = async (reason: string, status = 502) => {
+      await supabase.from("love_match_orders")
+        .update({ status: "failed", failure_reason: reason }).eq("order_id", orderId);
+      return new Response(JSON.stringify({ error: reason, order_id: orderId }), { status, headers: J });
+    };
+
+    // Recompute facts.
+    const result = scoreMatch(aFirst, aLast, aDob, bFirst, bLast, bDob, refYear);
+    const facts = {
+      language, score: result.score, band: result.band, shared: result.shared,
+      person_a: result.a, person_b: result.b, breakdown: result.breakdown,
+    };
+
+    // Prose cache.
+    const proseKey = await sha256(`prose:v1:${language}:${JSON.stringify(facts)}`);
+    let sections: Record<string, string> | null = null;
+    const { data: cachedProse } = await supabase
+      .from("love_match_prose_cache").select("sections").eq("prose_key", proseKey).maybeSingle();
+    if (cachedProse?.sections) sections = cachedProse.sections as Record<string, string>;
+
+    if (!sections) {
+      const allowed = allowedNumberSet(result);
+      for (let attempt = 0; attempt < 2 && !sections; attempt++) {
+        try {
+          const out = await generateProse(facts, language);
+          if (validateNoInventedNumbers(out, allowed)) sections = out;
+        } catch (_) { /* retry */ }
+      }
+      if (!sections) return await markFail("generation_failed");
+      await supabase.from("love_match_prose_cache").upsert({ prose_key: proseKey, sections });
+    }
+
+    // PDF via Browserless.
+    const printBase = Deno.env.get("LOVE_MATCH_PRINT_URL");
+    const browserlessKey = Deno.env.get("BROWSERLESS_API_KEY");
+    if (!printBase || !browserlessKey) return await markFail("pdf_config", 500);
+    const dataPayload = b64url(new TextEncoder().encode(JSON.stringify({ facts, sections })));
+    const printUrl = `${printBase}?print=1#data=${dataPayload}`;
+    const pdfRes = await fetch(
+      `https://production-sfo.browserless.io/pdf?token=${browserlessKey}&timeout=60000`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: printUrl, options: { printBackground: true, format: "A4" } }),
+      },
+    );
+    if (!pdfRes.ok) return await markFail("pdf_failed");
+    const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
+    if (pdfBytes.length < 10240) return await markFail("pdf_too_small");
+
+    const path = `love-match/${orderId}.pdf`;
+    await supabase.storage.from("love-match-pdfs")
+      .upload(path, pdfBytes, { contentType: "application/pdf", upsert: true });
+    const { data: signed } = await supabase.storage
+      .from("love-match-pdfs").createSignedUrl(path, 60 * 60 * 24 * 30);
+    const pdfUrl = signed?.signedUrl ?? null;
+
+    // AiSensy (optional).
+    let whatsappSent = false;
+    if (sendWhatsapp) {
+      try {
+        const aisensyKey = Deno.env.get("AISENSY_API_KEY");
+        if (aisensyKey && phone && pdfUrl) {
+          const wres = await fetch("https://backend.aisensy.com/campaign/t1/api/v2", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              apiKey: aisensyKey,
+              campaignName: "love_match_delivery",
+              destination: phone,
+              userName: aFirst,
+              media: { url: pdfUrl, filename: "Love-Match-Report.pdf" },
+            }),
+          });
+          whatsappSent = wres.ok;
+        }
+      } catch (_) { /* non-fatal */ }
+    }
+
+    await supabase.from("love_match_orders")
+      .update({ status: "delivered", pdf_url: pdfUrl, whatsapp_sent: whatsappSent })
+      .eq("order_id", orderId);
+
+    return new Response(JSON.stringify({
+      order_id: orderId, status: "delivered", pdf_url: pdfUrl, whatsapp_sent: whatsappSent, score: result.score, band: result.band,
+    }), { headers: J, status: 200 });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "internal" }), { status: 500, headers: J });
+  }
+});

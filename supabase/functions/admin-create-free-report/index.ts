@@ -207,6 +207,7 @@ Deno.serve(async (req) => {
         if (!printBase || !browserlessKey) { await markFail("pdf_config"); return; }
         const dataPayload = b64url(new TextEncoder().encode(JSON.stringify({ facts, sections })));
         const printUrl = `${printBase}?print=1#data=${dataPayload}`;
+        console.error(`[free-report] pdf_print_base=${printBase} print_url_len=${printUrl.length}`);
         const pdfRes = await fetch(
           `https://production-sfo.browserless.io/pdf?token=${browserlessKey}&timeout=60000`,
           {
@@ -216,11 +217,17 @@ Deno.serve(async (req) => {
           },
         );
         if (!pdfRes.ok) {
+          const errBody = await pdfRes.text().catch(() => "");
+          console.error(`[free-report] browserless_http status=${pdfRes.status} body=${errBody.slice(0, 500)}`);
           await markFail("pdf_failed");
           return;
         }
         const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
-        if (pdfBytes.length < 10240) { await markFail("pdf_too_small"); return; }
+        if (pdfBytes.length < 10240) {
+          console.error(`[free-report] browserless_pdf_too_small bytes=${pdfBytes.length}`);
+          await markFail("pdf_too_small");
+          return;
+        }
 
         const path = `love-match/${orderId}.pdf`;
         await supabase.storage.from("love-match-pdfs")

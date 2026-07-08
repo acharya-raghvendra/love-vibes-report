@@ -69,16 +69,38 @@ async function generateProse(facts: unknown, language: string): Promise<Record<s
   if (!key) throw new Error("missing_gemini_key");
   const model = "gemini-2.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+  // deno-lint-ignore no-explicit-any
+  const A = (facts as any)?.names?.a || "Person A";
+  // deno-lint-ignore no-explicit-any
+  const B = (facts as any)?.names?.b || "Person B";
   const system = [
-    "You write a numerology Love Match report. You ONLY write prose from the facts given.",
-    "You NEVER output a number not present in the facts. You never compute.",
+    `You are writing a numerology Love Match report for ${A} and ${B}.`,
+    `ALWAYS use their real names, ${A} and ${B}. NEVER write "Person A" or "Person B".`,
+    "You ONLY write prose from the facts given. You NEVER output a number not present in the facts. You never compute.",
     "Do NOT mention raw points, weights, percentages, or scoring math. Do not say things like 'contributes X points' or 'weight of 0.3'.",
-    "Use display numbers; if isMaster, write like '2 (Master 11)'; compound like '19/1' only if it differs.",
+    "For the Chemistry section, describe planet pairings using the provided planet names and relation label, for example 'Sun and Moon are friendly'. Do not invent numeric point values for pairings.",
+    "Use display numbers. If isMaster, write like '2 (Master 11)'. Show compound like '19/1' only when it differs from the display number.",
+    "Voice: honest, not flattering. Warm but real. Where the pairing is strong say so clearly, where it needs work say that plainly.",
+    "No em dashes or en dashes. Use commas or full stops.",
     language === "hi"
-      ? "Write in casual aam-bolchaal Hindi (Devanagari). Not heavy Sanskrit."
+      ? "Write in casual aam-bolchaal Hindi (Devanagari), not heavy Sanskrit."
       : "Write in warm, plain English.",
-    "Voice: honest, not flattering. No em dashes or en dashes; use commas or full stops.",
-    "Return ONE JSON object: {\"sections\":{\"s1\":\"...\",...,\"s13\":\"...\"}} and nothing else.",
+    `Each section must be 3 to 5 sentences. Cover both ${A} and ${B} and how they interact day to day. Never write a single generic line.`,
+    "Write EXACTLY these 13 sections. Each section's content MUST match its topic below. Do not let content drift to the wrong section:",
+    `s1: Overall compatibility. State the score and band, and what it means for ${A} and ${B} as a couple. Honest framing.`,
+    `s2: Their core numbers side by side, and what any shared numbers mean for them.`,
+    `s3: Life Path. How ${A} and ${B} each move through life, and where they align or clash.`,
+    `s4: Soul Urge. How ${A} and ${B} each love, and what each needs emotionally.`,
+    `s5: Chemistry and attraction. Use the planet pairings and relation labels provided to describe the pull between them.`,
+    `s6: Intimacy and closeness. How ${A} and ${B} connect closely, drawn from their Soul Urge.`,
+    `s7: Personality. How ${A} and ${B} each come across to the other in daily life.`,
+    `s8: Conflict and repair. How they argue and how they can recover, drawn from Life Path and Personality.`,
+    `s9: Maturity. How ${A} and ${B} each grow with age, and whether they grow toward each other or apart.`,
+    `s10: Personal Year timing. The phase ${A} and ${B} are each in right now.`,
+    `s11: At a glance. Their strengths as a couple and what to watch.`,
+    `s12: What you can do. Practical advice drawn from their specific numbers.`,
+    `s13: One honest closing note to ${A} and ${B}.`,
+    'Return ONE JSON object: {"sections":{"s1":"...","s2":"...","s3":"...","s4":"...","s5":"...","s6":"...","s7":"...","s8":"...","s9":"...","s10":"...","s11":"...","s12":"...","s13":"..."}} and nothing else.',
   ].join(" ");
   const res = await fetch(url, {
     method: "POST",

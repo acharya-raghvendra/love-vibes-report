@@ -234,18 +234,24 @@ Deno.serve(async (req: Request) => {
       await supabase.from("love_match_prose_cache").upsert({ prose_key: proseKey, sections });
     }
 
-    // 7. Browserless PDF from the Lovable print page.
-    const printBase = Deno.env.get("LOVE_MATCH_PRINT_URL"); // e.g. https://love.talktoguruji.com/print-report
+    // 7. Browserless PDF — server-rendered HTML (Option 3).
     const browserlessKey = Deno.env.get("BROWSERLESS_API_KEY");
-    const dataPayload = b64url(new TextEncoder().encode(JSON.stringify({ facts, sections })));
-    const printUrl = `${printBase}?print=1#data=${dataPayload}`;
+    if (!browserlessKey) return await markFail("pdf_config");
+    const pdfFacts = {
+      language: order.language,
+      score: result.score, band: result.band, shared: result.shared,
+      person_a: result.a, person_b: result.b,
+      names: { a: a.first, b: b.first },
+      chemistry,
+    };
+    const html = buildReportHtml(pdfFacts, sections);
 
     const pdfRes = await fetch(
       `https://production-sfo.browserless.io/pdf?token=${browserlessKey}&timeout=60000`,
       {
         method: "POST",
         headers: JSON_HEADERS,
-        body: JSON.stringify({ url: printUrl, options: { printBackground: true, format: "A4" } }),
+        body: JSON.stringify({ html, options: { printBackground: true, format: "A4" } }),
       },
     );
     if (!pdfRes.ok) return await markFail("pdf_failed");

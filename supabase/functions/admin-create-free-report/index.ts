@@ -168,6 +168,7 @@ Deno.serve(async (req) => {
           .update({ status: "failed", failure_reason: reason }).eq("order_id", orderId);
       };
       try {
+        console.error(`[free-report][${orderId}] pipeline_start`);
         const result = scoreMatch(aFirst, aLast, aDob, bFirst, bLast, bDob, refYear);
         const facts = {
           language, score: result.score, band: result.band, shared: result.shared,
@@ -187,7 +188,10 @@ Deno.serve(async (req) => {
             try {
               const out = await generateProse(facts, language);
               if (validateNoInventedNumbers(out, allowed)) sections = out;
-            } catch (_) { /* retry */ }
+              else console.error(`[free-report][${orderId}] gemini_validate_failed attempt=${attempt}`);
+            } catch (e) {
+              console.error(`[free-report][${orderId}] gemini_call_failed attempt=${attempt} err=${e instanceof Error ? e.message.slice(0, 300) : String(e).slice(0, 300)}`);
+            }
           }
           if (!sections) { await markFail("generation_failed"); return; }
           await supabase.from("love_match_prose_cache").upsert({ prose_key: proseKey, sections });
@@ -196,6 +200,7 @@ Deno.serve(async (req) => {
         // PDF via Browserless.
         const printBase = Deno.env.get("LOVE_MATCH_PRINT_URL");
         const browserlessKey = Deno.env.get("BROWSERLESS_API_KEY");
+        console.error(`[free-report][${orderId}] pdf_config printBase_set=${!!printBase} browserlessKey_set=${!!browserlessKey}`);
         if (!printBase || !browserlessKey) { await markFail("pdf_config"); return; }
         const dataPayload = b64url(new TextEncoder().encode(JSON.stringify({ facts, sections })));
         const printUrl = `${printBase}?print=1#data=${dataPayload}`;
@@ -207,22 +212,32 @@ Deno.serve(async (req) => {
             body: JSON.stringify({ url: printUrl, options: { printBackground: true, format: "A4" } }),
           },
         );
-        if (!pdfRes.ok) { await markFail("pdf_failed"); return; }
+        if (!pdfRes.ok) {
+          const body = await pdfRes.text().catch(() => "");
+          console.error(`[free-report][${orderId}] browserless_failed status=${pdfRes.status} body=${body.slice(0, 300)}`);
+          await markFail("pdf_failed");
+          return;
+        }
         const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
+        console.error(`[free-report][${orderId}] browserless_ok bytes=${pdfBytes.length}`);
         if (pdfBytes.length < 10240) { await markFail("pdf_too_small"); return; }
 
         const path = `love-match/${orderId}.pdf`;
-        await supabase.storage.from("love-match-pdfs")
+        const { error: upErr } = await supabase.storage.from("love-match-pdfs")
           .upload(path, pdfBytes, { contentType: "application/pdf", upsert: true });
-        const { data: signed } = await supabase.storage
+        if (upErr) console.error(`[free-report][${orderId}] storage_upload_failed msg=${upErr.message.slice(0, 300)}`);
+        const { data: signed, error: signErr } = await supabase.storage
           .from("love-match-pdfs").createSignedUrl(path, 60 * 60 * 24 * 30);
+        if (signErr) console.error(`[free-report][${orderId}] signed_url_failed msg=${signErr.message.slice(0, 300)}`);
         const pdfUrl = signed?.signedUrl ?? null;
+        console.error(`[free-report][${orderId}] pdf_url_ready=${!!pdfUrl}`);
 
         // Resend email delivery (optional).
         let delivered = false;
         if (sendEmail) {
           try {
             const resendKey = Deno.env.get("RESEND_API_KEY");
+            console.error(`[free-report][${orderId}] resend_precheck key_set=${!!resendKey} email_set=${!!email} pdf_set=${!!pdfUrl}`);
             if (resendKey && email && pdfUrl) {
               const rres = await fetch("https://api.resend.com/emails", {
                 method: "POST",
@@ -238,13 +253,22 @@ Deno.serve(async (req) => {
                 }),
               });
               delivered = rres.ok;
+              if (!rres.ok) {
+                const body = await rres.text().catch(() => "");
+                console.error(`[free-report][${orderId}] resend_failed status=${rres.status} body=${body.slice(0, 300)}`);
+              } else {
+                console.error(`[free-report][${orderId}] resend_ok`);
+              }
             }
-          } catch (_) { /* non-fatal */ }
+          } catch (e) {
+            console.error(`[free-report][${orderId}] resend_exception err=${e instanceof Error ? e.message.slice(0, 300) : String(e).slice(0, 300)}`);
+          }
         }
 
         await supabase.from("love_match_orders")
           .update({ status: "delivered", pdf_url: pdfUrl, whatsapp_sent: delivered })
           .eq("order_id", orderId);
+        console.error(`[free-report][${orderId}] delivered pdf_set=${!!pdfUrl} email_sent=${delivered}`);
       } catch (err) {
         await markFail(err instanceof Error ? err.message.slice(0, 200) : "internal");
       }

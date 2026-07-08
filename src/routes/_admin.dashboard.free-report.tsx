@@ -155,10 +155,10 @@ function FreeReportPage() {
           <label className="mt-6 flex items-center gap-2 text-body-md text-on-surface">
             <input
               type="checkbox"
-              checked={sendWhatsapp}
-              onChange={(e) => setSendWhatsapp(e.target.checked)}
+              checked={sendEmail}
+              onChange={(e) => setSendEmail(e.target.checked)}
             />
-            Send PDF via WhatsApp (requires phone)
+            Send PDF via email (requires recipient email)
           </label>
         </div>
 

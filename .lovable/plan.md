@@ -1,72 +1,32 @@
-## Root cause of coupon creation failure (found)
+# Fix "Edge Function returned a non-2xx status code" on Free Report
 
-`public.coupon_codes.discount_type` has a CHECK constraint allowing only `'percentage'` or **`'flat'`** — but every other layer in the project uses **`'fixed'`**:
-- Admin UI: `<option value="fixed">` and defaults `discount_type: "fixed"`
-- `admin-upsert-coupon`: rejects anything that isn't `'percentage'` or `'fixed'`
-- `create-love-match-order` + `validate-coupon`: treat `'fixed'` as the flat-rupee branch
+## What's happening
 
-So every insert hits `coupon_codes_discount_type_check` and PostgREST returns 400. That's the "not working" error.
+The `admin-create-free-report` function does the full pipeline synchronously (Gemini prose + Browserless PDF + WhatsApp), which routinely takes 30–90 seconds. The Supabase Functions client / browser fetch cuts the request off well before that finishes, so the UI sees a non-2xx error even though the backend is still working (or has just started). Function logs only show `booted` — no thrown error — which matches "the client gave up on the response," not a code bug.
 
-Fix: replace the constraint with `CHECK (discount_type IN ('percentage','fixed'))`. Nothing else on the coupon side needs to change — `usage_count` increment, `validate-coupon`, admin CRUD, and the preview UI are already in place from the previous port.
+Rather than fight the client-side timeout, switch to the background-job pattern already recommended for long edge tasks.
 
-## Port the affiliate system
+## Plan
 
-Numerology's model, adapted 1:1 to Love Match:
+Use the existing `love_match_orders` row as the job record (it already has `status`, `pdf_url`, `failure_reason`, `whatsapp_sent`) — no new table needed.
 
-**Role + schema**
-- Add `'affiliate'` to `public.app_role` enum.
-- Add `coupon_codes.affiliate_user_id uuid` (nullable FK-style to `auth.users`, no hard FK).
-- Add `coupon_codes.created_by uuid` (audit).
-- New RLS policy: affiliates can SELECT their own coupons (`affiliate_user_id = auth.uid()`).
-- Add SELECT policy on `love_match_orders` for affiliates: rows whose `coupon_code` maps to a coupon they own. Uses a security-definer helper `is_affiliate_of_coupon(text)` to avoid a recursive RLS join.
+1. Refactor `supabase/functions/admin-create-free-report/index.ts`:
+   - Validate inputs.
+   - Insert the `love_match_orders` row with `status='paid'`, `final_price=0`, `coupon_code='ADMIN_FREE'`.
+   - Return `{ order_id }` immediately (200).
+   - Kick off the pipeline (facts → prose cache/Gemini → Browserless PDF → storage → optional AiSensy → update row to `delivered` / `failed`) inside `EdgeRuntime.waitUntil(...)` so the client isn't waiting on it.
+   - Any thrown error inside the background task writes `status='failed'` + `failure_reason` to the same row, so the UI can display it.
 
-**Admin surface**
-- Extend `admin-upsert-coupon` to accept optional `affiliate_user_id`, stamp `created_by = auth.uid()`.
-- Add `admin-list-affiliates` edge fn: returns `{ user_id, email }[]` for users with `affiliate` role (service-role read of `auth.users` joined to `user_roles`).
-- Extend `_admin.dashboard.coupons.tsx` editor with an "Affiliate" dropdown (loaded via that fn); show affiliate email in the table.
-- New admin route `_admin.dashboard.affiliates.tsx` — list affiliates, "+ Add affiliate" flow that creates a user (via existing password-reset-style admin fn OR new `admin-create-affiliate` that uses `supabaseAdmin.auth.admin.createUser` + inserts `user_roles` row). Same shape as numerology's admin-create-user.
-- Sidebar entry "Affiliates".
+2. Update `src/routes/_admin.dashboard.free-report.tsx`:
+   - On submit, call the function and receive `order_id`.
+   - Show a "Generating…" state and poll `love_match_orders` (via the supabase client) every 2s for `status`, `pdf_url`, `whatsapp_sent`, `failure_reason`.
+   - Stop polling when `status='delivered'` (show PDF link + WhatsApp status) or `status='failed'` (show the failure reason). Add a 3-minute overall cap that surfaces "Still generating — check the Orders page" if it hasn't finished by then.
+   - Read access is already granted: admins can select `love_match_orders` under the existing RLS policies.
 
-**Affiliate portal** (three routes, pathless layout that routes affiliates in and admins out — affiliates cannot see the admin dashboard, admins can view read-only)
-- `src/routes/_affiliate.tsx` — gate: `beforeLoad` checks `has_role(uid, 'affiliate')`; redirects non-affiliates to `/`. Sidebar layout with Home / My Coupons / My Sales.
-- `_affiliate.portal.index.tsx` — three stat cards (My Coupons count, Total Sales, Total Revenue) computed from `coupon_codes` where `affiliate_user_id = uid` joined against `love_match_orders` with matching `coupon_code` and `status='delivered'`.
-- `_affiliate.portal.coupons.tsx` — table of the affiliate's coupons with code / discount / usage / expiry / status badge; Copy Code and Copy Link (`window.location.origin/?coupon=CODE`) buttons.
-- `_affiliate.portal.sales.tsx` — sales table (date, customer first name from `person_a.first`, coupon code, original price, discount, final price) with a date-range filter; summary cards (count / revenue / discount).
+3. No changes to signature verification, paid pipeline, or `love-match-finalize`. No new tables, no config changes beyond what already exists for `admin-create-free-report`.
 
-**Post-signin routing**
-- After login on `/dashboard/login`, branch on role: admin → `/dashboard`, affiliate → `/portal`, otherwise stay/redirect home. Update the existing `_admin` gate to also permit affiliates to view — actually keep it admin-only; affiliates hit `/portal`.
+## Technical notes
 
-**Contract preserved**
-- Coupon validation and order flow already stamp `coupon_code` into `love_match_orders`; affiliate sales derive from that. No changes needed in `create-love-match-order`, `validate-coupon`, `love-match-finalize` (usage_count increment stays).
-
-### Not in scope
-- Payouts / commission tracking (numerology doesn't have it either — the portal is reporting only).
-- Affiliate self-signup — admin creates affiliates.
-- Language-picker on the share link (Love Match is English-only for now; a plain `?coupon=CODE` link is enough).
-
-### Files touched
-
-**Migration**
-- Replace `coupon_codes_discount_type_check` (percentage/flat → percentage/fixed).
-- `ALTER TYPE app_role ADD VALUE 'affiliate'`.
-- `ALTER TABLE coupon_codes ADD COLUMN affiliate_user_id uuid, ADD COLUMN created_by uuid`.
-- New RLS policies (affiliate SELECT on `coupon_codes`; affiliate SELECT on `love_match_orders` via `is_affiliate_of_coupon`).
-- `is_affiliate_of_coupon(text) RETURNS boolean SECURITY DEFINER`.
-
-**Edge functions**
-- Edit `supabase/functions/admin-upsert-coupon/index.ts` — accept `affiliate_user_id`, stamp `created_by`.
-- New `supabase/functions/admin-list-affiliates/index.ts`.
-- New `supabase/functions/admin-create-affiliate/index.ts`.
-- `supabase/config.toml` — register both new fns with `verify_jwt = true`.
-
-**Frontend**
-- Edit `src/routes/_admin.dashboard.coupons.tsx` — affiliate dropdown in editor, affiliate column in table.
-- Edit `src/components/admin/admin-sidebar.tsx` — "Affiliates" nav item.
-- New `src/routes/_admin.dashboard.affiliates.tsx`.
-- New `src/routes/_affiliate.tsx` (layout gate + sidebar).
-- New `src/routes/_affiliate.portal.index.tsx`.
-- New `src/routes/_affiliate.portal.coupons.tsx`.
-- New `src/routes/_affiliate.portal.sales.tsx`.
-- Edit `src/routes/dashboard.login.tsx` — role-based redirect after sign-in.
-
-Please confirm before I switch to build mode.
+- `EdgeRuntime.waitUntil` is available in the Supabase Edge Runtime (Deno) and lets the isolate keep running after the response is sent, up to the 150s wall-clock ceiling — enough headroom for one Gemini + one Browserless call.
+- The polling read uses the existing admin session; no new RLS work required.
+- Idempotency: because we insert the order row before returning, retries by the user will create separate orders (same as the paid flow). That is acceptable and keeps the code simple.

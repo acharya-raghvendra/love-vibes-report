@@ -87,12 +87,21 @@ async function generateProse(facts: unknown, language: string): Promise<Record<s
       generationConfig: { temperature: 0.4, responseMimeType: "application/json" },
     }),
   });
-  if (!res.ok) throw new Error("gemini_failed");
-  const data = await res.json();
-  let text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  const rawText = await res.text().catch(() => "");
+  if (!res.ok) {
+    throw new Error(`gemini_http status=${res.status} body=${rawText.slice(0, 500)}`);
+  }
+  let data: unknown;
+  try { data = JSON.parse(rawText); }
+  catch { throw new Error(`gemini_envelope_parse body=${rawText.slice(0, 500)}`); }
+  // deno-lint-ignore no-explicit-any
+  let text = (data as any)?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  if (!text) throw new Error(`gemini_empty_candidates body=${rawText.slice(0, 300)}`);
   text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
-  const parsed = JSON.parse(text);
-  return parsed.sections ?? parsed;
+  let parsed: Record<string, unknown>;
+  try { parsed = JSON.parse(text); }
+  catch { throw new Error(`gemini_content_parse body=${text.slice(0, 500)}`); }
+  return (parsed.sections as Record<string, string>) ?? (parsed as Record<string, string>);
 }
 function validateNoInventedNumbers(sections: Record<string, string>, allowed: Set<string>): boolean {
   const prose = Object.values(sections).join(" ");

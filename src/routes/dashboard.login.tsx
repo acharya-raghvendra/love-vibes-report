@@ -14,23 +14,32 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  async function routeByRole(userId: string) {
+    const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+    const roles = (data ?? []).map((r: { role: string }) => r.role);
+    if (roles.includes("admin")) navigate({ to: "/dashboard", replace: true });
+    else if (roles.includes("affiliate")) navigate({ to: "/portal", replace: true });
+    else navigate({ to: "/", replace: true });
+  }
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/dashboard", replace: true });
+      if (data.user) routeByRole(data.user.id);
     });
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) {
-      setError(error.message);
+    if (error || !data.user) {
+      setError(error?.message ?? "Sign in failed");
       return;
     }
-    navigate({ to: "/dashboard", replace: true });
+    routeByRole(data.user.id);
   }
 
   return (

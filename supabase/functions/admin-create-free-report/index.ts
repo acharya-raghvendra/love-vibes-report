@@ -135,22 +135,23 @@ Deno.serve(async (req) => {
     const aLast = cleanName(body?.person_a?.last);
     const aDob = validDob(body?.person_a?.dob);
     const phone = cleanPhone(body?.person_a?.phone);
+    const email = cleanEmail(body?.person_a?.email ?? body?.recipient_email);
     const bFirst = cleanName(body?.person_b?.first);
     const bLast = cleanName(body?.person_b?.last);
     const bDob = validDob(body?.person_b?.dob);
     const language = body.language === "hi" ? "hi" : "en";
-    const sendWhatsapp = body.send_whatsapp !== false;
+    const sendEmail = body.send_email !== false;
 
     if (!aFirst || !aDob) return new Response(JSON.stringify({ error: "person_a invalid" }), { status: 422, headers: J });
     if (!bFirst || !bDob) return new Response(JSON.stringify({ error: "person_b invalid" }), { status: 422, headers: J });
-    if (sendWhatsapp && phone.length < 10) return new Response(JSON.stringify({ error: "phone required to send WhatsApp" }), { status: 422, headers: J });
+    if (sendEmail && !email) return new Response(JSON.stringify({ error: "recipient email required" }), { status: 422, headers: J });
 
     const orderId = crypto.randomUUID();
     const refYear = new Date().getUTCFullYear();
 
     const { error: insErr } = await supabase.from("love_match_orders").insert({
       order_id: orderId,
-      person_a: { first: aFirst, last: aLast, dob: aDob, phone },
+      person_a: { first: aFirst, last: aLast, dob: aDob, phone, email },
       person_b: { first: bFirst, last: bLast, dob: bDob },
       language, ref_year: refYear, status: "paid",
       final_price: 0,

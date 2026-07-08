@@ -55,6 +55,8 @@ async function generateProse(facts: unknown, language: string): Promise<Record<s
   const system = [
     "You write a numerology Love Match report. You ONLY write prose from the facts given.",
     "You NEVER output a number not present in the facts. You never compute.",
+    "Do NOT mention raw points, weights, percentages, or scoring math. Do not say things like 'contributes X points' or 'weight of 0.3'.",
+    "For the Chemistry section, describe planet pairings using the provided planet names and relation label (e.g. 'Sun and Moon are friendly'). Do not invent numeric point values for pairings.",
     "Use display numbers; if isMaster, write like '2 (Master 11)'; compound like '19/1' only if it differs.",
     language === "hi"
       ? "Write in casual aam-bolchaal Hindi (Devanagari). Not heavy Sanskrit."

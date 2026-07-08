@@ -192,14 +192,19 @@ Deno.serve(async (req) => {
         if (cachedProse?.sections) sections = cachedProse.sections as Record<string, string>;
 
         if (!sections) {
+          const geminiKey = Deno.env.get("GEMINI_API_KEY") ?? "";
+          console.error(`[free-report][${orderId}] gemini_key_len=${geminiKey.length}`);
           const allowed = allowedNumberSet(result);
           for (let attempt = 0; attempt < 2 && !sections; attempt++) {
             try {
               const out = await generateProse(facts, language);
               if (validateNoInventedNumbers(out, allowed)) sections = out;
-              else console.error(`[free-report][${orderId}] gemini_validate_failed attempt=${attempt}`);
+              else {
+                const preview = Object.values(out).join(" ").slice(0, 300);
+                console.error(`[free-report][${orderId}] gemini_validate_failed attempt=${attempt} preview=${preview}`);
+              }
             } catch (e) {
-              console.error(`[free-report][${orderId}] gemini_call_failed attempt=${attempt} err=${e instanceof Error ? e.message.slice(0, 300) : String(e).slice(0, 300)}`);
+              console.error(`[free-report][${orderId}] gemini_call_failed attempt=${attempt} err=${e instanceof Error ? e.message.slice(0, 500) : String(e).slice(0, 500)}`);
             }
           }
           if (!sections) { await markFail("generation_failed"); return; }

@@ -350,7 +350,7 @@ function PreviewPage() {
         setPaying(false);
         return;
       }
-      const q = quote ?? (await createOrder(appliedCoupon));
+      const q = quote && quote.orderId ? quote : (await createOrder(appliedCoupon));
       if (!q) {
         showToast("Payment could not start. Try again.");
         setPaying(false);

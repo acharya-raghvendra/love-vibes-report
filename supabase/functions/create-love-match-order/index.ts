@@ -103,6 +103,9 @@ Deno.serve(async (req) => {
       person_a: { first: aFirst, last: cleanName(body?.person_a?.last), dob: aDob, phone },
       person_b: { first: bFirst, last: cleanName(body?.person_b?.last), dob: bDob },
       language, ref_year: refYear, status: "created",
+      final_price: finalAmount,
+      discount_applied: discountApplied,
+      coupon_code: couponCode,
     });
     if (insErr) return new Response(JSON.stringify({ error: "order create failed" }), { status: 500, headers: J });
 

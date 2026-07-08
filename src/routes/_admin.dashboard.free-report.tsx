@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_admin/dashboard/free-report")({
@@ -11,9 +11,9 @@ type Result = {
   status: string;
   pdf_url: string | null;
   whatsapp_sent: boolean;
-  score: number;
-  band: string;
+  failure_reason?: string | null;
 };
+
 
 function FreeReportPage() {
   const [aFirst, setAFirst] = useState("");

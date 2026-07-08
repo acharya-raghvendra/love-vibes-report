@@ -12,8 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SuccessRouteImport } from './routes/success'
 import { Route as PreviewRouteImport } from './routes/preview'
 import { Route as InputRouteImport } from './routes/input'
+import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
+import { Route as DashboardLoginRouteImport } from './routes/dashboard.login'
+import { Route as AdminDashboardRouteImport } from './routes/_admin.dashboard'
+import { Route as AdminDashboardIndexRouteImport } from './routes/_admin.dashboard.index'
+import { Route as AdminDashboardPricingRouteImport } from './routes/_admin.dashboard.pricing'
+import { Route as AdminDashboardOrdersRouteImport } from './routes/_admin.dashboard.orders'
+import { Route as AdminDashboardCouponsRouteImport } from './routes/_admin.dashboard.coupons'
 
 const SuccessRoute = SuccessRouteImport.update({
   id: '/success',
@@ -30,6 +37,10 @@ const InputRoute = InputRouteImport.update({
   path: '/input',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/_admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -40,42 +51,126 @@ const LegalSlugRoute = LegalSlugRouteImport.update({
   path: '/legal/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardLoginRoute = DashboardLoginRouteImport.update({
+  id: '/dashboard/login',
+  path: '/dashboard/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDashboardIndexRoute = AdminDashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminDashboardRoute,
+} as any)
+const AdminDashboardPricingRoute = AdminDashboardPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => AdminDashboardRoute,
+} as any)
+const AdminDashboardOrdersRoute = AdminDashboardOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AdminDashboardRoute,
+} as any)
+const AdminDashboardCouponsRoute = AdminDashboardCouponsRouteImport.update({
+  id: '/coupons',
+  path: '/coupons',
+  getParentRoute: () => AdminDashboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/input': typeof InputRoute
   '/preview': typeof PreviewRoute
   '/success': typeof SuccessRoute
+  '/dashboard': typeof AdminDashboardRouteWithChildren
+  '/dashboard/login': typeof DashboardLoginRoute
   '/legal/$slug': typeof LegalSlugRoute
+  '/dashboard/coupons': typeof AdminDashboardCouponsRoute
+  '/dashboard/orders': typeof AdminDashboardOrdersRoute
+  '/dashboard/pricing': typeof AdminDashboardPricingRoute
+  '/dashboard/': typeof AdminDashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/input': typeof InputRoute
   '/preview': typeof PreviewRoute
   '/success': typeof SuccessRoute
+  '/dashboard/login': typeof DashboardLoginRoute
   '/legal/$slug': typeof LegalSlugRoute
+  '/dashboard/coupons': typeof AdminDashboardCouponsRoute
+  '/dashboard/orders': typeof AdminDashboardOrdersRoute
+  '/dashboard/pricing': typeof AdminDashboardPricingRoute
+  '/dashboard': typeof AdminDashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_admin': typeof AdminRouteWithChildren
   '/input': typeof InputRoute
   '/preview': typeof PreviewRoute
   '/success': typeof SuccessRoute
+  '/_admin/dashboard': typeof AdminDashboardRouteWithChildren
+  '/dashboard/login': typeof DashboardLoginRoute
   '/legal/$slug': typeof LegalSlugRoute
+  '/_admin/dashboard/coupons': typeof AdminDashboardCouponsRoute
+  '/_admin/dashboard/orders': typeof AdminDashboardOrdersRoute
+  '/_admin/dashboard/pricing': typeof AdminDashboardPricingRoute
+  '/_admin/dashboard/': typeof AdminDashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/input' | '/preview' | '/success' | '/legal/$slug'
+  fullPaths:
+    | '/'
+    | '/input'
+    | '/preview'
+    | '/success'
+    | '/dashboard'
+    | '/dashboard/login'
+    | '/legal/$slug'
+    | '/dashboard/coupons'
+    | '/dashboard/orders'
+    | '/dashboard/pricing'
+    | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/input' | '/preview' | '/success' | '/legal/$slug'
-  id: '__root__' | '/' | '/input' | '/preview' | '/success' | '/legal/$slug'
+  to:
+    | '/'
+    | '/input'
+    | '/preview'
+    | '/success'
+    | '/dashboard/login'
+    | '/legal/$slug'
+    | '/dashboard/coupons'
+    | '/dashboard/orders'
+    | '/dashboard/pricing'
+    | '/dashboard'
+  id:
+    | '__root__'
+    | '/'
+    | '/_admin'
+    | '/input'
+    | '/preview'
+    | '/success'
+    | '/_admin/dashboard'
+    | '/dashboard/login'
+    | '/legal/$slug'
+    | '/_admin/dashboard/coupons'
+    | '/_admin/dashboard/orders'
+    | '/_admin/dashboard/pricing'
+    | '/_admin/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   InputRoute: typeof InputRoute
   PreviewRoute: typeof PreviewRoute
   SuccessRoute: typeof SuccessRoute
+  DashboardLoginRoute: typeof DashboardLoginRoute
   LegalSlugRoute: typeof LegalSlugRoute
 }
 
@@ -102,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InputRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_admin': {
+      id: '/_admin'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -116,14 +218,86 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/login': {
+      id: '/dashboard/login'
+      path: '/dashboard/login'
+      fullPath: '/dashboard/login'
+      preLoaderRoute: typeof DashboardLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_admin/dashboard': {
+      id: '/_admin/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/dashboard/': {
+      id: '/_admin/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof AdminDashboardIndexRouteImport
+      parentRoute: typeof AdminDashboardRoute
+    }
+    '/_admin/dashboard/pricing': {
+      id: '/_admin/dashboard/pricing'
+      path: '/pricing'
+      fullPath: '/dashboard/pricing'
+      preLoaderRoute: typeof AdminDashboardPricingRouteImport
+      parentRoute: typeof AdminDashboardRoute
+    }
+    '/_admin/dashboard/orders': {
+      id: '/_admin/dashboard/orders'
+      path: '/orders'
+      fullPath: '/dashboard/orders'
+      preLoaderRoute: typeof AdminDashboardOrdersRouteImport
+      parentRoute: typeof AdminDashboardRoute
+    }
+    '/_admin/dashboard/coupons': {
+      id: '/_admin/dashboard/coupons'
+      path: '/coupons'
+      fullPath: '/dashboard/coupons'
+      preLoaderRoute: typeof AdminDashboardCouponsRouteImport
+      parentRoute: typeof AdminDashboardRoute
+    }
   }
 }
 
+interface AdminDashboardRouteChildren {
+  AdminDashboardCouponsRoute: typeof AdminDashboardCouponsRoute
+  AdminDashboardOrdersRoute: typeof AdminDashboardOrdersRoute
+  AdminDashboardPricingRoute: typeof AdminDashboardPricingRoute
+  AdminDashboardIndexRoute: typeof AdminDashboardIndexRoute
+}
+
+const AdminDashboardRouteChildren: AdminDashboardRouteChildren = {
+  AdminDashboardCouponsRoute: AdminDashboardCouponsRoute,
+  AdminDashboardOrdersRoute: AdminDashboardOrdersRoute,
+  AdminDashboardPricingRoute: AdminDashboardPricingRoute,
+  AdminDashboardIndexRoute: AdminDashboardIndexRoute,
+}
+
+const AdminDashboardRouteWithChildren = AdminDashboardRoute._addFileChildren(
+  AdminDashboardRouteChildren,
+)
+
+interface AdminRouteChildren {
+  AdminDashboardRoute: typeof AdminDashboardRouteWithChildren
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminDashboardRoute: AdminDashboardRouteWithChildren,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   InputRoute: InputRoute,
   PreviewRoute: PreviewRoute,
   SuccessRoute: SuccessRoute,
+  DashboardLoginRoute: DashboardLoginRoute,
   LegalSlugRoute: LegalSlugRoute,
 }
 export const routeTree = rootRouteImport

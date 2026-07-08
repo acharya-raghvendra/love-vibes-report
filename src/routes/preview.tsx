@@ -640,9 +640,9 @@ function PreviewPage() {
                       >
                         ₹{quote.finalPrice}
                       </span>
-                      {quote.discountApplied > 0 && (
+                      {quote.listPrice > quote.finalPrice && (
                         <span className="text-label-sm text-on-surface-variant line-through">
-                          ₹{quote.originalPrice}
+                          ₹{quote.listPrice}
                         </span>
                       )}
                     </>

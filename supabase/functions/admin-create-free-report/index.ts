@@ -270,6 +270,7 @@ Deno.serve(async (req) => {
           .eq("order_id", orderId);
         console.error(`[free-report][${orderId}] delivered pdf_set=${!!pdfUrl} email_sent=${delivered}`);
       } catch (err) {
+        console.error(`[free-report][${orderId}] pipeline_exception err=${err instanceof Error ? err.message.slice(0, 300) : String(err).slice(0, 300)}`);
         await markFail(err instanceof Error ? err.message.slice(0, 200) : "internal");
       }
     };

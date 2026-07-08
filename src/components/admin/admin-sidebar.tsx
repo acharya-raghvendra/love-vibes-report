@@ -8,6 +8,7 @@ const items = [
   { to: "/dashboard/coupons", label: "Coupons", icon: "sell" },
   { to: "/dashboard/pricing", label: "Pricing", icon: "payments" },
   { to: "/dashboard/failures", label: "Delivery Failures", icon: "error" },
+  { to: "/dashboard/settings", label: "Settings", icon: "settings" },
 ] as const;
 
 export function AdminSidebar() {

@@ -66,7 +66,7 @@ function validDob(raw: unknown): string | null {
 async function generateProse(facts: unknown, language: string): Promise<Record<string, string>> {
   const key = Deno.env.get("GEMINI_API_KEY");
   if (!key) throw new Error("missing_gemini_key");
-  const model = "gemini-2.0-flash";
+  const model = "gemini-2.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
   const system = [
     "You write a numerology Love Match report. You ONLY write prose from the facts given.",
@@ -177,7 +177,6 @@ Deno.serve(async (req) => {
           .update({ status: "failed", failure_reason: reason }).eq("order_id", orderId);
       };
       try {
-        console.error(`[free-report][${orderId}] pipeline_start`);
         const result = scoreMatch(aFirst, aLast, aDob, bFirst, bLast, bDob, refYear);
         const facts = {
           language, score: result.score, band: result.band, shared: result.shared,
@@ -192,20 +191,12 @@ Deno.serve(async (req) => {
         if (cachedProse?.sections) sections = cachedProse.sections as Record<string, string>;
 
         if (!sections) {
-          const geminiKey = Deno.env.get("GEMINI_API_KEY") ?? "";
-          console.error(`[free-report][${orderId}] gemini_key_len=${geminiKey.length}`);
           const allowed = allowedNumberSet(result);
           for (let attempt = 0; attempt < 2 && !sections; attempt++) {
             try {
               const out = await generateProse(facts, language);
               if (validateNoInventedNumbers(out, allowed)) sections = out;
-              else {
-                const preview = Object.values(out).join(" ").slice(0, 300);
-                console.error(`[free-report][${orderId}] gemini_validate_failed attempt=${attempt} preview=${preview}`);
-              }
-            } catch (e) {
-              console.error(`[free-report][${orderId}] gemini_call_failed attempt=${attempt} err=${e instanceof Error ? e.message.slice(0, 500) : String(e).slice(0, 500)}`);
-            }
+            } catch (_) { /* retry */ }
           }
           if (!sections) { await markFail("generation_failed"); return; }
           await supabase.from("love_match_prose_cache").upsert({ prose_key: proseKey, sections });
@@ -214,7 +205,6 @@ Deno.serve(async (req) => {
         // PDF via Browserless.
         const printBase = Deno.env.get("LOVE_MATCH_PRINT_URL");
         const browserlessKey = Deno.env.get("BROWSERLESS_API_KEY");
-        console.error(`[free-report][${orderId}] pdf_config printBase_set=${!!printBase} browserlessKey_set=${!!browserlessKey}`);
         if (!printBase || !browserlessKey) { await markFail("pdf_config"); return; }
         const dataPayload = b64url(new TextEncoder().encode(JSON.stringify({ facts, sections })));
         const printUrl = `${printBase}?print=1#data=${dataPayload}`;
@@ -227,31 +217,24 @@ Deno.serve(async (req) => {
           },
         );
         if (!pdfRes.ok) {
-          const body = await pdfRes.text().catch(() => "");
-          console.error(`[free-report][${orderId}] browserless_failed status=${pdfRes.status} body=${body.slice(0, 300)}`);
           await markFail("pdf_failed");
           return;
         }
         const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
-        console.error(`[free-report][${orderId}] browserless_ok bytes=${pdfBytes.length}`);
         if (pdfBytes.length < 10240) { await markFail("pdf_too_small"); return; }
 
         const path = `love-match/${orderId}.pdf`;
-        const { error: upErr } = await supabase.storage.from("love-match-pdfs")
+        await supabase.storage.from("love-match-pdfs")
           .upload(path, pdfBytes, { contentType: "application/pdf", upsert: true });
-        if (upErr) console.error(`[free-report][${orderId}] storage_upload_failed msg=${upErr.message.slice(0, 300)}`);
-        const { data: signed, error: signErr } = await supabase.storage
+        const { data: signed } = await supabase.storage
           .from("love-match-pdfs").createSignedUrl(path, 60 * 60 * 24 * 30);
-        if (signErr) console.error(`[free-report][${orderId}] signed_url_failed msg=${signErr.message.slice(0, 300)}`);
         const pdfUrl = signed?.signedUrl ?? null;
-        console.error(`[free-report][${orderId}] pdf_url_ready=${!!pdfUrl}`);
 
         // Resend email delivery (optional).
         let delivered = false;
         if (sendEmail) {
           try {
             const resendKey = Deno.env.get("RESEND_API_KEY");
-            console.error(`[free-report][${orderId}] resend_precheck key_set=${!!resendKey} email_set=${!!email} pdf_set=${!!pdfUrl}`);
             if (resendKey && email && pdfUrl) {
               const rres = await fetch("https://api.resend.com/emails", {
                 method: "POST",
@@ -267,24 +250,14 @@ Deno.serve(async (req) => {
                 }),
               });
               delivered = rres.ok;
-              if (!rres.ok) {
-                const body = await rres.text().catch(() => "");
-                console.error(`[free-report][${orderId}] resend_failed status=${rres.status} body=${body.slice(0, 300)}`);
-              } else {
-                console.error(`[free-report][${orderId}] resend_ok`);
-              }
             }
-          } catch (e) {
-            console.error(`[free-report][${orderId}] resend_exception err=${e instanceof Error ? e.message.slice(0, 300) : String(e).slice(0, 300)}`);
-          }
+          } catch (_) { /* non-fatal */ }
         }
 
         await supabase.from("love_match_orders")
           .update({ status: "delivered", pdf_url: pdfUrl, whatsapp_sent: delivered })
           .eq("order_id", orderId);
-        console.error(`[free-report][${orderId}] delivered pdf_set=${!!pdfUrl} email_sent=${delivered}`);
       } catch (err) {
-        console.error(`[free-report][${orderId}] pipeline_exception err=${err instanceof Error ? err.message.slice(0, 300) : String(err).slice(0, 300)}`);
         await markFail(err instanceof Error ? err.message.slice(0, 200) : "internal");
       }
     };

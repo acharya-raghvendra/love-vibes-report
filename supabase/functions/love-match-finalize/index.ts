@@ -8,6 +8,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { scoreMatch, MatchResult } from "../_shared/engine/scorer.ts";
+import { buildReportHtml } from "../_shared/buildReportHtml.ts";
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 

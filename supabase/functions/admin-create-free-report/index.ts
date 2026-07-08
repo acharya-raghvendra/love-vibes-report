@@ -67,11 +67,11 @@ async function generateProse(facts: unknown, language: string): Promise<Record<s
   const key = Deno.env.get("GEMINI_API_KEY");
   if (!key) throw new Error("missing_gemini_key");
   const model = "gemini-2.5-flash";
-  console.error(`[free-report] gemini_model=${model}`);
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
   const system = [
     "You write a numerology Love Match report. You ONLY write prose from the facts given.",
     "You NEVER output a number not present in the facts. You never compute.",
+    "Do NOT mention raw points, weights, percentages, or scoring math. Do not say things like 'contributes X points' or 'weight of 0.3'.",
     "Use display numbers; if isMaster, write like '2 (Master 11)'; compound like '19/1' only if it differs.",
     language === "hi"
       ? "Write in casual aam-bolchaal Hindi (Devanagari). Not heavy Sanskrit."
@@ -89,41 +89,29 @@ async function generateProse(facts: unknown, language: string): Promise<Record<s
     }),
   });
   const rawText = await res.text().catch(() => "");
-  if (!res.ok) {
-    console.error(`[free-report] gemini_http status=${res.status} body=${rawText.slice(0, 500)}`);
-    throw new Error(`gemini_http status=${res.status} body=${rawText.slice(0, 500)}`);
-  }
+  if (!res.ok) throw new Error(`gemini_http status=${res.status} body=${rawText.slice(0, 300)}`);
   let data: unknown;
   try { data = JSON.parse(rawText); }
-  catch {
-    console.error(`[free-report] gemini_envelope_parse body=${rawText.slice(0, 500)}`);
-    throw new Error(`gemini_envelope_parse body=${rawText.slice(0, 500)}`);
-  }
+  catch { throw new Error(`gemini_envelope_parse body=${rawText.slice(0, 300)}`); }
   // deno-lint-ignore no-explicit-any
   let text = (data as any)?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-  if (!text) {
-    console.error(`[free-report] gemini_empty_candidates body=${rawText.slice(0, 300)}`);
-    throw new Error(`gemini_empty_candidates body=${rawText.slice(0, 300)}`);
-  }
+  if (!text) throw new Error(`gemini_empty_candidates body=${rawText.slice(0, 300)}`);
   text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
   let parsed: Record<string, unknown>;
   try { parsed = JSON.parse(text); }
-  catch {
-    console.error(`[free-report] gemini_content_parse body=${text.slice(0, 500)}`);
-    throw new Error(`gemini_content_parse body=${text.slice(0, 500)}`);
-  }
+  catch { throw new Error(`gemini_content_parse body=${text.slice(0, 300)}`); }
   return (parsed.sections as Record<string, string>) ?? (parsed as Record<string, string>);
 }
-function validateNoInventedNumbers(sections: Record<string, string>, allowed: Set<string>): string | null {
+function validateNoInventedNumbers(sections: Record<string, string>, allowed: Set<string>): boolean {
   const prose = Object.values(sections).join(" ");
   const nums = prose.match(/\d+/g) ?? [];
   for (const n of nums) {
     if (allowed.has(n)) continue;
     if (/^(19|20)\d\d$/.test(n)) continue;
     if (n.length >= 4) continue;
-    return n;
+    return false;
   }
-  return null;
+  return true;
 }
 function allowedNumberSet(r: MatchResult): Set<string> {
   const s = new Set<string>();
@@ -191,7 +179,7 @@ Deno.serve(async (req) => {
         const result = scoreMatch(aFirst, aLast, aDob, bFirst, bLast, bDob, refYear);
         const facts = {
           language, score: result.score, band: result.band, shared: result.shared,
-          person_a: result.a, person_b: result.b, breakdown: result.breakdown,
+          person_a: result.a, person_b: result.b,
         };
 
         // Prose cache.
@@ -206,12 +194,7 @@ Deno.serve(async (req) => {
           for (let attempt = 0; attempt < 2 && !sections; attempt++) {
             try {
               const out = await generateProse(facts, language);
-              const invented = validateNoInventedNumbers(out, allowed);
-              if (invented === null) {
-                sections = out;
-              } else {
-                console.error(`[free-report] gemini_invented_number attempt=${attempt + 1} n=${invented} allowed=${Array.from(allowed).join(",")} preview=${Object.values(out).join(" ").slice(0, 800)}`);
-              }
+              if (validateNoInventedNumbers(out, allowed)) sections = out;
             } catch (_) { /* retry */ }
           }
           if (!sections) { await markFail("generation_failed"); return; }

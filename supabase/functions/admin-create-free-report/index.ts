@@ -66,7 +66,7 @@ function validDob(raw: unknown): string | null {
 async function generateProse(facts: unknown, language: string): Promise<Record<string, string>> {
   const key = Deno.env.get("GEMINI_API_KEY");
   if (!key) throw new Error("missing_gemini_key");
-  const model = "gemini-2.0-flash";
+  const model = "gemini-2.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
   const system = [
     "You write a numerology Love Match report. You ONLY write prose from the facts given.",

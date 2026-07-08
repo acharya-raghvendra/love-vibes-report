@@ -16,8 +16,10 @@ export type Database = {
     Tables: {
       coupon_codes: {
         Row: {
+          affiliate_user_id: string | null
           code: string
           created_at: string
+          created_by: string | null
           discount_amount: number
           discount_type: string
           expires_at: string | null
@@ -27,8 +29,10 @@ export type Database = {
           usage_count: number
         }
         Insert: {
+          affiliate_user_id?: string | null
           code: string
           created_at?: string
+          created_by?: string | null
           discount_amount: number
           discount_type: string
           expires_at?: string | null
@@ -38,8 +42,10 @@ export type Database = {
           usage_count?: number
         }
         Update: {
+          affiliate_user_id?: string | null
           code?: string
           created_at?: string
+          created_by?: string | null
           discount_amount?: number
           discount_type?: string
           expires_at?: string | null
@@ -195,6 +201,7 @@ export type Database = {
         Returns: boolean
       }
       increment_coupon_usage: { Args: { _code: string }; Returns: undefined }
+      is_affiliate_of_coupon: { Args: { _code: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user" | "affiliate"

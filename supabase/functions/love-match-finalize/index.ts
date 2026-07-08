@@ -186,10 +186,31 @@ Deno.serve(async (req: Request) => {
     const refYear = order.ref_year ?? new Date().getUTCFullYear();
     const result = scoreMatch(a.first, a.last, a.dob, b.first, b.last, b.dob, refYear);
 
+    const PLANETS: Record<number, string> = {
+      1: "Sun", 2: "Moon", 3: "Jupiter", 4: "Rahu", 5: "Mercury",
+      6: "Venus", 7: "Ketu", 8: "Saturn", 9: "Mars",
+    };
+    const relationLabel = (points: number): string => {
+      if (points >= 100) return "harmonious";
+      if (points >= 75) return "friendly";
+      if (points >= 50) return "neutral";
+      if (points >= 35) return "strained";
+      return "clashing";
+    };
+    const pairLabel = (k: string): string =>
+      k === "lifePath" ? "Life Path" : k === "soulUrge" ? "Soul Urge"
+      : k === "personality" ? "Personality" : "Destiny";
+    const chemistry = result.breakdown.map((p) => ({
+      pair: pairLabel(p.key),
+      a_planet: PLANETS[p.aScore] ?? "",
+      b_planet: PLANETS[p.bScore] ?? "",
+      relation: relationLabel(p.points),
+    }));
+
     const facts = {
       language: order.language,
       score: result.score, band: result.band, shared: result.shared,
-      person_a: result.a, person_b: result.b, breakdown: result.breakdown,
+      person_a: result.a, person_b: result.b, chemistry,
     };
 
     // 4. Prose cache.

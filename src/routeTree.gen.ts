@@ -18,7 +18,6 @@ import { Route as InputRouteImport } from './routes/input'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
 import { Route as DashboardLoginRouteImport } from './routes/dashboard.login'
 import { Route as AdminDashboardRouteImport } from './routes/_admin.dashboard'
 import { Route as AdminDashboardIndexRouteImport } from './routes/_admin.dashboard.index'
@@ -71,11 +70,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LegalSlugRoute = LegalSlugRouteImport.update({
-  id: '/legal/$slug',
-  path: '/legal/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardLoginRoute = DashboardLoginRouteImport.update({
   id: '/dashboard/login',
   path: '/dashboard/login',
@@ -123,7 +117,6 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/dashboard': typeof AdminDashboardRouteWithChildren
   '/dashboard/login': typeof DashboardLoginRoute
-  '/legal/$slug': typeof LegalSlugRoute
   '/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/dashboard/failures': typeof AdminDashboardFailuresRoute
   '/dashboard/orders': typeof AdminDashboardOrdersRoute
@@ -140,7 +133,6 @@ export interface FileRoutesByTo {
   '/success': typeof SuccessRoute
   '/terms': typeof TermsRoute
   '/dashboard/login': typeof DashboardLoginRoute
-  '/legal/$slug': typeof LegalSlugRoute
   '/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/dashboard/failures': typeof AdminDashboardFailuresRoute
   '/dashboard/orders': typeof AdminDashboardOrdersRoute
@@ -160,7 +152,6 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_admin/dashboard': typeof AdminDashboardRouteWithChildren
   '/dashboard/login': typeof DashboardLoginRoute
-  '/legal/$slug': typeof LegalSlugRoute
   '/_admin/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/_admin/dashboard/failures': typeof AdminDashboardFailuresRoute
   '/_admin/dashboard/orders': typeof AdminDashboardOrdersRoute
@@ -180,7 +171,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/dashboard'
     | '/dashboard/login'
-    | '/legal/$slug'
     | '/dashboard/coupons'
     | '/dashboard/failures'
     | '/dashboard/orders'
@@ -197,7 +187,6 @@ export interface FileRouteTypes {
     | '/success'
     | '/terms'
     | '/dashboard/login'
-    | '/legal/$slug'
     | '/dashboard/coupons'
     | '/dashboard/failures'
     | '/dashboard/orders'
@@ -216,7 +205,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/_admin/dashboard'
     | '/dashboard/login'
-    | '/legal/$slug'
     | '/_admin/dashboard/coupons'
     | '/_admin/dashboard/failures'
     | '/_admin/dashboard/orders'
@@ -235,7 +223,6 @@ export interface RootRouteChildren {
   SuccessRoute: typeof SuccessRoute
   TermsRoute: typeof TermsRoute
   DashboardLoginRoute: typeof DashboardLoginRoute
-  LegalSlugRoute: typeof LegalSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -301,13 +288,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/legal/$slug': {
-      id: '/legal/$slug'
-      path: '/legal/$slug'
-      fullPath: '/legal/$slug'
-      preLoaderRoute: typeof LegalSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/login': {
@@ -403,7 +383,6 @@ const rootRouteChildren: RootRouteChildren = {
   SuccessRoute: SuccessRoute,
   TermsRoute: TermsRoute,
   DashboardLoginRoute: DashboardLoginRoute,
-  LegalSlugRoute: LegalSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

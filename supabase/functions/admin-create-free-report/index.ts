@@ -67,11 +67,11 @@ async function generateProse(facts: unknown, language: string): Promise<Record<s
   const key = Deno.env.get("GEMINI_API_KEY");
   if (!key) throw new Error("missing_gemini_key");
   const model = "gemini-2.5-flash";
-  console.error(`[free-report] gemini_model=${model}`);
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
   const system = [
     "You write a numerology Love Match report. You ONLY write prose from the facts given.",
     "You NEVER output a number not present in the facts. You never compute.",
+    "Do NOT mention raw points, weights, percentages, or scoring math. Do not say things like 'contributes X points' or 'weight of 0.3'.",
     "Use display numbers; if isMaster, write like '2 (Master 11)'; compound like '19/1' only if it differs.",
     language === "hi"
       ? "Write in casual aam-bolchaal Hindi (Devanagari). Not heavy Sanskrit."
@@ -89,29 +89,17 @@ async function generateProse(facts: unknown, language: string): Promise<Record<s
     }),
   });
   const rawText = await res.text().catch(() => "");
-  if (!res.ok) {
-    console.error(`[free-report] gemini_http status=${res.status} body=${rawText.slice(0, 500)}`);
-    throw new Error(`gemini_http status=${res.status} body=${rawText.slice(0, 500)}`);
-  }
+  if (!res.ok) throw new Error(`gemini_http status=${res.status} body=${rawText.slice(0, 300)}`);
   let data: unknown;
   try { data = JSON.parse(rawText); }
-  catch {
-    console.error(`[free-report] gemini_envelope_parse body=${rawText.slice(0, 500)}`);
-    throw new Error(`gemini_envelope_parse body=${rawText.slice(0, 500)}`);
-  }
+  catch { throw new Error(`gemini_envelope_parse body=${rawText.slice(0, 300)}`); }
   // deno-lint-ignore no-explicit-any
   let text = (data as any)?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-  if (!text) {
-    console.error(`[free-report] gemini_empty_candidates body=${rawText.slice(0, 300)}`);
-    throw new Error(`gemini_empty_candidates body=${rawText.slice(0, 300)}`);
-  }
+  if (!text) throw new Error(`gemini_empty_candidates body=${rawText.slice(0, 300)}`);
   text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
   let parsed: Record<string, unknown>;
   try { parsed = JSON.parse(text); }
-  catch {
-    console.error(`[free-report] gemini_content_parse body=${text.slice(0, 500)}`);
-    throw new Error(`gemini_content_parse body=${text.slice(0, 500)}`);
-  }
+  catch { throw new Error(`gemini_content_parse body=${text.slice(0, 300)}`); }
   return (parsed.sections as Record<string, string>) ?? (parsed as Record<string, string>);
 }
 function validateNoInventedNumbers(sections: Record<string, string>, allowed: Set<string>): string | null {

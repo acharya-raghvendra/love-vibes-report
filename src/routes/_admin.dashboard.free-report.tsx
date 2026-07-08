@@ -10,7 +10,7 @@ type Result = {
   order_id: string;
   status: string;
   pdf_url: string | null;
-  whatsapp_sent: boolean;
+  email_sent: boolean;
   failure_reason?: string | null;
 };
 

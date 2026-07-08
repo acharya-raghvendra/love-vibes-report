@@ -241,7 +241,7 @@ Deno.serve(async (req: Request) => {
       } catch (_) { /* non-fatal */ }
     }
 
-    return ok({ order_id: orderId, status: "delivered", pdf_url: pdfUrl, whatsapp_sent: whatsappSent });
+    return ok({ order_id: orderId, status: "delivered", pdf_url: pdfUrl, whatsapp_sent: delivered });
   } catch (_err) {
     return ok({ error: "internal" }, 500);
   }

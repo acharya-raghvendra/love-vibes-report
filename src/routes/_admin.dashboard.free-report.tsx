@@ -221,7 +221,7 @@ function FreeReportPage() {
           )}
           {result.status === "delivered" && (
             <div className="text-body-sm text-on-surface-variant">
-              WhatsApp: {result.whatsapp_sent ? "sent" : "not sent"}
+              Email: {result.email_sent ? "sent" : "not sent"}
             </div>
           )}
         </div>

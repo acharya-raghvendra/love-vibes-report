@@ -29,6 +29,7 @@ import { Route as AffiliatePortalCouponsRouteImport } from './routes/_affiliate.
 import { Route as AdminDashboardSettingsRouteImport } from './routes/_admin.dashboard.settings'
 import { Route as AdminDashboardPricingRouteImport } from './routes/_admin.dashboard.pricing'
 import { Route as AdminDashboardOrdersRouteImport } from './routes/_admin.dashboard.orders'
+import { Route as AdminDashboardFreeReportRouteImport } from './routes/_admin.dashboard.free-report'
 import { Route as AdminDashboardFailuresRouteImport } from './routes/_admin.dashboard.failures'
 import { Route as AdminDashboardCouponsRouteImport } from './routes/_admin.dashboard.coupons'
 import { Route as AdminDashboardAffiliatesRouteImport } from './routes/_admin.dashboard.affiliates'
@@ -131,6 +132,12 @@ const AdminDashboardOrdersRoute = AdminDashboardOrdersRouteImport.update({
   path: '/orders',
   getParentRoute: () => AdminDashboardRoute,
 } as any)
+const AdminDashboardFreeReportRoute =
+  AdminDashboardFreeReportRouteImport.update({
+    id: '/free-report',
+    path: '/free-report',
+    getParentRoute: () => AdminDashboardRoute,
+  } as any)
 const AdminDashboardFailuresRoute = AdminDashboardFailuresRouteImport.update({
   id: '/failures',
   path: '/failures',
@@ -163,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/affiliates': typeof AdminDashboardAffiliatesRoute
   '/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/dashboard/failures': typeof AdminDashboardFailuresRoute
+  '/dashboard/free-report': typeof AdminDashboardFreeReportRoute
   '/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/dashboard/pricing': typeof AdminDashboardPricingRoute
   '/dashboard/settings': typeof AdminDashboardSettingsRoute
@@ -184,6 +192,7 @@ export interface FileRoutesByTo {
   '/dashboard/affiliates': typeof AdminDashboardAffiliatesRoute
   '/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/dashboard/failures': typeof AdminDashboardFailuresRoute
+  '/dashboard/free-report': typeof AdminDashboardFreeReportRoute
   '/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/dashboard/pricing': typeof AdminDashboardPricingRoute
   '/dashboard/settings': typeof AdminDashboardSettingsRoute
@@ -210,6 +219,7 @@ export interface FileRoutesById {
   '/_admin/dashboard/affiliates': typeof AdminDashboardAffiliatesRoute
   '/_admin/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/_admin/dashboard/failures': typeof AdminDashboardFailuresRoute
+  '/_admin/dashboard/free-report': typeof AdminDashboardFreeReportRoute
   '/_admin/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/_admin/dashboard/pricing': typeof AdminDashboardPricingRoute
   '/_admin/dashboard/settings': typeof AdminDashboardSettingsRoute
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/dashboard/affiliates'
     | '/dashboard/coupons'
     | '/dashboard/failures'
+    | '/dashboard/free-report'
     | '/dashboard/orders'
     | '/dashboard/pricing'
     | '/dashboard/settings'
@@ -256,6 +267,7 @@ export interface FileRouteTypes {
     | '/dashboard/affiliates'
     | '/dashboard/coupons'
     | '/dashboard/failures'
+    | '/dashboard/free-report'
     | '/dashboard/orders'
     | '/dashboard/pricing'
     | '/dashboard/settings'
@@ -281,6 +293,7 @@ export interface FileRouteTypes {
     | '/_admin/dashboard/affiliates'
     | '/_admin/dashboard/coupons'
     | '/_admin/dashboard/failures'
+    | '/_admin/dashboard/free-report'
     | '/_admin/dashboard/orders'
     | '/_admin/dashboard/pricing'
     | '/_admin/dashboard/settings'
@@ -446,6 +459,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardOrdersRouteImport
       parentRoute: typeof AdminDashboardRoute
     }
+    '/_admin/dashboard/free-report': {
+      id: '/_admin/dashboard/free-report'
+      path: '/free-report'
+      fullPath: '/dashboard/free-report'
+      preLoaderRoute: typeof AdminDashboardFreeReportRouteImport
+      parentRoute: typeof AdminDashboardRoute
+    }
     '/_admin/dashboard/failures': {
       id: '/_admin/dashboard/failures'
       path: '/failures'
@@ -474,6 +494,7 @@ interface AdminDashboardRouteChildren {
   AdminDashboardAffiliatesRoute: typeof AdminDashboardAffiliatesRoute
   AdminDashboardCouponsRoute: typeof AdminDashboardCouponsRoute
   AdminDashboardFailuresRoute: typeof AdminDashboardFailuresRoute
+  AdminDashboardFreeReportRoute: typeof AdminDashboardFreeReportRoute
   AdminDashboardOrdersRoute: typeof AdminDashboardOrdersRoute
   AdminDashboardPricingRoute: typeof AdminDashboardPricingRoute
   AdminDashboardSettingsRoute: typeof AdminDashboardSettingsRoute
@@ -484,6 +505,7 @@ const AdminDashboardRouteChildren: AdminDashboardRouteChildren = {
   AdminDashboardAffiliatesRoute: AdminDashboardAffiliatesRoute,
   AdminDashboardCouponsRoute: AdminDashboardCouponsRoute,
   AdminDashboardFailuresRoute: AdminDashboardFailuresRoute,
+  AdminDashboardFreeReportRoute: AdminDashboardFreeReportRoute,
   AdminDashboardOrdersRoute: AdminDashboardOrdersRoute,
   AdminDashboardPricingRoute: AdminDashboardPricingRoute,
   AdminDashboardSettingsRoute: AdminDashboardSettingsRoute,

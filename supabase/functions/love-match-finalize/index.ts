@@ -206,29 +206,31 @@ Deno.serve(async (req: Request) => {
       .from("love-match-pdfs").createSignedUrl(path, 60 * 60 * 24 * 30); // 30 days
     const pdfUrl = signed?.signedUrl ?? null;
 
-    // 8. AiSensy send (best-effort; delivery status tracked on order).
-    let whatsappSent = false;
+    // 8. Resend email delivery (best-effort; delivered flag tracked on order).
+    let delivered = false;
     try {
-      const aisensyKey = Deno.env.get("AISENSY_API_KEY");
-      const phone = order.person_a?.phone ?? null;
-      if (aisensyKey && phone && pdfUrl) {
-        const wres = await fetch("https://backend.aisensy.com/campaign/t1/api/v2", {
+      const resendKey = Deno.env.get("RESEND_API_KEY");
+      const toEmail = order.person_a?.email ?? null;
+      if (resendKey && toEmail && pdfUrl) {
+        const rres = await fetch("https://api.resend.com/emails", {
           method: "POST",
-          headers: JSON_HEADERS,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${resendKey}`,
+          },
           body: JSON.stringify({
-            apiKey: aisensyKey,
-            campaignName: "love_match_delivery",
-            destination: phone,
-            userName: order.person_a.first,
-            media: { url: pdfUrl, filename: "Love-Match-Report.pdf" },
+            from: "TalkToGuruji <alerts@update.talktoguruji.com>",
+            to: [toEmail],
+            subject: "Your Love Match Report is ready — TalkToGuruji",
+            html: buildReportEmailHtml(order.person_a?.first ?? "", pdfUrl),
           }),
         });
-        whatsappSent = wres.ok;
+        delivered = rres.ok;
       }
     } catch (_) { /* non-fatal; URL still stored */ }
 
     await supabase.from("love_match_orders")
-      .update({ status: "delivered", pdf_url: pdfUrl, whatsapp_sent: whatsappSent })
+      .update({ status: "delivered", pdf_url: pdfUrl, whatsapp_sent: delivered })
       .eq("order_id", orderId);
 
     // Bump coupon usage_count post-delivery (non-fatal). The status-guard above

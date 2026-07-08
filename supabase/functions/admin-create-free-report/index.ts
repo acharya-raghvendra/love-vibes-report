@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
         const result = scoreMatch(aFirst, aLast, aDob, bFirst, bLast, bDob, refYear);
         const facts = {
           language, score: result.score, band: result.band, shared: result.shared,
-          person_a: result.a, person_b: result.b, breakdown: result.breakdown,
+          person_a: result.a, person_b: result.b,
         };
 
         // Prose cache.
@@ -194,12 +194,7 @@ Deno.serve(async (req) => {
           for (let attempt = 0; attempt < 2 && !sections; attempt++) {
             try {
               const out = await generateProse(facts, language);
-              const invented = validateNoInventedNumbers(out, allowed);
-              if (invented === null) {
-                sections = out;
-              } else {
-                console.error(`[free-report] gemini_invented_number attempt=${attempt + 1} n=${invented} allowed=${Array.from(allowed).join(",")} preview=${Object.values(out).join(" ").slice(0, 800)}`);
-              }
+              if (validateNoInventedNumbers(out, allowed)) sections = out;
             } catch (_) { /* retry */ }
           }
           if (!sections) { await markFail("generation_failed"); return; }

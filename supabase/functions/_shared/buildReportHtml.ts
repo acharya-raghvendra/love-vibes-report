@@ -148,6 +148,9 @@ export function buildReportHtml(facts: Facts, sections: Record<string, unknown>)
     + `<div class="byline"><span class="hair"></span><span class="by serif">by</span><span class="hair"></span></div>`
     + `<div class="logo-chip"><img src="${LOGO_URL}" alt="TalkToGuruji"/></div>`
     + `</div>`
+    + `<div class="cover-disc">${hi
+      ? "यह report सिर्फ़ guidance और self-reflection के लिए numerology पर आधारित है. किसी नतीजे की guarantee नहीं, और professional advice का विकल्प नहीं."
+      : "This report is based on numerology for guidance and self-reflection only. It is not a guarantee of any outcome, nor a substitute for professional advice."}</div>`
     + `</div>`;
 
   // s1 score
@@ -230,6 +233,50 @@ export function buildReportHtml(facts: Facts, sections: Record<string, unknown>)
     + `<div class="up-sub">${esc(up.sub)}</div>`
     + `<a class="up-cta" href="https://numerology.talktoguruji.com?coupon=LOVE">${esc(up.cta)}</a>`
     + `<div class="up-note">${esc(up.note)}</div>`
+    + `</div>`
+    + frun(++pg, hi) + `</div>`;
+
+  // Final disclaimer page
+  const dc = hi ? {
+    title: "ज़रूरी Disclaimer",
+    lead: "यह आपकी personalized Love Match reading है, जो आप दोनों की numerology को दर्शाती है.",
+    items: [
+      "यह report numerology के सिद्धांतों और symbolic व्याख्या पर आधारित है.",
+      "इसकी insights सिर्फ़ समझ, awareness और guidance के लिए हैं.",
+      "यह आपके रिश्ते में किसी guaranteed नतीजे की भविष्यवाणी नहीं है.",
+      "नतीजे आपकी अपनी choices, actions और परिस्थितियों पर निर्भर करते हैं.",
+      "Accuracy आपके दिए गए नामों और जन्म तिथियों पर निर्भर करती है.",
+      "यह legal, medical, financial या psychological सलाह नहीं है.",
+      "बड़े रिश्ते के फ़ैसले आपकी अपनी समझ या किसी qualified professional पर आधारित होने चाहिए.",
+      "इस report के आधार पर लिए गए फ़ैसलों के लिए creators और brand ज़िम्मेदार नहीं हैं.",
+      "Digital report deliver होने के बाद कोई refund नहीं मिलेगा.",
+    ],
+    close: "Numerology self-reflection के लिए एक पारंपरिक framework है. इस reading को एक tool की तरह इस्तेमाल करें ताकि आप ख़ुद को और एक-दूसरे को ज़्यादा awareness के साथ समझ सकें.",
+    co: "Inno-One Service LLP",
+  } : {
+    title: "Important Disclaimer",
+    lead: "This is your personalized Love Match reading, reflecting the numerology of you both.",
+    items: [
+      "This report is based on numerology principles and symbolic interpretation.",
+      "The insights are meant for understanding, awareness, and guidance only.",
+      "This is not a prediction of guaranteed outcomes in your relationship.",
+      "Results may vary based on your own choices, actions, and circumstances.",
+      "Accuracy depends on the names and birth dates you provided.",
+      "This is not legal, medical, financial, or psychological advice.",
+      "Major relationship decisions should rest on your own judgment or a qualified professional.",
+      "The creators and brand are not responsible for decisions taken solely based on this report.",
+      "No refunds once the digital report has been delivered.",
+    ],
+    close: "Numerology is a traditional framework for self-reflection. Use this reading as a tool to understand yourselves and each other with greater awareness.",
+    co: "Inno-One Service LLP",
+  };
+  pages += `<div class="page">`
+    + `<div class="disc-card">`
+    + `<div class="disc-title">${esc(dc.title)}</div>`
+    + `<div class="disc-lead">${esc(dc.lead)}</div>`
+    + `<ul class="disc-list">${dc.items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>`
+    + `<div class="disc-close">${esc(dc.close)}</div>`
+    + `<div class="disc-co">${esc(dc.co)}</div>`
     + `</div>`
     + frun(++pg, hi) + `</div>`;
 
@@ -328,5 +375,14 @@ p.body b{color:var(--ink);}
 .upsell .up-sub{font-size:12.5px;color:var(--soft);margin-top:4px;}
 .upsell .up-cta{display:inline-block;margin-top:16px;background:var(--coral);color:#fff;font-weight:600;font-size:13px;text-decoration:none;padding:11px 26px;border-radius:24px;letter-spacing:.02em;}
 .upsell .up-note{font-size:10.5px;color:var(--muted);margin-top:10px;}
+.cover-disc{margin-top:16px;max-width:78%;font-size:9px;line-height:1.55;color:rgba(120,70,64,.55);border:1px solid rgba(120,70,64,.18);border-radius:8px;padding:9px 14px;background:rgba(255,255,255,.28);}
+.disc-card{border:1px solid var(--line);border-radius:18px;padding:24px 26px;background:#fff;box-shadow:0 2px 0 var(--blush);}
+.disc-title{font-size:20px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:9px;}
+.disc-lead{color:var(--coral-dk);font-weight:600;font-size:13px;line-height:1.6;margin:12px 0 14px;}
+.disc-list{list-style:none;margin:0;padding:0;}
+.disc-list li{position:relative;padding:6px 0 6px 18px;font-size:11.5px;line-height:1.6;color:var(--soft);border-bottom:1px dotted var(--line);}
+.disc-list li::before{content:"•";position:absolute;left:2px;color:var(--coral);}
+.disc-close{margin-top:14px;font-size:11.5px;line-height:1.7;color:var(--soft);font-style:italic;}
+.disc-co{margin-top:14px;font-size:10px;color:var(--muted);letter-spacing:.04em;}
 </style></head><body class="${hi ? "hi" : ""}">${pages}</body></html>`;
 }

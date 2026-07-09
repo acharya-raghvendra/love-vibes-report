@@ -247,7 +247,8 @@ body.hi .serif{font-family:'Fraunces','Noto Sans Devanagari',serif;}
 .cover .byline{display:flex;align-items:center;gap:12px;}
 .cover .byline .hair{width:34px;height:1px;background:rgba(120,70,64,.4);}
 .cover .byline .by{font-style:italic;font-size:15px;color:rgba(120,70,64,.75);letter-spacing:.06em;}
-.cover .signoff img{height:34px;object-fit:contain;opacity:.92;}
+.cover .logo-chip{background:rgba(255,255,255,.92);border-radius:14px;padding:12px 22px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(120,70,64,.10);}
+.cover .signoff img{height:44px;object-fit:contain;opacity:1;}
 .eyebrow-s{display:flex;align-items:center;gap:8px;color:var(--coral);letter-spacing:.16em;font-size:10px;text-transform:uppercase;font-weight:700;}
 h2.sec{font-size:29px;font-weight:500;margin:10px 0 0;line-height:1.12;color:var(--ink);}
 .rule{width:40px;height:3px;background:var(--coral);margin:14px 0 22px;border-radius:3px;}

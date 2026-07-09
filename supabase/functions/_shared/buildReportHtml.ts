@@ -236,6 +236,50 @@ export function buildReportHtml(facts: Facts, sections: Record<string, unknown>)
     + `</div>`
     + frun(++pg, hi) + `</div>`;
 
+  // Final disclaimer page
+  const dc = hi ? {
+    title: "ज़रूरी Disclaimer",
+    lead: "यह आपकी personalized Love Match reading है, जो आप दोनों की numerology को दर्शाती है.",
+    items: [
+      "यह report numerology के सिद्धांतों और symbolic व्याख्या पर आधारित है.",
+      "इसकी insights सिर्फ़ समझ, awareness और guidance के लिए हैं.",
+      "यह आपके रिश्ते में किसी guaranteed नतीजे की भविष्यवाणी नहीं है.",
+      "नतीजे आपकी अपनी choices, actions और परिस्थितियों पर निर्भर करते हैं.",
+      "Accuracy आपके दिए गए नामों और जन्म तिथियों पर निर्भर करती है.",
+      "यह legal, medical, financial या psychological सलाह नहीं है.",
+      "बड़े रिश्ते के फ़ैसले आपकी अपनी समझ या किसी qualified professional पर आधारित होने चाहिए.",
+      "इस report के आधार पर लिए गए फ़ैसलों के लिए creators और brand ज़िम्मेदार नहीं हैं.",
+      "Digital report deliver होने के बाद कोई refund नहीं मिलेगा.",
+    ],
+    close: "Numerology self-reflection के लिए एक पारंपरिक framework है. इस reading को एक tool की तरह इस्तेमाल करें ताकि आप ख़ुद को और एक-दूसरे को ज़्यादा awareness के साथ समझ सकें.",
+    co: "Inno-One Service LLP",
+  } : {
+    title: "Important Disclaimer",
+    lead: "This is your personalized Love Match reading, reflecting the numerology of you both.",
+    items: [
+      "This report is based on numerology principles and symbolic interpretation.",
+      "The insights are meant for understanding, awareness, and guidance only.",
+      "This is not a prediction of guaranteed outcomes in your relationship.",
+      "Results may vary based on your own choices, actions, and circumstances.",
+      "Accuracy depends on the names and birth dates you provided.",
+      "This is not legal, medical, financial, or psychological advice.",
+      "Major relationship decisions should rest on your own judgment or a qualified professional.",
+      "The creators and brand are not responsible for decisions taken solely based on this report.",
+      "No refunds once the digital report has been delivered.",
+    ],
+    close: "Numerology is a traditional framework for self-reflection. Use this reading as a tool to understand yourselves and each other with greater awareness.",
+    co: "Inno-One Service LLP",
+  };
+  pages += `<div class="page">`
+    + `<div class="disc-card">`
+    + `<div class="disc-title">${esc(dc.title)}</div>`
+    + `<div class="disc-lead">${esc(dc.lead)}</div>`
+    + `<ul class="disc-list">${dc.items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>`
+    + `<div class="disc-close">${esc(dc.close)}</div>`
+    + `<div class="disc-co">${esc(dc.co)}</div>`
+    + `</div>`
+    + frun(++pg, hi) + `</div>`;
+
   return `<!DOCTYPE html><html lang="${hi ? "hi" : "en"}"><head><meta charset="UTF-8"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>

@@ -125,7 +125,7 @@ export function buildReportHtml(facts: Facts, sections: Record<string, unknown>)
     + `<div class="pill">Honest, not just flattering.</div>`
     + `<div class="signoff">`
     + `<div class="byline"><span class="hair"></span><span class="by serif">by</span><span class="hair"></span></div>`
-    + `<img src="${LOGO_URL}" alt="TalkToGuruji"/>`
+    + `<div class="logo-chip"><img src="${LOGO_URL}" alt="TalkToGuruji"/></div>`
     + `</div>`
     + `</div>`;
 

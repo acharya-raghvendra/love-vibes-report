@@ -154,18 +154,18 @@ export function buildReportHtml(facts: Facts, sections: Record<string, unknown>)
   const s1 = (S.s1 || {}) as { headline?: string; what_it_means?: string; honest_note?: string };
   let sharedHtml = "";
   if (facts.shared && facts.shared.length) {
-    sharedHtml = `<div class="shared">You share: ${facts.shared.map((x) => `<b>${esc(x)}</b>`).join(", ")}.</div>`;
+    sharedHtml = `<div class="shared">${hi ? "आप दोनों में common: " : "You share: "}${facts.shared.map((x) => `<b>${esc(x)}</b>`).join(", ")}.</div>`;
   }
-  pages += `<div class="page">${head("s1")}`
+  pages += `<div class="page">${head("s1", hi)}`
     + `<div class="score-hero"><div class="ring">${ringSvg(facts.score)}`
-    + `<div class="lbl"><b>${facts.score}</b><span>out of 100</span></div></div>`
+    + `<div class="lbl"><b>${facts.score}</b><span>${hi ? "में से 100" : "out of 100"}</span></div></div>`
     + `<div class="band-pill">${esc(facts.band)}</div>`
     + (s1.headline ? `<div class="band-sub">${esc(s1.headline)}</div>` : "")
     + `</div>`
     + sharedHtml
-    + (s1.what_it_means ? `<div class="hero-quote"><b>What the score means.</b> ${esc(s1.what_it_means)}</div>` : "")
+    + (s1.what_it_means ? `<div class="hero-quote"><b>${hi ? "Score का मतलब." : "What the score means."}</b> ${esc(s1.what_it_means)}</div>` : "")
     + (s1.honest_note ? `<p class="body">${esc(s1.honest_note)}</p>` : "")
-    + frun(++pg) + `</div>`;
+    + frun(++pg, hi) + `</div>`;
 
   // s2 core numbers (stacked person cards = mobile-readable)
   const s2 = (S.s2 || {}) as { shared_note?: string };

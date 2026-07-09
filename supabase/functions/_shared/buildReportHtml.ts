@@ -148,6 +148,9 @@ export function buildReportHtml(facts: Facts, sections: Record<string, unknown>)
     + `<div class="byline"><span class="hair"></span><span class="by serif">by</span><span class="hair"></span></div>`
     + `<div class="logo-chip"><img src="${LOGO_URL}" alt="TalkToGuruji"/></div>`
     + `</div>`
+    + `<div class="cover-disc">${hi
+      ? "यह report सिर्फ़ guidance और self-reflection के लिए numerology पर आधारित है. किसी नतीजे की guarantee नहीं, और professional advice का विकल्प नहीं."
+      : "This report is based on numerology for guidance and self-reflection only. It is not a guarantee of any outcome, nor a substitute for professional advice."}</div>`
     + `</div>`;
 
   // s1 score

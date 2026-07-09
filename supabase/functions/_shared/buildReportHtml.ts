@@ -125,7 +125,7 @@ export function buildReportHtml(facts: Facts, sections: Record<string, unknown>)
     + `<div class="pill">Honest, not just flattering.</div>`
     + `<div class="signoff">`
     + `<div class="byline"><span class="hair"></span><span class="by serif">by</span><span class="hair"></span></div>`
-    + `<img src="${LOGO_URL}" alt="TalkToGuruji"/>`
+    + `<div class="logo-chip"><img src="${LOGO_URL}" alt="TalkToGuruji"/></div>`
     + `</div>`
     + `</div>`;
 
@@ -247,7 +247,8 @@ body.hi .serif{font-family:'Fraunces','Noto Sans Devanagari',serif;}
 .cover .byline{display:flex;align-items:center;gap:12px;}
 .cover .byline .hair{width:34px;height:1px;background:rgba(120,70,64,.4);}
 .cover .byline .by{font-style:italic;font-size:15px;color:rgba(120,70,64,.75);letter-spacing:.06em;}
-.cover .signoff img{height:34px;object-fit:contain;opacity:.92;}
+.cover .logo-chip{background:rgba(255,255,255,.92);border-radius:14px;padding:12px 22px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(120,70,64,.10);}
+.cover .signoff img{height:44px;object-fit:contain;opacity:1;}
 .eyebrow-s{display:flex;align-items:center;gap:8px;color:var(--coral);letter-spacing:.16em;font-size:10px;text-transform:uppercase;font-weight:700;}
 h2.sec{font-size:29px;font-weight:500;margin:10px 0 0;line-height:1.12;color:var(--ink);}
 .rule{width:40px;height:3px;background:var(--coral);margin:14px 0 22px;border-radius:3px;}
@@ -297,7 +298,7 @@ p.body b{color:var(--ink);}
 .letter{font-family:'Fraunces',serif;font-size:14.5px;line-height:1.9;color:var(--soft);font-style:italic;}
 .letter p{margin-bottom:14px;}
 .sign{margin-top:18px;display:flex;flex-direction:column;gap:6px;}
-.sign img{height:30px;object-fit:contain;opacity:.9;}
+.sign img{height:38px;object-fit:contain;opacity:1;}
 .sign span{font-size:11px;color:var(--muted);}
 .upsell{background:linear-gradient(160deg,#fff,var(--coral-wash));border:1px solid var(--coral-lt);border-radius:20px;padding:24px 24px 22px;margin-top:8px;box-shadow:0 3px 0 var(--blush);}
 .upsell .up-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}

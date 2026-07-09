@@ -140,10 +140,10 @@ export function buildReportHtml(facts: Facts, sections: Record<string, unknown>)
   // Cover
   let pages = `<div class="page cover">`
     + `<div class="badge"><span class="cring"><i></i><i></i></span></div>`
-    + `<div class="eyebrow">Compatibility Analysis</div>`
-    + `<h1 class="serif">Love Match Report</h1>`
+    + `<div class="eyebrow">${hi ? "कम्पैटिबिलिटी analysis" : "Compatibility Analysis"}</div>`
+    + `<h1 class="serif">${hi ? "लव मैच रिपोर्ट" : "Love Match Report"}</h1>`
     + `<div class="names serif">${esc(nameA)} <span class="amp">&amp;</span> ${esc(nameB)}</div>`
-    + `<div class="pill">Honest, not just flattering.</div>`
+    + `<div class="pill">${hi ? "Honest, सिर्फ़ तारीफ़ नहीं." : "Honest, not just flattering."}</div>`
     + `<div class="signoff">`
     + `<div class="byline"><span class="hair"></span><span class="by serif">by</span><span class="hair"></span></div>`
     + `<div class="logo-chip"><img src="${LOGO_URL}" alt="TalkToGuruji"/></div>`

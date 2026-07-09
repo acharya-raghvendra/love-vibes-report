@@ -375,5 +375,14 @@ p.body b{color:var(--ink);}
 .upsell .up-sub{font-size:12.5px;color:var(--soft);margin-top:4px;}
 .upsell .up-cta{display:inline-block;margin-top:16px;background:var(--coral);color:#fff;font-weight:600;font-size:13px;text-decoration:none;padding:11px 26px;border-radius:24px;letter-spacing:.02em;}
 .upsell .up-note{font-size:10.5px;color:var(--muted);margin-top:10px;}
+.cover-disc{margin-top:16px;max-width:78%;font-size:9px;line-height:1.55;color:rgba(120,70,64,.55);border:1px solid rgba(120,70,64,.18);border-radius:8px;padding:9px 14px;background:rgba(255,255,255,.28);}
+.disc-card{border:1px solid var(--line);border-radius:18px;padding:24px 26px;background:#fff;box-shadow:0 2px 0 var(--blush);}
+.disc-title{font-size:20px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:9px;}
+.disc-lead{color:var(--coral-dk);font-weight:600;font-size:13px;line-height:1.6;margin:12px 0 14px;}
+.disc-list{list-style:none;margin:0;padding:0;}
+.disc-list li{position:relative;padding:6px 0 6px 18px;font-size:11.5px;line-height:1.6;color:var(--soft);border-bottom:1px dotted var(--line);}
+.disc-list li::before{content:"•";position:absolute;left:2px;color:var(--coral);}
+.disc-close{margin-top:14px;font-size:11.5px;line-height:1.7;color:var(--soft);font-style:italic;}
+.disc-co{margin-top:14px;font-size:10px;color:var(--muted);letter-spacing:.04em;}
 </style></head><body class="${hi ? "hi" : ""}">${pages}</body></html>`;
 }

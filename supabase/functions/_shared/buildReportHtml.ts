@@ -3,7 +3,7 @@
 // his/her cards stack vertically, large type, generous spacing.
 
 const LOGO_URL =
-  "https://love.talktoguruji.com/__l5e/assets-v1/1826ef0e-d66c-48a4-8123-8270594dca3f/talktoguruji-logo.png";
+  "https://love.talktoguruji.com/__l5e/assets-v1/a644ef39-fd73-4187-bf42-f5bc9cf3a3c4/talktoguruji-logo.png";
 
 interface NumFact { compound: number; display: number; score: number; isMaster: boolean; }
 interface CoreNumbers {

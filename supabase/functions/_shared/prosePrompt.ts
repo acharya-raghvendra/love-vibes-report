@@ -34,10 +34,17 @@ export function buildSystemPrompt(A: string, B: string, language: string): strin
         `Real example of the tone and depth: "Okay, real talk, this is your fault line. ${A}'s love language is basically provide, build, secure the future. ${B}'s is presence, time, put the phone down and sit with me. So here is the classic loop, ${A} is grinding late thinking I am doing this for us, and ${B} is thinking cool, but where are you. Nobody is the villain here. You are just texting love in two different apps and wondering why it will not send."`,
       ].join(" ");
 
+  // Human-readable name of the output language, used inside the rules so the
+  // model has an explicit, repeated target and never falls back to the English
+  // schema labels.
+  const langName = language === "hi" ? "Hinglish (Devanagari, casual aam-bolchaal)" : "English";
+
   return [
     `You are writing a premium numerology Love Match report for ${A} and ${B}. They paid for this. It must feel personal, sharp, and real, like it was written by someone who actually gets them, never generic, never a horoscope.`,
     `ALWAYS use their names, ${A} and ${B}. NEVER write "Person A" or "Person B".`,
     voice,
+    // --- HARD LANGUAGE RULE (fixes English labels/headings leaking into hi) ---
+    `LANGUAGE RULE: The entire report is in ${langName}. EVERY visible string you output, without exception, must be in ${langName}. This includes a_card, b_card, tag, intro, every block "label", every block "text", every s11 strength/watch label, every s12 item label, and the s13 letter. The English key names and the English label examples in the schema below (for example "Day to day", "In love", "Long term", "Closeness", "The pull", "The spark or friction", "Getting close", "What blocks it", "When you clash", "How to repair", "Where you are heading", "Right now", "But it is also a strength") are STRUCTURAL PLACEHOLDERS that describe what the block is about. Translate every one of them into ${langName}. Never copy an English label verbatim into a ${langName} report. The JSON keys (s1, a_card, tag, label, text, etc.) stay in English; only the VALUES are ${langName}.`,
     "You ONLY write from the facts given. NEVER output a number not present in the facts. You never compute.",
     "Do NOT mention raw points, weights, percentages, or scoring math.",
     "Use display numbers. If isMaster write like '2 (Master 11)'. Show compound like '19/1' only when it differs.",
@@ -45,7 +52,9 @@ export function buildSystemPrompt(A: string, B: string, language: string): strin
     "CRITICAL DEPTH RULE: every blocks[] entry must SHOW a concrete everyday scene, a real moment between them, not describe a trait. Show the actual thought each person has in a real situation, like the example. Never write vague advice like 'communication is key'. Make them feel seen.",
     "Be honest, not flattering. Where they fit beautifully, say it and say why. Where they will struggle, name it plainly and specifically, then show them the way through. The honesty is the product.",
     "NO REPETITION RULE: each section must add a NEW angle or scene. If a tension (e.g. control vs freedom) was already covered in an earlier section, later sections must NOT repeat it; find a different situation, consequence, or facet instead. A reader must never feel one insight is being stretched across the report.",
-    "TAG RULE: every tag must read like a natural, catchy phrase a friend would actually say (in the report's language). Never awkward word-mashups.",
+    // --- REWRITTEN TAG RULE (fixes "अलविदा misunderstanding") ---
+    `TAG RULE: every "tag" is a short 3 to 6 word phrase, written in ONE language only (${langName}), that a warm honest friend would actually say out loud about this pairing. It must feel inviting, curious, or gently honest, NEVER ominous or negative. NEVER a bare or alarming word such as goodbye, अलविदा, "the end", "misunderstanding", or "warning". Do NOT mash two languages together (no Hindi word glued to a stray English word). Do NOT create awkward word-joins or run words together without spaces. If in doubt, keep it simple, specific to these two, and kind. Good hi examples: "अलग राहें, एक मंज़िल", "समझ जाओ तो कमाल". Good en examples: "Different wiring, real pull", "Worth the effort".`,
+    "TAG SELF-CHECK: before finalising each tag, re-read it as the paying couple would. If it reads as a threat, a breakup omen, half-English-half-Hindi, or gibberish, rewrite it.",
     "Return ONE JSON object with EXACTLY this shape and these keys:",
     `{"sections":{`,
     `"s1":{"headline":"one line under the score, e.g. works beautifully with effort","what_it_means":"3-4 sentences explaining what the score measures and does not promise","honest_note":"4-6 sentences of honest framing of this specific pairing, what is genuinely strong and where they are built differently"},`,
@@ -62,6 +71,7 @@ export function buildSystemPrompt(A: string, B: string, language: string): strin
     `"s12":{"intro":"one line: this advice comes from your numbers, not generic tips","items":[{"label":"For the <specific gap>","text":"one concrete habit or agreement, tied to their numbers, 2-3 sentences"} for each of 3-4 gaps found in this pairing]},`,
     `"s13":{"text":"a closing letter of 3 short paragraphs to ${A} and ${B}: what they have that many couples do not, the small everyday work each one specifically must do, and an honest warm send-off. No author name."}`,
     `}}`,
+    `REMINDER before you output: re-scan every "label", "tag", a_card, b_card, intro, text and the s13 letter and confirm they are all in ${langName}. Any English placeholder label left untranslated is a failure.`,
     "Output nothing outside that JSON.",
   ].join(" ");
 }

@@ -6,6 +6,8 @@
 import { corsHeaders, J, requireAdmin } from "../_shared/admin-auth.ts";
 import { scoreMatch, MatchResult } from "../_shared/engine/scorer.ts";
 import { buildReportHtml } from "../_shared/buildReportHtml.ts";
+import { buildSystemPrompt } from "../_shared/prosePrompt.ts";
+
 
 async function sha256(s: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
@@ -64,69 +66,16 @@ function validDob(raw: unknown): string | null {
   return raw;
 }
 
-async function generateProse(facts: unknown, language: string): Promise<Record<string, string>> {
-  const key = Deno.env.get("GEMINI_API_KEY");
-  if (!key) throw new Error("missing_gemini_key");
-  const model = "gemini-2.5-flash";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-  // deno-lint-ignore no-explicit-any
-  const A = (facts as any)?.names?.a || "Person A";
-  // deno-lint-ignore no-explicit-any
-  const B = (facts as any)?.names?.b || "Person B";
-  const system = [
-    `You are writing a numerology Love Match report for ${A} and ${B}.`,
-    `ALWAYS use their real names, ${A} and ${B}. NEVER write "Person A" or "Person B".`,
-    "You ONLY write prose from the facts given. You NEVER output a number not present in the facts. You never compute.",
-    "Do NOT mention raw points, weights, percentages, or scoring math. Do not say things like 'contributes X points' or 'weight of 0.3'.",
-    "For the Chemistry section, describe planet pairings using the provided planet names and relation label, for example 'Sun and Moon are friendly'. Do not invent numeric point values for pairings.",
-    "Use display numbers. If isMaster, write like '2 (Master 11)'. Show compound like '19/1' only when it differs from the display number.",
-    "Voice: honest, not flattering. Warm but real. Where the pairing is strong say so clearly, where it needs work say that plainly.",
-    "No em dashes or en dashes. Use commas or full stops.",
-    language === "hi"
-      ? "Write in casual aam-bolchaal Hindi (Devanagari), not heavy Sanskrit."
-      : "Write in warm, plain English.",
-    `Each section must be 3 to 5 sentences. Cover both ${A} and ${B} and how they interact day to day. Never write a single generic line.`,
-    "Write EXACTLY these 13 sections. Each section's content MUST match its topic below. Do not let content drift to the wrong section:",
-    `s1: Overall compatibility. State the score and band, and what it means for ${A} and ${B} as a couple. Honest framing.`,
-    `s2: Their core numbers side by side, and what any shared numbers mean for them.`,
-    `s3: Life Path. How ${A} and ${B} each move through life, and where they align or clash.`,
-    `s4: Soul Urge. How ${A} and ${B} each love, and what each needs emotionally.`,
-    `s5: Chemistry and attraction. Use the planet pairings and relation labels provided to describe the pull between them.`,
-    `s6: Intimacy and closeness. How ${A} and ${B} connect closely, drawn from their Soul Urge.`,
-    `s7: Personality. How ${A} and ${B} each come across to the other in daily life.`,
-    `s8: Conflict and repair. How they argue and how they can recover, drawn from Life Path and Personality.`,
-    `s9: Maturity. How ${A} and ${B} each grow with age, and whether they grow toward each other or apart.`,
-    `s10: Personal Year timing. The phase ${A} and ${B} are each in right now.`,
-    `s11: At a glance. Their strengths as a couple and what to watch.`,
-    `s12: What you can do. Practical advice drawn from their specific numbers.`,
-    `s13: One honest closing note to ${A} and ${B}.`,
-    'Return ONE JSON object: {"sections":{"s1":"...","s2":"...","s3":"...","s4":"...","s5":"...","s6":"...","s7":"...","s8":"...","s9":"...","s10":"...","s11":"...","s12":"...","s13":"..."}} and nothing else.',
-  ].join(" ");
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: [{ role: "user", parts: [{ text: JSON.stringify(facts) }] }],
-      generationConfig: { temperature: 0.4, responseMimeType: "application/json" },
-    }),
-  });
-  const rawText = await res.text().catch(() => "");
-  if (!res.ok) throw new Error(`gemini_http status=${res.status} body=${rawText.slice(0, 300)}`);
-  let data: unknown;
-  try { data = JSON.parse(rawText); }
-  catch { throw new Error(`gemini_envelope_parse body=${rawText.slice(0, 300)}`); }
-  // deno-lint-ignore no-explicit-any
-  let text = (data as any)?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-  if (!text) throw new Error(`gemini_empty_candidates body=${rawText.slice(0, 300)}`);
-  text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
-  let parsed: Record<string, unknown>;
-  try { parsed = JSON.parse(text); }
-  catch { throw new Error(`gemini_content_parse body=${text.slice(0, 300)}`); }
-  return (parsed.sections as Record<string, string>) ?? (parsed as Record<string, string>);
+function collectStrings(v: unknown, out: string[]): void {
+  if (typeof v === "string") out.push(v);
+  else if (Array.isArray(v)) for (const x of v) collectStrings(x, out);
+  else if (v && typeof v === "object") for (const x of Object.values(v)) collectStrings(x, out);
 }
-function validateNoInventedNumbers(sections: Record<string, string>, allowed: Set<string>): boolean {
-  const prose = Object.values(sections).join(" ");
+
+function validateNoInventedNumbers(sections: unknown, allowed: Set<string>): boolean {
+  const strs: string[] = [];
+  collectStrings(sections, strs);
+  const prose = strs.join(" ");
   const nums = prose.match(/\d+/g) ?? [];
   for (const n of nums) {
     if (allowed.has(n)) continue;
@@ -135,6 +84,44 @@ function validateNoInventedNumbers(sections: Record<string, string>, allowed: Se
     return false;
   }
   return true;
+}
+
+async function generateProse(
+  facts: { names?: { a?: string; b?: string }; language?: string },
+  language: string,
+): Promise<Record<string, unknown>> {
+  const key = Deno.env.get("GEMINI_API_KEY");
+  if (!key) throw new Error("gemini_missing_key");
+  const model = "gemini-2.5-flash";
+  const url =
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+
+  const A = facts.names?.a || "Person A";
+  const B = facts.names?.b || "Person B";
+  const system = buildSystemPrompt(A, B, language);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents: [{ role: "user", parts: [{ text: JSON.stringify(facts) }] }],
+      generationConfig: {
+        temperature: 0.55,
+        responseMimeType: "application/json",
+        maxOutputTokens: 8192,
+      },
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`gemini_http status=${res.status} body=${body.slice(0, 500)}`);
+  }
+  const data = await res.json();
+  let text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
+  const parsed = JSON.parse(text);
+  return parsed.sections ?? parsed;
 }
 function allowedNumberSet(r: MatchResult): Set<string> {
   const s = new Set<string>();
@@ -152,6 +139,7 @@ function allowedNumberSet(r: MatchResult): Set<string> {
   s.add("11"); s.add("22"); s.add("33");
   return s;
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -207,11 +195,11 @@ Deno.serve(async (req) => {
         };
 
         // Prose cache.
-        const proseKey = await sha256(`prose:v1:${language}:${JSON.stringify(facts)}`);
-        let sections: Record<string, string> | null = null;
+        const proseKey = await sha256(`prose:v2:${language}:${JSON.stringify(facts)}`);
+        let sections: Record<string, unknown> | null = null;
         const { data: cachedProse } = await supabase
           .from("love_match_prose_cache").select("sections").eq("prose_key", proseKey).maybeSingle();
-        if (cachedProse?.sections) sections = cachedProse.sections as Record<string, string>;
+        if (cachedProse?.sections) sections = cachedProse.sections as Record<string, unknown>;
 
         if (!sections) {
           const allowed = allowedNumberSet(result);

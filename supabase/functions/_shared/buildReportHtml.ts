@@ -95,15 +95,18 @@ function ringSvg(score: number): string {
     + `transform="rotate(-90 90 90)"/></svg>`;
 }
 
-function frun(pg: number): string {
-  return `<div class="frun"><span>TalkToGuruji &nbsp;•&nbsp; Love Match Report</span><span class="pg">${pg}</span></div>`;
+function frun(pg: number, hi: boolean): string {
+  const title = hi ? "लव मैच रिपोर्ट" : "Love Match Report";
+  return `<div class="frun"><span>TalkToGuruji &nbsp;•&nbsp; ${title}</span><span class="pg">${pg}</span></div>`;
 }
-function eyebrow(n: string): string {
+function eyebrow(n: string, hi: boolean): string {
   const nn = n.length < 2 ? "0" + n : n;
-  return `<div class="eyebrow-s"><span class="rings"><i></i><i></i></span> Section ${nn}</div>`;
+  const label = hi ? "सेक्शन" : "Section";
+  return `<div class="eyebrow-s"><span class="rings"><i></i><i></i></span> ${label} ${nn}</div>`;
 }
-function head(id: string): string {
-  return eyebrow(id.replace("s", "")) + `<h2 class="sec serif">${esc(SECTION_TITLES[id])}</h2><div class="rule"></div>`;
+function head(id: string, hi: boolean): string {
+  const titles = hi ? SECTION_TITLES_HI : SECTION_TITLES_EN;
+  return eyebrow(id.replace("s", ""), hi) + `<h2 class="sec serif">${esc(titles[id])}</h2><div class="rule"></div>`;
 }
 
 function cards2(nameA: string, nameB: string, s: AnalyticalSection): string {

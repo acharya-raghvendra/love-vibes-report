@@ -195,11 +195,11 @@ Deno.serve(async (req) => {
         };
 
         // Prose cache.
-        const proseKey = await sha256(`prose:v1:${language}:${JSON.stringify(facts)}`);
-        let sections: Record<string, string> | null = null;
+        const proseKey = await sha256(`prose:v2:${language}:${JSON.stringify(facts)}`);
+        let sections: Record<string, unknown> | null = null;
         const { data: cachedProse } = await supabase
           .from("love_match_prose_cache").select("sections").eq("prose_key", proseKey).maybeSingle();
-        if (cachedProse?.sections) sections = cachedProse.sections as Record<string, string>;
+        if (cachedProse?.sections) sections = cachedProse.sections as Record<string, unknown>;
 
         if (!sections) {
           const allowed = allowedNumberSet(result);

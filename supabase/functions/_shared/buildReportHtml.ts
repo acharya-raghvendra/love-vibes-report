@@ -298,7 +298,7 @@ p.body b{color:var(--ink);}
 .letter{font-family:'Fraunces',serif;font-size:14.5px;line-height:1.9;color:var(--soft);font-style:italic;}
 .letter p{margin-bottom:14px;}
 .sign{margin-top:18px;display:flex;flex-direction:column;gap:6px;}
-.sign img{height:30px;object-fit:contain;opacity:.9;}
+.sign img{height:38px;object-fit:contain;opacity:1;}
 .sign span{font-size:11px;color:var(--muted);}
 .upsell{background:linear-gradient(160deg,#fff,var(--coral-wash));border:1px solid var(--coral-lt);border-radius:20px;padding:24px 24px 22px;margin-top:8px;box-shadow:0 3px 0 var(--blush);}
 .upsell .up-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}

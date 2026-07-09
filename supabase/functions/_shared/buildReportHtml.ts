@@ -3,7 +3,7 @@
 // his/her cards stack vertically, large type, generous spacing.
 
 const LOGO_URL =
-  "https://love.talktoguruji.com/__l5e/assets-v1/a644ef39-fd73-4187-bf42-f5bc9cf3a3c4/talktoguruji-logo.png";
+  "https://love.talktoguruji.com/__l5e/assets-v1/1826ef0e-d66c-48a4-8123-8270594dca3f/talktoguruji-logo.png";
 
 interface NumFact { compound: number; display: number; score: number; isMaster: boolean; }
 interface CoreNumbers {
@@ -118,12 +118,15 @@ export function buildReportHtml(facts: Facts, sections: Record<string, unknown>)
 
   // Cover
   let pages = `<div class="page cover">`
-    + `<div class="badge"><span class="heart">&#9829;</span></div>`
+    + `<div class="badge"><span class="cring"><i></i><i></i></span></div>`
     + `<div class="eyebrow">Compatibility Analysis</div>`
     + `<h1 class="serif">Love Match Report</h1>`
     + `<div class="names serif">${esc(nameA)} <span class="amp">&amp;</span> ${esc(nameB)}</div>`
     + `<div class="pill">Honest, not just flattering.</div>`
-    + `<div class="signoff"><img src="${LOGO_URL}" alt="TalkToGuruji"/><span>by TalkToGuruji</span></div>`
+    + `<div class="signoff">`
+    + `<div class="byline"><span class="hair"></span><span class="by serif">by</span><span class="hair"></span></div>`
+    + `<img src="${LOGO_URL}" alt="TalkToGuruji"/>`
+    + `</div>`
     + `</div>`;
 
   // s1 score
@@ -193,7 +196,7 @@ export function buildReportHtml(facts: Facts, sections: Record<string, unknown>)
 body{font-family:'Inter',sans-serif;color:var(--ink);}
 body.hi{font-family:'Noto Sans Devanagari',sans-serif;}
 .serif{font-family:'Fraunces',serif;}
-body.hi .serif{font-family:'Noto Sans Devanagari',sans-serif;}
+body.hi .serif{font-family:'Fraunces','Noto Sans Devanagari',serif;}
 @page{size:A4;margin:0;}
 .page{width:210mm;min-height:297mm;padding:26mm 24mm 22mm;position:relative;page-break-after:always;background:var(--cream);display:flex;flex-direction:column;}
 .page:last-child{page-break-after:auto;}
@@ -204,16 +207,21 @@ body.hi .serif{font-family:'Noto Sans Devanagari',sans-serif;}
 .rings i{position:absolute;top:0;width:15px;height:15px;border-radius:50%;border:1.5px solid var(--coral);}
 .rings i:first-child{left:0;}.rings i:last-child{left:8px;border-color:var(--gold);}
 .cover{background:linear-gradient(165deg,var(--peach1) 0%,var(--peach2) 55%,#EBB6AE 100%);align-items:center;text-align:center;padding:40mm 24mm;}
-.cover .badge{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;margin-bottom:20px;}
-.cover .badge .heart{font-size:30px;}
+.cover .badge{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;margin-bottom:20px;}
+.cover .cring{width:38px;height:24px;position:relative;display:inline-block;}
+.cover .cring i{position:absolute;top:0;width:24px;height:24px;border-radius:50%;border:2px solid var(--coral);}
+.cover .cring i:first-child{left:0;}
+.cover .cring i:last-child{left:14px;border-color:var(--gold);}
 .cover .eyebrow{color:rgba(120,70,64,.7);letter-spacing:.36em;font-size:10.5px;text-transform:uppercase;margin-top:34mm;}
 .cover h1{font-size:54px;line-height:1.02;font-weight:500;margin-top:12px;color:#5C332E;}
 .cover .names{margin-top:26px;font-size:30px;color:#7A4038;font-weight:500;}
 .cover .names .amp{color:#fff;}
 .cover .pill{margin-top:22px;background:rgba(255,255,255,.6);color:#8A4A42;font-size:13px;padding:8px 20px;border-radius:24px;font-style:italic;}
-.cover .signoff{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:6px;}
-.cover .signoff img{height:34px;object-fit:contain;opacity:.9;}
-.cover .signoff span{color:rgba(120,70,64,.6);font-size:10px;letter-spacing:.08em;}
+.cover .signoff{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:9px;}
+.cover .byline{display:flex;align-items:center;gap:12px;}
+.cover .byline .hair{width:34px;height:1px;background:rgba(120,70,64,.4);}
+.cover .byline .by{font-style:italic;font-size:15px;color:rgba(120,70,64,.75);letter-spacing:.06em;}
+.cover .signoff img{height:34px;object-fit:contain;opacity:.92;}
 .eyebrow-s{display:flex;align-items:center;gap:8px;color:var(--coral);letter-spacing:.16em;font-size:10px;text-transform:uppercase;font-weight:700;}
 h2.sec{font-size:29px;font-weight:500;margin:10px 0 0;line-height:1.12;color:var(--ink);}
 .rule{width:40px;height:3px;background:var(--coral);margin:14px 0 22px;border-radius:3px;}

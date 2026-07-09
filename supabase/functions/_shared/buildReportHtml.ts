@@ -169,43 +169,43 @@ export function buildReportHtml(facts: Facts, sections: Record<string, unknown>)
 
   // s2 core numbers (stacked person cards = mobile-readable)
   const s2 = (S.s2 || {}) as { shared_note?: string };
-  pages += `<div class="page">${head("s2")}`
-    + `<div class="pcol his"><h3>${esc(nameA)}</h3>${numRows(facts.person_a)}</div>`
-    + `<div class="pcol hers"><h3>${esc(nameB)}</h3>${numRows(facts.person_b)}</div>`
+  pages += `<div class="page">${head("s2", hi)}`
+    + `<div class="pcol his"><h3>${esc(nameA)}</h3>${numRows(facts.person_a, hi)}</div>`
+    + `<div class="pcol hers"><h3>${esc(nameB)}</h3>${numRows(facts.person_b, hi)}</div>`
     + (s2.shared_note ? `<div class="shared">${esc(s2.shared_note)}</div>` : "")
-    + frun(++pg) + `</div>`;
+    + frun(++pg, hi) + `</div>`;
 
   // s3-s10 analytical
   for (const id of ["s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10"]) {
     const sec = (S[id] || { blocks: [] }) as AnalyticalSection;
     const extra = id === "s5" && facts.chemistry ? pairStrip(facts.chemistry) : "";
-    pages += analyticalPage(id, nameA, nameB, sec, ++pg, extra);
+    pages += analyticalPage(id, nameA, nameB, sec, ++pg, hi, extra);
   }
 
   // s11 lists
   const s11 = (S.s11 || {}) as { strengths?: SectionBlock[]; watch?: SectionBlock[]; overall?: string };
   const li = (items: SectionBlock[] | undefined, cls: string) =>
     (items || []).map((i) => `<div class="li ${cls}"><span class="b">&#10022;</span><span class="t"><b>${esc(i.label)}.</b> <span>${esc(i.text)}</span></span></div>`).join("");
-  pages += `<div class="page">${head("s11")}`
-    + `<div class="listcol"><h4>Your strengths</h4>${li(s11.strengths, "good")}</div>`
-    + `<div class="listcol watch"><h4>What to watch</h4>${li(s11.watch, "watch")}</div>`
-    + (s11.overall ? `<div class="hero-quote"><b>Overall.</b> ${esc(s11.overall)}</div>` : "")
-    + frun(++pg) + `</div>`;
+  pages += `<div class="page">${head("s11", hi)}`
+    + `<div class="listcol"><h4>${hi ? "आपकी strengths" : "Your strengths"}</h4>${li(s11.strengths, "good")}</div>`
+    + `<div class="listcol watch"><h4>${hi ? "ध्यान रखने वाली बातें" : "What to watch"}</h4>${li(s11.watch, "watch")}</div>`
+    + (s11.overall ? `<div class="hero-quote"><b>${hi ? "कुल मिलाकर." : "Overall."}</b> ${esc(s11.overall)}</div>` : "")
+    + frun(++pg, hi) + `</div>`;
 
   // s12 advice
   const s12 = (S.s12 || {}) as { intro?: string; items?: SectionBlock[] };
-  pages += `<div class="page">${head("s12")}`
+  pages += `<div class="page">${head("s12", hi)}`
     + (s12.intro ? `<p class="body intro-line">${esc(s12.intro)}</p>` : "")
     + (s12.items || []).map((i) => `<div class="blk-row"><div class="lab">${esc(i.label)}</div><p>${esc(i.text)}</p></div>`).join("")
-    + frun(++pg) + `</div>`;
+    + frun(++pg, hi) + `</div>`;
 
   // s13 closing letter
   const s13 = (S.s13 || {}) as { text?: string };
   const letterParas = esc(s13.text || "").split("\n").filter(Boolean).map((p) => `<p>${p}</p>`).join("");
-  pages += `<div class="page">${head("s13")}`
+  pages += `<div class="page">${head("s13", hi)}`
     + `<div class="letter">${letterParas}</div>`
     + `<div class="sign"><img src="${LOGO_URL}" alt="TalkToGuruji"/><span>${hi ? "सादर, TalkToGuruji" : "With warm regards, TalkToGuruji"}</span></div>`
-    + frun(++pg) + `</div>`;
+    + frun(++pg, hi) + `</div>`;
 
   // Upsell page (Numerology Report), love-framed, language-aware.
   const up = hi ? {

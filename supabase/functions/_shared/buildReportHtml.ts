@@ -21,7 +21,7 @@ interface Facts {
   chemistry?: ChemPair[]; names?: { a?: string; b?: string };
 }
 
-const SECTION_TITLES: Record<string, string> = {
+const SECTION_TITLES_EN: Record<string, string> = {
   s1: "How compatible are you two", s2: "Your core numbers",
   s3: "Life Path: how you each move through life", s4: "Soul Urge: how you each love",
   s5: "Chemistry & attraction", s6: "Intimacy & closeness",
@@ -29,6 +29,21 @@ const SECTION_TITLES: Record<string, string> = {
   s9: "Maturity: how you grow over time", s10: "Right now: the timing",
   s11: "At a glance: strengths & what to watch", s12: "What you can do",
   s13: "One honest note",
+};
+const SECTION_TITLES_HI: Record<string, string> = {
+  s1: "आप दोनों कितने compatible हैं",
+  s2: "आपके core numbers",
+  s3: "Life Path: आप दोनों ज़िंदगी कैसे जीते हैं",
+  s4: "Soul Urge: आप दोनों प्यार कैसे करते हैं",
+  s5: "Chemistry और attraction",
+  s6: "नज़दीकी और intimacy",
+  s7: "Personality: आप बाहर से कैसे दिखते हैं",
+  s8: "टकराव और repair",
+  s9: "Maturity: वक़्त के साथ आप कैसे बदलते हैं",
+  s10: "अभी का वक़्त",
+  s11: "एक नज़र में: strengths और ध्यान रखने वाली बातें",
+  s12: "आप क्या कर सकते हैं",
+  s13: "एक honest बात",
 };
 
 function esc(s: unknown): string {

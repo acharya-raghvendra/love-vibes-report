@@ -80,17 +80,50 @@ function foot(): string {
   return `<div class="foot-run"><span>TalkToGuruji • Love Match Report</span><span>Confidential</span></div>`;
 }
 
-function sectionPage(id: string, prose: string, extra = ""): string {
+interface SectionBlock { label: string; text: string; }
+interface AnalyticalSection {
+  a_card?: string; b_card?: string; tag?: string; intro?: string; blocks?: SectionBlock[];
+}
+
+function pageShell(id: string, inner: string): string {
   const n = id.replace("s", "");
   const nn = n.length < 2 ? "0" + n : n;
-  const body = esc(prose).split("\n").map((para) => `<p class="body">${para}</p>`).join("");
   return `<div class="page">`
     + `<div class="eyebrow-s">Section ${nn}</div>`
     + `<h2 class="sec serif">${esc(SECTION_TITLES[id])}</h2><div class="rule"></div>`
-    + extra + body + foot() + `</div>`;
+    + inner + foot() + `</div>`;
 }
 
-export function buildReportHtml(facts: Facts, sections: Record<string, string>): string {
+function personCards(nameA: string, nameB: string, s: AnalyticalSection): string {
+  if (!s.a_card && !s.b_card) return "";
+  return `<div class="cards2">`
+    + `<div class="pcard"><h4>${esc(nameA)}</h4><p>${esc(s.a_card || "")}</p></div>`
+    + `<div class="pcard"><h4>${esc(nameB)}</h4><p>${esc(s.b_card || "")}</p></div>`
+    + `</div>`;
+}
+
+function blocksHtml(blocks?: SectionBlock[]): string {
+  if (!blocks || !blocks.length) return "";
+  return blocks.map((b) =>
+    `<p class="body"><b class="blk">${esc(b.label)}:</b> ${esc(b.text)}</p>`
+  ).join("");
+}
+
+function analyticalPage(id: string, nameA: string, nameB: string, s: AnalyticalSection, extra = ""): string {
+  let inner = personCards(nameA, nameB, s);
+  if (s.tag) inner += `<div class="tag">${esc(s.tag)}</div>`;
+  inner += extra;
+  if (s.intro) inner += `<p class="body intro">${esc(s.intro)}</p>`;
+  inner += blocksHtml(s.blocks);
+  return pageShell(id, inner);
+}
+
+function listBlock(title: string, items: SectionBlock[]): string {
+  return `<h3 class="listhead serif">${esc(title)}</h3>`
+    + items.map((i) => `<p class="body"><b class="blk">${esc(i.label)}.</b> ${esc(i.text)}</p>`).join("");
+}
+
+export function buildReportHtml(facts: Facts, sections: Record<string, unknown>): string {
   const hi = facts.language === "hi";
   const nameA = facts.person_a?.first || facts.names?.a || "Person A";
   const nameB = facts.person_b?.first || facts.names?.b || "Person B";
@@ -112,14 +145,41 @@ export function buildReportHtml(facts: Facts, sections: Record<string, string>):
     + `<div class="tagline">Honest, not just flattering.</div>`
     + `<div class="foot">© TalkToGuruji • Inno-One Service LLP</div></div>`;
 
-  pages += sectionPage("s1", sections.s1 || "", dial(facts.score, facts.band) + sharedHtml);
-  pages += sectionPage("s2", sections.s2 || "",
-    `<div class="grid2">${personCol(nameA, facts.person_a)}${personCol(nameB, facts.person_b)}</div>`);
+  const S = sections as Record<string, unknown>;
+  const s1 = (S.s1 || {}) as { headline?: string; what_it_means?: string; honest_note?: string };
+  pages += pageShell("s1",
+    dial(facts.score, facts.band)
+    + (s1.headline ? `<div class="tag">${esc(s1.headline)}</div>` : "")
+    + sharedHtml
+    + (s1.what_it_means ? `<p class="body"><b class="blk">What the score means:</b> ${esc(s1.what_it_means)}</p>` : "")
+    + (s1.honest_note ? `<p class="body">${esc(s1.honest_note)}</p>` : ""));
 
-  for (const id of ["s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "s12", "s13"]) {
+  const s2 = (S.s2 || {}) as { shared_note?: string };
+  pages += pageShell("s2",
+    `<div class="grid2">${personCol(nameA, facts.person_a)}${personCol(nameB, facts.person_b)}</div>`
+    + (s2.shared_note ? `<div class="shared">${esc(s2.shared_note)}</div>` : ""));
+
+  for (const id of ["s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10"]) {
+    const sec = (S[id] || { blocks: [] }) as AnalyticalSection;
     const extra = id === "s5" && facts.chemistry ? pairStrip(facts.chemistry) : "";
-    pages += sectionPage(id, sections[id] || "", extra);
+    pages += analyticalPage(id, nameA, nameB, sec, extra);
   }
+
+  const s11 = (S.s11 || {}) as { strengths?: SectionBlock[]; watch?: SectionBlock[]; overall?: string };
+  pages += pageShell("s11",
+    listBlock("Your strengths", s11.strengths || [])
+    + listBlock("What to watch", s11.watch || [])
+    + (s11.overall ? `<p class="body"><b class="blk">Overall:</b> ${esc(s11.overall)}</p>` : ""));
+
+  const s12 = (S.s12 || {}) as { intro?: string; items?: SectionBlock[] };
+  pages += pageShell("s12",
+    (s12.intro ? `<p class="body intro">${esc(s12.intro)}</p>` : "")
+    + (s12.items || []).map((i) => `<p class="body"><b class="blk">${esc(i.label)}.</b> ${esc(i.text)}</p>`).join(""));
+
+  const s13 = (S.s13 || {}) as { text?: string };
+  pages += pageShell("s13",
+    esc(s13.text || "").split("\n").filter(Boolean).map((p) => `<p class="body">${p}</p>`).join("")
+    || `<p class="body"></p>`);
 
   return `<!DOCTYPE html><html lang="${hi ? "hi" : "en"}"><head><meta charset="UTF-8"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -169,5 +229,13 @@ body.hi .person h3{font-family:'Noto Sans Devanagari',sans-serif;}
 .pair small{color:var(--muted);}
 .shared{background:var(--cream);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:12.5px;margin-top:8px;}
 .shared b{color:var(--gold);}
+.cards2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:2px 0 12px;}
+.pcard{background:var(--cream);border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+.pcard h4{font-family:'Fraunces',serif;font-size:15px;margin-bottom:5px;color:var(--ink);}
+body.hi .pcard h4{font-family:'Noto Sans Devanagari',sans-serif;}
+.pcard p{font-size:12px;line-height:1.6;color:#4A443A;}
+.blk{color:var(--ink);font-weight:600;}
+.listhead{font-size:17px;font-weight:600;margin:10px 0 8px;color:var(--ink);}
+p.body.intro{background:var(--cream);border-left:3px solid var(--gold);padding:10px 14px;border-radius:0 6px 6px 0;}
 </style></head><body class="${hi ? "hi" : ""}">${pages}</body></html>`;
 }

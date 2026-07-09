@@ -6,6 +6,8 @@
 import { corsHeaders, J, requireAdmin } from "../_shared/admin-auth.ts";
 import { scoreMatch, MatchResult } from "../_shared/engine/scorer.ts";
 import { buildReportHtml } from "../_shared/buildReportHtml.ts";
+import { buildSystemPrompt } from "../_shared/prosePrompt.ts";
+
 
 async function sha256(s: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));

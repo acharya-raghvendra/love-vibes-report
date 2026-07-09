@@ -21,7 +21,7 @@ interface Facts {
   chemistry?: ChemPair[]; names?: { a?: string; b?: string };
 }
 
-const SECTION_TITLES: Record<string, string> = {
+const SECTION_TITLES_EN: Record<string, string> = {
   s1: "How compatible are you two", s2: "Your core numbers",
   s3: "Life Path: how you each move through life", s4: "Soul Urge: how you each love",
   s5: "Chemistry & attraction", s6: "Intimacy & closeness",
@@ -29,6 +29,21 @@ const SECTION_TITLES: Record<string, string> = {
   s9: "Maturity: how you grow over time", s10: "Right now: the timing",
   s11: "At a glance: strengths & what to watch", s12: "What you can do",
   s13: "One honest note",
+};
+const SECTION_TITLES_HI: Record<string, string> = {
+  s1: "आप दोनों कितने compatible हैं",
+  s2: "आपके core numbers",
+  s3: "Life Path: आप दोनों ज़िंदगी कैसे जीते हैं",
+  s4: "Soul Urge: आप दोनों प्यार कैसे करते हैं",
+  s5: "Chemistry और attraction",
+  s6: "नज़दीकी और intimacy",
+  s7: "Personality: आप बाहर से कैसे दिखते हैं",
+  s8: "टकराव और repair",
+  s9: "Maturity: वक़्त के साथ आप कैसे बदलते हैं",
+  s10: "अभी का वक़्त",
+  s11: "एक नज़र में: strengths और ध्यान रखने वाली बातें",
+  s12: "आप क्या कर सकते हैं",
+  s13: "एक honest बात",
 };
 
 function esc(s: unknown): string {
@@ -50,15 +65,18 @@ function relationDot(rel: string): string {
   return "#C9A25E";
 }
 
-function numRows(c: CoreNumbers): string {
+function numRows(c: CoreNumbers, hi: boolean): string {
+  const L = hi
+    ? { lp: "लाइफ़ पाथ", de: "डेस्टिनी", su: "सोल अर्ज", pe: "पर्सनैलिटी", master: "मास्टर" }
+    : { lp: "Life Path", de: "Destiny", su: "Soul Urge", pe: "Personality", master: "Master" };
   const row = (label: string, f: NumFact) => {
     const compound = f.compound !== f.display ? `${f.compound}/${f.display}` : `${f.display}`;
-    const shown = f.isMaster ? `${f.score} (Master ${f.display})` : compound;
+    const shown = f.isMaster ? `${f.score} (${L.master} ${f.display})` : compound;
     return `<div class="nrow"><span class="v">${esc(f.display)}</span>`
       + `<span class="meta"><b>${label}</b><span>${esc(shown)}</span></span></div>`;
   };
-  return row("Life Path", c.lifePath) + row("Destiny", c.destiny)
-    + row("Soul Urge", c.soulUrge) + row("Personality", c.personality);
+  return row(L.lp, c.lifePath) + row(L.de, c.destiny)
+    + row(L.su, c.soulUrge) + row(L.pe, c.personality);
 }
 
 function pairStrip(chem: ChemPair[]): string {
@@ -77,15 +95,18 @@ function ringSvg(score: number): string {
     + `transform="rotate(-90 90 90)"/></svg>`;
 }
 
-function frun(pg: number): string {
-  return `<div class="frun"><span>TalkToGuruji &nbsp;•&nbsp; Love Match Report</span><span class="pg">${pg}</span></div>`;
+function frun(pg: number, hi: boolean): string {
+  const title = hi ? "लव मैच रिपोर्ट" : "Love Match Report";
+  return `<div class="frun"><span>TalkToGuruji &nbsp;•&nbsp; ${title}</span><span class="pg">${pg}</span></div>`;
 }
-function eyebrow(n: string): string {
+function eyebrow(n: string, hi: boolean): string {
   const nn = n.length < 2 ? "0" + n : n;
-  return `<div class="eyebrow-s"><span class="rings"><i></i><i></i></span> Section ${nn}</div>`;
+  const label = hi ? "सेक्शन" : "Section";
+  return `<div class="eyebrow-s"><span class="rings"><i></i><i></i></span> ${label} ${nn}</div>`;
 }
-function head(id: string): string {
-  return eyebrow(id.replace("s", "")) + `<h2 class="sec serif">${esc(SECTION_TITLES[id])}</h2><div class="rule"></div>`;
+function head(id: string, hi: boolean): string {
+  const titles = hi ? SECTION_TITLES_HI : SECTION_TITLES_EN;
+  return eyebrow(id.replace("s", ""), hi) + `<h2 class="sec serif">${esc(titles[id])}</h2><div class="rule"></div>`;
 }
 
 function cards2(nameA: string, nameB: string, s: AnalyticalSection): string {
@@ -100,13 +121,13 @@ function blocks(bl?: SectionBlock[]): string {
   ).join("");
 }
 
-function analyticalPage(id: string, nameA: string, nameB: string, s: AnalyticalSection, pg: number, extra = ""): string {
-  let inner = head(id) + cards2(nameA, nameB, s);
+function analyticalPage(id: string, nameA: string, nameB: string, s: AnalyticalSection, pg: number, hi: boolean, extra = ""): string {
+  let inner = head(id, hi) + cards2(nameA, nameB, s);
   if (s.tag) inner += `<div class="verdict">${esc(s.tag)}</div>`;
   inner += extra;
   if (s.intro) inner += `<div class="hero-quote">${esc(s.intro)}</div>`;
   inner += blocks(s.blocks);
-  return `<div class="page">${inner}${frun(pg)}</div>`;
+  return `<div class="page">${inner}${frun(pg, hi)}</div>`;
 }
 
 export function buildReportHtml(facts: Facts, sections: Record<string, unknown>): string {
@@ -119,10 +140,10 @@ export function buildReportHtml(facts: Facts, sections: Record<string, unknown>)
   // Cover
   let pages = `<div class="page cover">`
     + `<div class="badge"><span class="cring"><i></i><i></i></span></div>`
-    + `<div class="eyebrow">Compatibility Analysis</div>`
-    + `<h1 class="serif">Love Match Report</h1>`
+    + `<div class="eyebrow">${hi ? "कम्पैटिबिलिटी analysis" : "Compatibility Analysis"}</div>`
+    + `<h1 class="serif">${hi ? "लव मैच रिपोर्ट" : "Love Match Report"}</h1>`
     + `<div class="names serif">${esc(nameA)} <span class="amp">&amp;</span> ${esc(nameB)}</div>`
-    + `<div class="pill">Honest, not just flattering.</div>`
+    + `<div class="pill">${hi ? "Honest, सिर्फ़ तारीफ़ नहीं." : "Honest, not just flattering."}</div>`
     + `<div class="signoff">`
     + `<div class="byline"><span class="hair"></span><span class="by serif">by</span><span class="hair"></span></div>`
     + `<div class="logo-chip"><img src="${LOGO_URL}" alt="TalkToGuruji"/></div>`
@@ -133,58 +154,58 @@ export function buildReportHtml(facts: Facts, sections: Record<string, unknown>)
   const s1 = (S.s1 || {}) as { headline?: string; what_it_means?: string; honest_note?: string };
   let sharedHtml = "";
   if (facts.shared && facts.shared.length) {
-    sharedHtml = `<div class="shared">You share: ${facts.shared.map((x) => `<b>${esc(x)}</b>`).join(", ")}.</div>`;
+    sharedHtml = `<div class="shared">${hi ? "आप दोनों में common: " : "You share: "}${facts.shared.map((x) => `<b>${esc(x)}</b>`).join(", ")}.</div>`;
   }
-  pages += `<div class="page">${head("s1")}`
+  pages += `<div class="page">${head("s1", hi)}`
     + `<div class="score-hero"><div class="ring">${ringSvg(facts.score)}`
-    + `<div class="lbl"><b>${facts.score}</b><span>out of 100</span></div></div>`
+    + `<div class="lbl"><b>${facts.score}</b><span>${hi ? "में से 100" : "out of 100"}</span></div></div>`
     + `<div class="band-pill">${esc(facts.band)}</div>`
     + (s1.headline ? `<div class="band-sub">${esc(s1.headline)}</div>` : "")
     + `</div>`
     + sharedHtml
-    + (s1.what_it_means ? `<div class="hero-quote"><b>What the score means.</b> ${esc(s1.what_it_means)}</div>` : "")
+    + (s1.what_it_means ? `<div class="hero-quote"><b>${hi ? "Score का मतलब." : "What the score means."}</b> ${esc(s1.what_it_means)}</div>` : "")
     + (s1.honest_note ? `<p class="body">${esc(s1.honest_note)}</p>` : "")
-    + frun(++pg) + `</div>`;
+    + frun(++pg, hi) + `</div>`;
 
   // s2 core numbers (stacked person cards = mobile-readable)
   const s2 = (S.s2 || {}) as { shared_note?: string };
-  pages += `<div class="page">${head("s2")}`
-    + `<div class="pcol his"><h3>${esc(nameA)}</h3>${numRows(facts.person_a)}</div>`
-    + `<div class="pcol hers"><h3>${esc(nameB)}</h3>${numRows(facts.person_b)}</div>`
+  pages += `<div class="page">${head("s2", hi)}`
+    + `<div class="pcol his"><h3>${esc(nameA)}</h3>${numRows(facts.person_a, hi)}</div>`
+    + `<div class="pcol hers"><h3>${esc(nameB)}</h3>${numRows(facts.person_b, hi)}</div>`
     + (s2.shared_note ? `<div class="shared">${esc(s2.shared_note)}</div>` : "")
-    + frun(++pg) + `</div>`;
+    + frun(++pg, hi) + `</div>`;
 
   // s3-s10 analytical
   for (const id of ["s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10"]) {
     const sec = (S[id] || { blocks: [] }) as AnalyticalSection;
     const extra = id === "s5" && facts.chemistry ? pairStrip(facts.chemistry) : "";
-    pages += analyticalPage(id, nameA, nameB, sec, ++pg, extra);
+    pages += analyticalPage(id, nameA, nameB, sec, ++pg, hi, extra);
   }
 
   // s11 lists
   const s11 = (S.s11 || {}) as { strengths?: SectionBlock[]; watch?: SectionBlock[]; overall?: string };
   const li = (items: SectionBlock[] | undefined, cls: string) =>
     (items || []).map((i) => `<div class="li ${cls}"><span class="b">&#10022;</span><span class="t"><b>${esc(i.label)}.</b> <span>${esc(i.text)}</span></span></div>`).join("");
-  pages += `<div class="page">${head("s11")}`
-    + `<div class="listcol"><h4>Your strengths</h4>${li(s11.strengths, "good")}</div>`
-    + `<div class="listcol watch"><h4>What to watch</h4>${li(s11.watch, "watch")}</div>`
-    + (s11.overall ? `<div class="hero-quote"><b>Overall.</b> ${esc(s11.overall)}</div>` : "")
-    + frun(++pg) + `</div>`;
+  pages += `<div class="page">${head("s11", hi)}`
+    + `<div class="listcol"><h4>${hi ? "आपकी strengths" : "Your strengths"}</h4>${li(s11.strengths, "good")}</div>`
+    + `<div class="listcol watch"><h4>${hi ? "ध्यान रखने वाली बातें" : "What to watch"}</h4>${li(s11.watch, "watch")}</div>`
+    + (s11.overall ? `<div class="hero-quote"><b>${hi ? "कुल मिलाकर." : "Overall."}</b> ${esc(s11.overall)}</div>` : "")
+    + frun(++pg, hi) + `</div>`;
 
   // s12 advice
   const s12 = (S.s12 || {}) as { intro?: string; items?: SectionBlock[] };
-  pages += `<div class="page">${head("s12")}`
+  pages += `<div class="page">${head("s12", hi)}`
     + (s12.intro ? `<p class="body intro-line">${esc(s12.intro)}</p>` : "")
     + (s12.items || []).map((i) => `<div class="blk-row"><div class="lab">${esc(i.label)}</div><p>${esc(i.text)}</p></div>`).join("")
-    + frun(++pg) + `</div>`;
+    + frun(++pg, hi) + `</div>`;
 
   // s13 closing letter
   const s13 = (S.s13 || {}) as { text?: string };
   const letterParas = esc(s13.text || "").split("\n").filter(Boolean).map((p) => `<p>${p}</p>`).join("");
-  pages += `<div class="page">${head("s13")}`
+  pages += `<div class="page">${head("s13", hi)}`
     + `<div class="letter">${letterParas}</div>`
     + `<div class="sign"><img src="${LOGO_URL}" alt="TalkToGuruji"/><span>${hi ? "सादर, TalkToGuruji" : "With warm regards, TalkToGuruji"}</span></div>`
-    + frun(++pg) + `</div>`;
+    + frun(++pg, hi) + `</div>`;
 
   // Upsell page (Numerology Report), love-framed, language-aware.
   const up = hi ? {
@@ -210,7 +231,7 @@ export function buildReportHtml(facts: Facts, sections: Record<string, unknown>)
     + `<a class="up-cta" href="https://numerology.talktoguruji.com?coupon=LOVE">${esc(up.cta)}</a>`
     + `<div class="up-note">${esc(up.note)}</div>`
     + `</div>`
-    + frun(++pg) + `</div>`;
+    + frun(++pg, hi) + `</div>`;
 
   return `<!DOCTYPE html><html lang="${hi ? "hi" : "en"}"><head><meta charset="UTF-8"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>

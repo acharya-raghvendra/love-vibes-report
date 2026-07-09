@@ -65,15 +65,18 @@ function relationDot(rel: string): string {
   return "#C9A25E";
 }
 
-function numRows(c: CoreNumbers): string {
+function numRows(c: CoreNumbers, hi: boolean): string {
+  const L = hi
+    ? { lp: "लाइफ़ पाथ", de: "डेस्टिनी", su: "सोल अर्ज", pe: "पर्सनैलिटी", master: "मास्टर" }
+    : { lp: "Life Path", de: "Destiny", su: "Soul Urge", pe: "Personality", master: "Master" };
   const row = (label: string, f: NumFact) => {
     const compound = f.compound !== f.display ? `${f.compound}/${f.display}` : `${f.display}`;
-    const shown = f.isMaster ? `${f.score} (Master ${f.display})` : compound;
+    const shown = f.isMaster ? `${f.score} (${L.master} ${f.display})` : compound;
     return `<div class="nrow"><span class="v">${esc(f.display)}</span>`
       + `<span class="meta"><b>${label}</b><span>${esc(shown)}</span></span></div>`;
   };
-  return row("Life Path", c.lifePath) + row("Destiny", c.destiny)
-    + row("Soul Urge", c.soulUrge) + row("Personality", c.personality);
+  return row(L.lp, c.lifePath) + row(L.de, c.destiny)
+    + row(L.su, c.soulUrge) + row(L.pe, c.personality);
 }
 
 function pairStrip(chem: ChemPair[]): string {

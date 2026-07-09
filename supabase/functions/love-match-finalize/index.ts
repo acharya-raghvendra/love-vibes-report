@@ -226,8 +226,8 @@ Deno.serve(async (req: Request) => {
     };
 
     // 4. Prose cache.
-    const proseKey = await sha256(`prose:v1:${order.language}:${JSON.stringify(facts)}`);
-    let sections: Record<string, string> | null = null;
+    const proseKey = await sha256(`prose:v2:${order.language}:${JSON.stringify(facts)}`);
+    let sections: Record<string, unknown> | null = null;
     const { data: cachedProse } = await supabase
       .from("love_match_prose_cache").select("sections").eq("prose_key", proseKey).maybeSingle();
     if (cachedProse?.sections) sections = cachedProse.sections;

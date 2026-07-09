@@ -231,7 +231,7 @@ export function buildReportHtml(facts: Facts, sections: Record<string, unknown>)
     + `<a class="up-cta" href="https://numerology.talktoguruji.com?coupon=LOVE">${esc(up.cta)}</a>`
     + `<div class="up-note">${esc(up.note)}</div>`
     + `</div>`
-    + frun(++pg) + `</div>`;
+    + frun(++pg, hi) + `</div>`;
 
   return `<!DOCTYPE html><html lang="${hi ? "hi" : "en"}"><head><meta charset="UTF-8"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>

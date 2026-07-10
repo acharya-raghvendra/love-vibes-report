@@ -21,24 +21,12 @@ function ok(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS });
 }
 
-// Constant-time hex/string compare — same shape as love-match-finalize.
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let out = 0;
-  for (let i = 0; i < a.length; i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return out === 0;
-}
-
 Deno.serve(async (req: Request) => {
   try {
-    // 1. Shared-secret auth.
-    const provided = req.headers.get("x-partner-secret") ?? "";
-    const expected = Deno.env.get("PARTNER_API_SECRET") ?? "";
-    if (!expected || !provided || !timingSafeEqual(provided, expected)) {
-      return ok({ error: "unauthorized" }, 401);
-    }
+    // Auth: verify_jwt=true in config.toml — Supabase gateway validates the
+    // caller's anon Bearer before this handler runs. No extra check here.
 
-    // 2. Parse + validate body.
+    // 1. Parse + validate body.
     const body = await req.json().catch(() => ({}));
     const a = body?.person_a ?? {};
     const b = body?.person_b ?? {};

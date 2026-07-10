@@ -34,5 +34,6 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.partner-generate-full]
-verify_jwt = false
+verify_jwt = true
+
 

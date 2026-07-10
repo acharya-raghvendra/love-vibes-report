@@ -123,16 +123,25 @@ function blocks(bl?: SectionBlock[]): string {
   ).join("");
 }
 
-function analyticalPage(id: string, nameA: string, nameB: string, s: AnalyticalSection, pg: number, hi: boolean, extra = ""): string {
+function analyticalPage(id: string, nameA: string, nameB: string, s: AnalyticalSection, pg: number, hi: boolean, extra = "", footerOverride?: string): string {
   let inner = head(id, hi) + cards2(nameA, nameB, s);
   if (s.tag) inner += `<div class="verdict">${esc(s.tag)}</div>`;
   inner += extra;
   if (s.intro) inner += `<div class="hero-quote">${esc(s.intro)}</div>`;
   inner += blocks(s.blocks);
-  return `<div class="page">${inner}${frun(pg, hi)}</div>`;
+  return `<div class="page">${inner}${frun(pg, hi, footerOverride)}</div>`;
 }
 
-export function buildReportHtml(facts: Facts, sections: Record<string, unknown>): string {
+export function buildReportHtml(
+  facts: Facts,
+  sections: Record<string, unknown>,
+  opts?: { logoUrl?: string; footerText?: string; companyName?: string; showUpsell?: boolean },
+): string {
+  const logoUrl = opts?.logoUrl ?? LOGO_URL;
+  const footerOverride = opts?.footerText;
+  const companyName = opts?.companyName ?? "Inno-One Service LLP";
+  const showUpsell = opts?.showUpsell ?? true;
+
   const hi = facts.language === "hi";
   const nameA = facts.person_a?.first || facts.names?.a || "Person A";
   const nameB = facts.person_b?.first || facts.names?.b || "Person B";

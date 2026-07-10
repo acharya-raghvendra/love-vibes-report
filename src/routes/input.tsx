@@ -225,7 +225,8 @@ function InputPage() {
           <div className="glass-card rounded-2xl border border-dashed border-outline-variant/40 p-6">
             <label className="mb-2 flex items-center gap-2 font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant">
               <span className="material-symbols-outlined text-base">chat</span>
-              Receive Insights via WhatsApp
+              WhatsApp Number <span className="text-primary">*</span>
+              <span className="ml-1 normal-case tracking-normal text-on-surface-variant/70">(required to deliver your report)</span>
             </label>
             <div className="flex items-center gap-3">
               <div className="rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-3 font-label-md text-on-surface-variant">
@@ -234,6 +235,7 @@ function InputPage() {
               <input
                 type="tel"
                 inputMode="numeric"
+                required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="WhatsApp Number"

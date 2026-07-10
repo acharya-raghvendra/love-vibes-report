@@ -49,7 +49,7 @@ function PrivacyPage() {
               <li><strong>Names:</strong> The names of both partners, to personalize your compatibility report</li>
               <li><strong>Dates of Birth:</strong> The dates of birth of both partners, essential for compatibility calculations</li>
               <li><strong>Buyer Email Address:</strong> To deliver your report and communicate with you</li>
-              <li><strong>Phone Number (optional):</strong> For customer support and order updates</li>
+              <li><strong>Phone Number:</strong> Required to deliver your report via WhatsApp and for order updates</li>
               <li><strong>Payment Information:</strong> Processed securely through Razorpay payment gateway</li>
             </ul>
 

@@ -1,7 +1,10 @@
-Update the Effective Date and Last Updated lines on all three legal pages from "January 1, 2026" to "July 9, 2026":
+## Make WhatsApp number required + update privacy page
 
-- `src/routes/terms.tsx` (lines 34–35)
-- `src/routes/refund.tsx` (lines 34–35)
-- `src/routes/privacy.tsx` (lines 34–35)
+**src/routes/input.tsx**
+- Update the WhatsApp field label from "Receive Insights via WhatsApp" to indicate it's required (add a red asterisk, e.g. "WhatsApp Number *" or "Receive Insights via WhatsApp (required)"), and add `required` to the tel input. Validation already blocks submit for <10 digits — keep as is.
 
-No other content changes.
+**src/routes/privacy.tsx** (line 52)
+- Change `<strong>Phone Number (optional):</strong> For customer support and order updates`
+  to `<strong>Phone Number:</strong> Required to deliver your report via WhatsApp and for order updates`
+
+No backend changes — `create-love-match-order` already requires phone (≥10 digits).

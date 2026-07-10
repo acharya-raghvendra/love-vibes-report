@@ -33,19 +33,19 @@ const TESTIMONIALS = [
 const FAQS = [
   {
     q: "How accurate is this?",
-    a: "Our algorithm uses millennia-old Vedic numerology systems cross-referenced with modern personality mapping to provide insights with over 90% reported resonance.",
+    a: "Our reports use established Chaldean and Vedic numerology methods to map compatibility between two people. Numerology is an interpretive system for insight and self-reflection, not a guaranteed prediction. Many readers find the analysis resonates closely with their real experience.",
   },
   {
     q: "What do I need to provide?",
-    a: "Simply provide your full birth names and exact birth dates. Time of birth is optional but adds another layer of cosmic depth to your report.",
+    a: "Just the full birth names and dates of birth of both people. That is all the analysis needs.",
   },
   {
     q: "Is it private?",
-    a: "Your sacred data is encrypted and never shared. We treat your personal journey with the highest level of spiritual and digital integrity.",
+    a: "Yes. Your data is encrypted and never shared. We handle your personal information with strict care and use it only to generate your report.",
   },
   {
     q: "Can I get a refund?",
-    a: "If the insights do not resonate with your soul within 7 days, we offer a full cosmic satisfaction guarantee. Just reach out to our guides.",
+    a: "Because this is a personalized digital report delivered instantly, we are unable to offer refunds once it has been generated. If you face any technical issue with delivery, reach out and we will make it right.",
   },
 ];
 

@@ -1,37 +1,16 @@
-Make a targeted change to `supabase/functions/_shared/buildReportHtml.ts` so partner-branded PDFs (called by `partner-generate-full` with `showUpsell: false`) have no TalkToGuruji sign-off, while the consumer/finalize path (no `opts`) stays byte-identical.
+## Change
 
-### Change
-In the s13 closing letter block, gate the sign-off `<div class="sign">...</div>` on `opts?.showUpsell !== false`. The existing sign-off line is preserved literally when the condition is true; when false, an empty string is concatenated instead.
+In `src/routes/index.tsx`, replace the four FAQ answer strings in the `FAQS` array with the exact new copy provided. Questions unchanged.
 
-### Before
-```typescript
-  // s13 closing letter
-  const s13 = (S.s13 || {}) as { text?: string };
-  const letterParas = esc(s13.text || "").split("\n").filter(Boolean).map((p) => `<p>${p}</p>`).join("");
-  pages += `<div class="page">${head("s13", hi)}`
-    + `<div class="letter">${letterParas}</div>`
-    + `<div class="sign"><img src="${logoUrl}" alt="TalkToGuruji"/><span>${hi ? "सादर, TalkToGuruji" : "With warm regards, TalkToGuruji"}</span></div>`
-    + frun(++pg, hi, footerOverride) + `</div>`;
-```
+- "How accurate is this?" → new answer (removes the "90% reported resonance" figure).
+- "What do I need to provide?" → new answer (removes "Time of birth is optional…" line).
+- "Is it private?" → new answer.
+- "Can I get a refund?" → new answer (no-refund policy for instant digital reports).
 
-### After
-```typescript
-  // s13 closing letter
-  const s13 = (S.s13 || {}) as { text?: string };
-  const letterParas = esc(s13.text || "").split("\n").filter(Boolean).map((p) => `<p>${p}</p>`).join("");
-  const signoff = opts?.showUpsell === false
-    ? ""
-    : `<div class="sign"><img src="${logoUrl}" alt="TalkToGuruji"/><span>${hi ? "सादर, TalkToGuruji" : "With warm regards, TalkToGuruji"}</span></div>`;
-  pages += `<div class="page">${head("s13", hi)}`
-    + `<div class="letter">${letterParas}</div>`
-    + signoff
-    + frun(++pg, hi, footerOverride) + `</div>`;
-```
+## Sweep for birth-time / accuracy-% mentions elsewhere
 
-### Constraints
-- Only modify `supabase/functions/_shared/buildReportHtml.ts`.
-- Do not touch `love-match-finalize`, `partner-generate-full/index.ts`, `admin-create-free-report`, or any other file.
-- When `opts` is undefined, the output HTML for that block remains byte-identical to today.
+Search the codebase for any other user-facing copy referencing birth time or a specific accuracy percentage, and remove those mentions only (no logic changes). Likely candidates to check: `src/routes/input.tsx`, `src/routes/preview.tsx`, `src/routes/success.tsx`, `src/routes/contact.tsx`, `src/routes/privacy.tsx`, `src/routes/refund.tsx`, `src/routes/terms.tsx`, `src/components/site-footer.tsx`, `src/components/site-header.tsx`, and `src/routes/__root.tsx` meta. If a route/form field or label references birth time, remove the copy only — no schema or engine changes (engine already ignores time).
 
-### Deploy
-Redeploy `partner-generate-full` so the updated shared `buildReportHtml.ts` is live.
+## Out of scope
+
+No changes to edge functions, engine, DB schema, or the compatibility scoring logic.

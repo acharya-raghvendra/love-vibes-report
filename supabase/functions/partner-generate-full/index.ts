@@ -118,23 +118,34 @@ Deno.serve(async (req: Request) => {
 
     // 6. Browserless PDF — same call as love-match-finalize (timeout=60000).
     const browserlessKey = Deno.env.get("BROWSERLESS_API_KEY");
+    const hasBranding = !!body?.branding;
+    console.log(
+      `[partner] browserless_key_len=${browserlessKey?.length ?? 0} has_branding=${hasBranding}`,
+    );
     if (!browserlessKey) {
       console.error("[partner] BROWSERLESS_API_KEY missing");
       return ok({ status: "failed", error: { code: "GENERATION_FAILED" } }, 500);
     }
-    const pdfRes = await fetch(
-      `https://production-sfo.browserless.io/pdf?token=${browserlessKey}&timeout=60000`,
-      {
-        method: "POST",
-        headers: JSON_HEADERS,
-        body: JSON.stringify({ html, options: { printBackground: true, format: "A4" } }),
-      },
-    );
+    const browserlessUrl =
+      `https://production-sfo.browserless.io/pdf?token=${browserlessKey}&timeout=60000`;
+    const pdfRes = await fetch(browserlessUrl, {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ html, options: { printBackground: true, format: "A4" } }),
+    });
     if (!pdfRes.ok) {
       const errBody = await pdfRes.text().catch(() => "");
-      console.error(`[partner] browserless_http status=${pdfRes.status} body=${errBody.slice(0, 500)}`);
+      const last4 = browserlessKey.slice(-4);
+      const maskedUrl = browserlessUrl.replace(
+        `token=${browserlessKey}`,
+        `token=***${last4}`,
+      );
+      console.error(
+        `[partner] browserless_http status=${pdfRes.status} has_branding=${hasBranding} url=${maskedUrl} body=${errBody.slice(0, 500)}`,
+      );
       return ok({ status: "failed", error: { code: "GENERATION_FAILED" } }, 500);
     }
+
     const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
     if (pdfBytes.length < 10240) {
       console.error(`[partner] browserless_pdf_too_small bytes=${pdfBytes.length}`);

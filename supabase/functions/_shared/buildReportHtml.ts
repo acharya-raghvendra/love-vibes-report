@@ -157,7 +157,7 @@ export function buildReportHtml(
     + `<div class="pill">${hi ? "Honest, सिर्फ़ तारीफ़ नहीं." : "Honest, not just flattering."}</div>`
     + `<div class="signoff">`
     + `<div class="byline"><span class="hair"></span><span class="by serif">by</span><span class="hair"></span></div>`
-    + `<div class="logo-chip"><img src="${LOGO_URL}" alt="TalkToGuruji"/></div>`
+    + `<div class="logo-chip"><img src="${logoUrl}" alt="TalkToGuruji"/></div>`
     + `</div>`
     + `<div class="cover-disc">${hi
       ? "यह report सिर्फ़ guidance और self-reflection के लिए numerology पर आधारित है. किसी नतीजे की guarantee नहीं, और professional advice का विकल्प नहीं."
@@ -179,7 +179,7 @@ export function buildReportHtml(
     + sharedHtml
     + (s1.what_it_means ? `<div class="hero-quote"><b>${hi ? "Score का मतलब." : "What the score means."}</b> ${esc(s1.what_it_means)}</div>` : "")
     + (s1.honest_note ? `<p class="body">${esc(s1.honest_note)}</p>` : "")
-    + frun(++pg, hi) + `</div>`;
+    + frun(++pg, hi, footerOverride) + `</div>`;
 
   // s2 core numbers (stacked person cards = mobile-readable)
   const s2 = (S.s2 || {}) as { shared_note?: string };
@@ -187,13 +187,13 @@ export function buildReportHtml(
     + `<div class="pcol his"><h3>${esc(nameA)}</h3>${numRows(facts.person_a, hi)}</div>`
     + `<div class="pcol hers"><h3>${esc(nameB)}</h3>${numRows(facts.person_b, hi)}</div>`
     + (s2.shared_note ? `<div class="shared">${esc(s2.shared_note)}</div>` : "")
-    + frun(++pg, hi) + `</div>`;
+    + frun(++pg, hi, footerOverride) + `</div>`;
 
   // s3-s10 analytical
   for (const id of ["s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10"]) {
     const sec = (S[id] || { blocks: [] }) as AnalyticalSection;
     const extra = id === "s5" && facts.chemistry ? pairStrip(facts.chemistry) : "";
-    pages += analyticalPage(id, nameA, nameB, sec, ++pg, hi, extra);
+    pages += analyticalPage(id, nameA, nameB, sec, ++pg, hi, extra, footerOverride);
   }
 
   // s11 lists
@@ -204,48 +204,50 @@ export function buildReportHtml(
     + `<div class="listcol"><h4>${hi ? "आपकी strengths" : "Your strengths"}</h4>${li(s11.strengths, "good")}</div>`
     + `<div class="listcol watch"><h4>${hi ? "ध्यान रखने वाली बातें" : "What to watch"}</h4>${li(s11.watch, "watch")}</div>`
     + (s11.overall ? `<div class="hero-quote"><b>${hi ? "कुल मिलाकर." : "Overall."}</b> ${esc(s11.overall)}</div>` : "")
-    + frun(++pg, hi) + `</div>`;
+    + frun(++pg, hi, footerOverride) + `</div>`;
 
   // s12 advice
   const s12 = (S.s12 || {}) as { intro?: string; items?: SectionBlock[] };
   pages += `<div class="page">${head("s12", hi)}`
     + (s12.intro ? `<p class="body intro-line">${esc(s12.intro)}</p>` : "")
     + (s12.items || []).map((i) => `<div class="blk-row"><div class="lab">${esc(i.label)}</div><p>${esc(i.text)}</p></div>`).join("")
-    + frun(++pg, hi) + `</div>`;
+    + frun(++pg, hi, footerOverride) + `</div>`;
 
   // s13 closing letter
   const s13 = (S.s13 || {}) as { text?: string };
   const letterParas = esc(s13.text || "").split("\n").filter(Boolean).map((p) => `<p>${p}</p>`).join("");
   pages += `<div class="page">${head("s13", hi)}`
     + `<div class="letter">${letterParas}</div>`
-    + `<div class="sign"><img src="${LOGO_URL}" alt="TalkToGuruji"/><span>${hi ? "सादर, TalkToGuruji" : "With warm regards, TalkToGuruji"}</span></div>`
-    + frun(++pg, hi) + `</div>`;
+    + `<div class="sign"><img src="${logoUrl}" alt="TalkToGuruji"/><span>${hi ? "सादर, TalkToGuruji" : "With warm regards, TalkToGuruji"}</span></div>`
+    + frun(++pg, hi, footerOverride) + `</div>`;
 
   // Upsell page (Numerology Report), love-framed, language-aware.
-  const up = hi ? {
-    eyebrow: "एक और बात",
-    title: "आपके numbers सिर्फ़ love तक नहीं रुकते",
-    body: "इस report ने आपके नाम से Soul Urge और Destiny पढ़ा. पर क्या आपके नाम की spelling आपका साथ दे रही है, या चुपके से रोक रही है? आपकी पूरी Numerology Report आपका Name Correction और Mobile Number analysis खोलती है, वो रोज़मर्रा के numbers जो आपके पैसे, काम और रिश्तों को चला रहे हैं.",
-    card: "Numerology Report", sub: "Name Correction + Mobile Number Analysis",
-    cta: "अपनी report पाएं", note: "Code LOVE आपके link में पहले से लगा है.",
-  } : {
-    eyebrow: "One more thing",
-    title: "Your numbers don't stop at love",
-    body: "This report read your Soul Urge and Destiny straight from your name. But is your name spelling quietly helping you, or holding you back? Your full Numerology Report reveals your Name Correction and Mobile Number analysis, the everyday numbers steering your money, work, and relationships.",
-    card: "Numerology Report", sub: "Name Correction + Mobile Number Analysis",
-    cta: "Get your report", note: "Code LOVE is already applied in your link.",
-  };
-  pages += `<div class="page">`
-    + `<div class="eyebrow-s"><span class="rings"><i></i><i></i></span> ${esc(up.eyebrow)}</div>`
-    + `<h2 class="sec serif">${esc(up.title)}</h2><div class="rule"></div>`
-    + `<p class="body">${esc(up.body)}</p>`
-    + `<div class="upsell">`
-    + `<div class="up-head"><div class="up-title serif">${esc(up.card)}</div><div class="up-price">₹399</div></div>`
-    + `<div class="up-sub">${esc(up.sub)}</div>`
-    + `<a class="up-cta" href="https://numerology.talktoguruji.com?coupon=LOVE">${esc(up.cta)}</a>`
-    + `<div class="up-note">${esc(up.note)}</div>`
-    + `</div>`
-    + frun(++pg, hi) + `</div>`;
+  if (showUpsell) {
+    const up = hi ? {
+      eyebrow: "एक और बात",
+      title: "आपके numbers सिर्फ़ love तक नहीं रुकते",
+      body: "इस report ने आपके नाम से Soul Urge और Destiny पढ़ा. पर क्या आपके नाम की spelling आपका साथ दे रही है, या चुपके से रोक रही है? आपकी पूरी Numerology Report आपका Name Correction और Mobile Number analysis खोलती है, वो रोज़मर्रा के numbers जो आपके पैसे, काम और रिश्तों को चला रहे हैं.",
+      card: "Numerology Report", sub: "Name Correction + Mobile Number Analysis",
+      cta: "अपनी report पाएं", note: "Code LOVE आपके link में पहले से लगा है.",
+    } : {
+      eyebrow: "One more thing",
+      title: "Your numbers don't stop at love",
+      body: "This report read your Soul Urge and Destiny straight from your name. But is your name spelling quietly helping you, or holding you back? Your full Numerology Report reveals your Name Correction and Mobile Number analysis, the everyday numbers steering your money, work, and relationships.",
+      card: "Numerology Report", sub: "Name Correction + Mobile Number Analysis",
+      cta: "Get your report", note: "Code LOVE is already applied in your link.",
+    };
+    pages += `<div class="page">`
+      + `<div class="eyebrow-s"><span class="rings"><i></i><i></i></span> ${esc(up.eyebrow)}</div>`
+      + `<h2 class="sec serif">${esc(up.title)}</h2><div class="rule"></div>`
+      + `<p class="body">${esc(up.body)}</p>`
+      + `<div class="upsell">`
+      + `<div class="up-head"><div class="up-title serif">${esc(up.card)}</div><div class="up-price">₹399</div></div>`
+      + `<div class="up-sub">${esc(up.sub)}</div>`
+      + `<a class="up-cta" href="https://numerology.talktoguruji.com?coupon=LOVE">${esc(up.cta)}</a>`
+      + `<div class="up-note">${esc(up.note)}</div>`
+      + `</div>`
+      + frun(++pg, hi, footerOverride) + `</div>`;
+  }
 
   // Final disclaimer page
   const dc = hi ? {
@@ -263,7 +265,7 @@ export function buildReportHtml(
       "Digital report deliver होने के बाद कोई refund नहीं मिलेगा.",
     ],
     close: "Numerology self-reflection के लिए एक पारंपरिक framework है. इस reading को एक tool की तरह इस्तेमाल करें ताकि आप ख़ुद को और एक-दूसरे को ज़्यादा awareness के साथ समझ सकें.",
-    co: "Inno-One Service LLP",
+    co: companyName,
   } : {
     title: "Important Disclaimer",
     lead: "This is your personalized Love Match reading, reflecting the numerology of you both.",
@@ -279,7 +281,7 @@ export function buildReportHtml(
       "No refunds once the digital report has been delivered.",
     ],
     close: "Numerology is a traditional framework for self-reflection. Use this reading as a tool to understand yourselves and each other with greater awareness.",
-    co: "Inno-One Service LLP",
+    co: companyName,
   };
   pages += `<div class="page">`
     + `<div class="disc-card">`
@@ -289,7 +291,7 @@ export function buildReportHtml(
     + `<div class="disc-close">${esc(dc.close)}</div>`
     + `<div class="disc-co">${esc(dc.co)}</div>`
     + `</div>`
-    + frun(++pg, hi) + `</div>`;
+    + frun(++pg, hi, footerOverride) + `</div>`;
 
   return `<!DOCTYPE html><html lang="${hi ? "hi" : "en"}"><head><meta charset="UTF-8"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>

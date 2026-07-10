@@ -216,10 +216,14 @@ export function buildReportHtml(
   // s13 closing letter
   const s13 = (S.s13 || {}) as { text?: string };
   const letterParas = esc(s13.text || "").split("\n").filter(Boolean).map((p) => `<p>${p}</p>`).join("");
+  const signoff = opts?.showUpsell === false
+    ? ""
+    : `<div class="sign"><img src="${logoUrl}" alt="TalkToGuruji"/><span>${hi ? "सादर, TalkToGuruji" : "With warm regards, TalkToGuruji"}</span></div>`;
   pages += `<div class="page">${head("s13", hi)}`
     + `<div class="letter">${letterParas}</div>`
-    + `<div class="sign"><img src="${logoUrl}" alt="TalkToGuruji"/><span>${hi ? "सादर, TalkToGuruji" : "With warm regards, TalkToGuruji"}</span></div>`
+    + signoff
     + frun(++pg, hi, footerOverride) + `</div>`;
+
 
   // Upsell page (Numerology Report), love-framed, language-aware.
   if (showUpsell) {

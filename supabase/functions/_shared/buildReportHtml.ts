@@ -95,10 +95,12 @@ function ringSvg(score: number): string {
     + `transform="rotate(-90 90 90)"/></svg>`;
 }
 
-function frun(pg: number, hi: boolean): string {
+function frun(pg: number, hi: boolean, footerOverride?: string): string {
   const title = hi ? "लव मैच रिपोर्ट" : "Love Match Report";
-  return `<div class="frun"><span>TalkToGuruji &nbsp;•&nbsp; ${title}</span><span class="pg">${pg}</span></div>`;
+  const text = footerOverride ?? `TalkToGuruji &nbsp;•&nbsp; ${title}`;
+  return `<div class="frun"><span>${text}</span><span class="pg">${pg}</span></div>`;
 }
+
 function eyebrow(n: string, hi: boolean): string {
   const nn = n.length < 2 ? "0" + n : n;
   const label = hi ? "सेक्शन" : "Section";

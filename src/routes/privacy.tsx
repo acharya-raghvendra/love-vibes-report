@@ -31,8 +31,8 @@ function PrivacyPage() {
 
         <div className="space-y-8 text-on-surface-variant font-body-md text-body-md leading-relaxed">
           <p>
-            <strong>Effective Date:</strong> January 1, 2026<br />
-            <strong>Last Updated:</strong> January 1, 2026
+            <strong>Effective Date:</strong> July 9, 2026<br />
+            <strong>Last Updated:</strong> July 9, 2026
           </p>
 
           <p>

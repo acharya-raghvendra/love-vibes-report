@@ -1,73 +1,124 @@
-## Problem
 
-`prosePrompt.ts` correctly forces Gemini to return every value in Hinglish/Devanagari when `language==="hi"`, but `supabase/functions/_shared/buildReportHtml.ts` still renders the report **chrome** (section titles, eyebrows, footer, list headers, cover strapline, core-number labels) as hardcoded English. So a Hindi order comes back with Hindi *body copy* wrapped in English *headings* — exactly the regression the user is seeing.
+# Internals report — Love Match report pipeline
 
-The prose is fine. The template shell is not language-aware.
+Read-only. No code changes proposed.
 
-## Fix — one file: `supabase/functions/_shared/buildReportHtml.ts`
+## 1. `love-match-finalize` pipeline (in order)
 
-All edits are presentation-only. No changes to signature verification, order status, Browserless POST, Resend delivery, `prosePrompt.ts`, or the cache key.
+File: `supabase/functions/love-match-finalize/index.ts`
 
-### 1. Replace the single `SECTION_TITLES` map with a bilingual pair
+| # | Step | Helper (function → file) |
+|---|---|---|
+| 1 | Read raw body, verify Razorpay signature | `hmacSha256Hex` + `timingSafeEqual` (inline in `love-match-finalize/index.ts`) |
+| 2 | Parse event, ignore non-`payment.captured` | inline |
+| 3 | Load order by `order_id` from `love_match_orders` (never trusts webhook body) | `supabase.from("love_match_orders").select(...)` |
+| 4 | Idempotency guard (`status === "delivered"` → short-circuit) | inline |
+| 5 | Mark `status = "paid"` | inline update |
+| 6 | Recompute facts server-side from names + DOBs | `scoreMatch` → `supabase/functions/_shared/engine/scorer.ts` |
+| 7 | Build `chemistry` array (planet labels, relation labels) | inline `PLANETS`, `relationLabel`, `pairLabel` |
+| 8 | Prose cache lookup by `prose_key` | `sha256` (inline) → `love_match_prose_cache` |
+| 9 | Gemini prose generation (retry once, validate no invented numbers) | `generateProse` (inline) using `buildSystemPrompt` → `supabase/functions/_shared/prosePrompt.ts`; `validateNoInventedNumbers` + `allowedNumberSet` (inline) |
+| 10 | Cache prose (`upsert` into `love_match_prose_cache`) | inline |
+| 11 | Build HTML | `buildReportHtml` → `supabase/functions/_shared/buildReportHtml.ts` |
+| 12 | Browserless PDF render (`production-sfo.browserless.io/pdf`) | inline `fetch`; validates `pdfBytes.length ≥ 10240` |
+| 13 | Upload to Storage `love-match-pdfs/love-match/{orderId}.pdf`; sign URL 30 days | `supabase.storage.from(...).upload / createSignedUrl` |
+| 14 | Resend email (best-effort) | inline `fetch` to `api.resend.com/emails`, HTML from `buildReportEmailHtml` (inline) |
+| 15 | Update `love_match_orders` to `status="delivered"`, `pdf_url`, `whatsapp_sent` | inline |
+| 16 | Increment coupon usage via RPC (non-fatal) | `supabase.rpc("increment_coupon_usage", ...)` |
+
+Failure branch: `markFail(reason)` sets `status="failed"` + `failure_reason`.
+
+## 2. `buildReportHtml` signature
+
+File: `supabase/functions/_shared/buildReportHtml.ts`
 
 ```ts
-const SECTION_TITLES_EN: Record<string,string> = { /* current map */ };
-const SECTION_TITLES_HI: Record<string,string> = {
-  s1: "आप दोनों कितने compatible हैं",
-  s2: "आपके core numbers",
-  s3: "Life Path: आप दोनों ज़िंदगी कैसे जीते हैं",
-  s4: "Soul Urge: आप दोनों प्यार कैसे करते हैं",
-  s5: "Chemistry और attraction",
-  s6: "नज़दीकी और intimacy",
-  s7: "Personality: आप बाहर से कैसे दिखते हैं",
-  s8: "टकराव और repair",
-  s9: "Maturity: वक़्त के साथ आप कैसे बदलते हैं",
-  s10: "अभी का वक़्त",
-  s11: "एक नज़र में: strengths और ध्यान रखने वाली बातें",
-  s12: "आप क्या कर सकते हैं",
-  s13: "एक honest बात",
-};
+export function buildReportHtml(
+  facts: Facts,
+  sections: Record<string, unknown>
+): string
 ```
 
-### 2. Thread `hi` through the small helpers that emit chrome
+`Facts` = `{ language?, score, band, shared?, person_a: CoreNumbers, person_b: CoreNumbers, chemistry?: ChemPair[], names?: { a?, b? } }`.
 
-Change signatures (module-scope, still pure):
-- `eyebrow(n, hi)` → `Section 03` becomes `सेक्शन 03` when `hi`.
-- `head(id, hi)` → picks HI or EN title map.
-- `frun(pg, hi)` → footer text `TalkToGuruji • Love Match Report` becomes `TalkToGuruji • लव मैच रिपोर्ट`.
-- `numRows(c, hi)` → `Life Path / Destiny / Soul Urge / Personality` become `लाइफ़ पाथ / डेस्टिनी / सोल अर्ज / पर्सनैलिटी`.
-- `analyticalPage(...)` gains an `hi` param and forwards to `head` + `frun`.
+Branding today: **hardcoded**, no argument.
+- `LOGO_URL` const at top of file (`https://love.talktoguruji.com/__l5e/…/talktoguruji-logo.png`)
+- Footer text `"TalkToGuruji • Love Match Report"` hardcoded in `frun()`
+- Upsell URL/coupon hardcoded (`numerology.talktoguruji.com?coupon=LOVE`, ₹399)
+- Company name `"Inno-One Service LLP"` hardcoded in disclaimer
 
-`ringSvg`, `pairStrip`, `relationDot`, `ringColor`, `blocks`, `cards2` need no change — they emit no English text.
+No `brand`, `logoUrl`, `footer`, or `upsell` argument exists.
 
-### 3. Localize the inline strings inside `buildReportHtml`
+## 3. `admin-create-free-report`
 
-Replace the hardcoded English fragments (all currently on lines 122–186) with `hi ? "…" : "…"` ternaries, keeping identical HTML structure:
+File: `supabase/functions/admin-create-free-report/index.ts`
 
-| Location | English (current) | Hindi |
+- **Auth**: `requireAdmin(req)` from `supabase/functions/_shared/admin-auth.ts`. It reads `Authorization` header, `auth.getUser()` against `SUPABASE_ANON_KEY`/`SUPABASE_PUBLISHABLE_KEY`, then calls RPC `has_role(user_id, 'admin')`. Returns 401 or 403. Uses a **user JWT** — no shared secret.
+- **Pipeline sharing**: **duplicated**, not shared. The score→prose→PDF→storage→email logic is copy-pasted from `love-match-finalize`. Only `scoreMatch`, `buildReportHtml`, and `buildSystemPrompt` are imported from `_shared/`. There is **no shared pipeline module** (no `_shared/runReportPipeline.ts`); `generateProse`, `validateNoInventedNumbers`, `allowedNumberSet`, `buildReportEmailHtml`, `sha256`, etc. exist inline in both files.
+- Response: `202 { order_id, status: "processing" }`; work runs via `EdgeRuntime.waitUntil`. Client polls `love_match_orders`.
+
+## 4. `love_match_orders` columns
+
+| Column | Type | Notes |
 |---|---|---|
-| Cover eyebrow | `Compatibility Analysis` | `कम्पैटिबिलिटी analysis` |
-| Cover h1 | `Love Match Report` | `लव मैच रिपोर्ट` |
-| Cover pill | `Honest, not just flattering.` | `Honest, सिर्फ़ तारीफ़ नहीं.` |
-| s1 label | `What the score means.` | `Score का मतलब.` |
-| s11 col A | `Your strengths` | `आपकी strengths` |
-| s11 col B | `What to watch` | `ध्यान रखने वाली बातें` |
-| s11 overall | `Overall.` | `कुल मिलाकर.` |
+| `order_id` | text | PK |
+| `person_a` | jsonb | `{first,last,dob,phone?,email?}` |
+| `person_b` | jsonb | `{first,last,dob}` |
+| `language` | text | default `'en'` |
+| `ref_year` | integer | |
+| `status` | text | default `'created'`. Live values in DB: `created`, `delivered`, `failed`. Code also writes transient `paid` in `love-match-finalize`. |
+| `pdf_url` | text | signed URL, 30-day |
+| `whatsapp_sent` | boolean | reused as "email delivered" flag |
+| `razorpay_order_id` | text | |
+| `failure_reason` | text | |
+| `final_price` | integer | |
+| `discount_applied` | integer | default 0 |
+| `coupon_code` | text | `admin-create-free-report` writes `'ADMIN_FREE'` |
+| `created_at` | timestamptz | |
 
-Update the `buildReportHtml` call sites to pass `hi` into `head`, `frun`, `numRows`, `analyticalPage`.
+**No `partner_id`, `brand`, `tenant`, `source`, or upsell-related columns.**
 
-The s13 sign-off (`सादर, TalkToGuruji`) and the upsell block are already language-aware — leave them.
+## 5. `love_match_prose_cache` cache key
 
-### 4. No other changes
+`prose_key = sha256("prose:v3:" + language + ":" + JSON.stringify(facts))`
 
-- No prompt edit — Gemini is already producing Hindi body copy correctly.
-- No cache-key bump — cached prose was generated after the previous cache-key bump (`prose:v3:`) and is already Hindi. Bumping again would just re-bill Gemini for zero content change. The bug is 100% in the template shell.
-- Logo, chip, sign-off styling untouched.
+where `facts = { language, score, band, shared, person_a: result.a, person_b: result.b, names: { a: aFirst, b: bFirst } }` (no `chemistry`, no DOBs, no phone/email). Same formula in both `love-match-finalize` and `admin-create-free-report`.
 
-### 5. Redeploy + verify
+## 6. Shared-secret authenticated functions
 
-- `supabase--deploy_edge_functions` for `love-match-finalize` and `admin-create-free-report`.
-- Ask the user to regenerate one Hindi report and confirm:
-  - Cover strapline, section headings, footer, and core-number labels are Devanagari.
-  - Body text (already fine) still reads naturally.
-  - English orders are unchanged (English map is untouched).
+**None.** Every function today uses either:
+- Razorpay HMAC signature (`love-match-finalize` — `RAZORPAY_WEBHOOK_SECRET`)
+- Supabase user JWT + `has_role` (`admin-*` functions via `requireAdmin`)
+- Or is public / `verify_jwt = false` with no auth (`love-match-generate`, `create-love-match-order`, `validate-coupon`)
+
+No `X-API-KEY` / `PARTNER_SECRET` / bearer-shared-secret pattern exists.
+
+## 7. Env vars read via `Deno.env.get`
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `GEMINI_API_KEY`
+- `BROWSERLESS_API_KEY`
+- `RESEND_API_KEY`
+- `RAZORPAY_KEY_ID`
+- `RAZORPAY_KEY_SECRET`
+- `RAZORPAY_WEBHOOK_SECRET`
+
+## 8. Upsell page location & gating shape
+
+File: `supabase/functions/_shared/buildReportHtml.ts`, inside `buildReportHtml`, roughly **lines 213–237**, between the s13 closing letter and the final disclaimer page.
+
+- Not a separate function — it's an inline block that:
+  1. Builds a language-aware `up` object (`{ eyebrow, title, body, card, sub, cta, note }`)
+  2. Appends one `<div class="page">…</div>` to `pages`
+  3. Calls `frun(++pg, hi)` for the page footer (this is how the page break/pagination works — every page is its own `<div class="page">` with `page-break-after: always` in CSS, and `pg` is a shared counter incremented as pages are emitted)
+- CSS classes owned by this block: `.upsell`, `.up-head`, `.up-title`, `.up-price`, `.up-sub`, `.up-cta`, `.up-note`
+- Hardcoded values: URL `https://numerology.talktoguruji.com?coupon=LOVE`, price `₹399`, card title `"Numerology Report"`
+
+To gate it behind a flag you'd wrap that block in `if (opts.showUpsell)` and **skip the `++pg`** (or keep sequential numbering — the counter's only effect is the footer page number; nothing downstream depends on total page count).
+
+---
+
+Ready to move to build mode whenever you want to act on any of this (partner endpoint, `brand`/`upsell` args on `buildReportHtml`, extracting a `_shared/runReportPipeline.ts`, or adding partner columns to `love_match_orders`).

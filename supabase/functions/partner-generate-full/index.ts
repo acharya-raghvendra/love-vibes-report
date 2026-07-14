@@ -95,15 +95,23 @@ Deno.serve(async (req: Request) => {
 
     if (!sections) {
       const allowed = allowedNumberSet(result);
+      let truncatedCount = 0;
       for (let attempt = 0; attempt < 2 && !sections; attempt++) {
         try {
           const out = await generateProse(keyFacts, language);
           if (validateNoInventedNumbers(out, allowed)) sections = out;
         } catch (err) {
-          console.error("[partner] generateProse failed:", err instanceof Error ? err.message : err);
+          const msg = err instanceof Error ? err.message : String(err);
+          if (msg.startsWith("gemini_truncated")) truncatedCount++;
+          console.error("[partner] generateProse failed:", msg);
         }
       }
-      if (!sections) return ok({ status: "failed", error: { code: "GENERATION_FAILED" } }, 500);
+      if (!sections) {
+        if (truncatedCount >= 2) {
+          return ok({ status: "failed", error: { code: "PROSE_TRUNCATED" } }, 500);
+        }
+        return ok({ status: "failed", error: { code: "GENERATION_FAILED" } }, 500);
+      }
       await supabase.from("love_match_prose_cache").upsert({ prose_key: proseKey, sections });
     }
 

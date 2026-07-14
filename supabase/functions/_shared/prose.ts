@@ -54,7 +54,7 @@ export async function generateProse(
       generationConfig: {
         temperature: 0.55,
         responseMimeType: "application/json",
-        maxOutputTokens: 8192,
+        maxOutputTokens: 32768,
       },
     }),
   });
@@ -63,6 +63,12 @@ export async function generateProse(
     throw new Error(`gemini_http status=${res.status} body=${body.slice(0, 500)}`);
   }
   const data = await res.json();
+  const finishReason = data?.candidates?.[0]?.finishReason ?? "UNKNOWN";
+  const outputTokens = data?.usageMetadata?.candidatesTokenCount ?? -1;
+  console.log(`[prose] gemini finish_reason=${finishReason} output_tokens=${outputTokens}`);
+  if (finishReason === "MAX_TOKENS") {
+    throw new Error(`gemini_truncated finish_reason=MAX_TOKENS output_tokens=${outputTokens}`);
+  }
   let text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
   text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
   const parsed = JSON.parse(text);

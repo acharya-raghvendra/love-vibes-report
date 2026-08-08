@@ -44,6 +44,25 @@ type OrderQuote = {
   finalPrice: number;
 };
 
+// Single source of truth for every price rendered on this page.
+type Pricing = {
+  listPrice: number;
+  originalPrice: number;
+  discountApplied: number;
+  finalAmount: number;
+};
+
+// Gateway handoff data only — never read for display.
+type GatewayOrder = {
+  orderId: string;
+  internalOrderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  couponCode: string | null;
+};
+
+
 const LOCKED_SECTIONS = [
   { icon: "favorite", label: "Full Chemistry Breakdown" },
   { icon: "psychology", label: "Destiny Number Compatibility" },

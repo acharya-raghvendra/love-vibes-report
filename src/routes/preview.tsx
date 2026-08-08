@@ -44,6 +44,25 @@ type OrderQuote = {
   finalPrice: number;
 };
 
+// Single source of truth for every price rendered on this page.
+type Pricing = {
+  listPrice: number;
+  originalPrice: number;
+  discountApplied: number;
+  finalAmount: number;
+};
+
+// Gateway handoff data only — never read for display.
+type GatewayOrder = {
+  orderId: string;
+  internalOrderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  couponCode: string | null;
+};
+
+
 const LOCKED_SECTIONS = [
   { icon: "favorite", label: "Full Chemistry Breakdown" },
   { icon: "psychology", label: "Destiny Number Compatibility" },
@@ -194,8 +213,12 @@ function PreviewPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
-  const [quote, setQuote] = useState<OrderQuote | null>(null);
+  const [pricing, setPricing] = useState<Pricing | null>(null);
+  const [order, setOrder] = useState<GatewayOrder | null>(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
+  // Bumped on every coupon apply/remove; late in-flight responses with an
+  // older generation are discarded so they cannot clobber the shown price.
+  const priceGenRef = useRef(0);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = useCallback((m: string) => {
@@ -255,20 +278,6 @@ function PreviewPage() {
     );
   }, [state]);
 
-  // Pre-fetch pricing once the preview is ready so we can display server-authoritative price.
-  useEffect(() => {
-    if (state.kind !== "ready" || !input || quote) return;
-    let cancelled = false;
-    (async () => {
-      const q = await createOrder(null);
-      if (!cancelled && q) setQuote(q);
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.kind, input]);
-
   const createOrder = useCallback(
     async (couponCode: string | null): Promise<OrderQuote | null> => {
       if (!input) return null;
@@ -286,6 +295,7 @@ function PreviewPage() {
             dob: input.person_b.dob,
           },
           language: "en",
+          // No amount is ever sent; the server is authoritative on price.
           couponCode: couponCode ?? undefined,
         },
       });
@@ -294,6 +304,31 @@ function PreviewPage() {
     },
     [input],
   );
+
+  // Pre-fetch server-authoritative pricing once the preview is ready.
+  useEffect(() => {
+    if (state.kind !== "ready" || !input || pricing) return;
+    const gen = priceGenRef.current;
+    (async () => {
+      const q = await createOrder(null);
+      if (!q || gen !== priceGenRef.current) return; // stale — a coupon was applied meanwhile
+      setPricing({
+        listPrice: q.listPrice,
+        originalPrice: q.originalPrice,
+        discountApplied: q.discountApplied,
+        finalAmount: q.finalPrice,
+      });
+      setOrder({
+        orderId: q.orderId,
+        internalOrderId: q.internalOrderId,
+        amount: q.amount,
+        currency: q.currency,
+        keyId: q.keyId,
+        couponCode: null,
+      });
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.kind, input]);
 
   async function onApplyCoupon() {
     const code = couponInput.trim().toUpperCase();
@@ -306,38 +341,31 @@ function PreviewPage() {
       return;
     }
     if (!data.valid) {
-      setAppliedCoupon(null);
       showToast(data.error ?? "Invalid coupon code");
-      return;
+      return; // pricing untouched
     }
-    // Update display price; blank orderId marks the current quote as stale so
-    // onUnlock creates a fresh Razorpay order with the coupon applied.
-    setQuote((prev) => prev ? {
-      ...prev,
-      orderId: "",
-      finalPrice: data.finalPrice,
-      originalPrice: data.originalPrice,
-      listPrice: data.listPrice,
-      discountApplied: data.calculatedDiscount,
-    } : {
-      orderId: "",
-      internalOrderId: "",
-      amount: 0,
-      currency: "INR",
-      keyId: "",
+    priceGenRef.current += 1; // invalidate any in-flight base-price response
+    setPricing({
       listPrice: data.listPrice,
       originalPrice: data.originalPrice,
-      finalPrice: data.finalPrice,
       discountApplied: data.calculatedDiscount,
+      finalAmount: data.originalPrice - data.calculatedDiscount,
     });
+    setOrder(null); // existing gateway order is stale; a fresh one is created on unlock
     setAppliedCoupon(code);
     showToast(`Coupon applied — you saved ₹${data.calculatedDiscount}`);
   }
 
   function onRemoveCoupon() {
+    priceGenRef.current += 1;
     setAppliedCoupon(null);
     setCouponInput("");
-    setQuote(null);
+    setOrder(null);
+    setPricing((prev) =>
+      prev
+        ? { ...prev, discountApplied: 0, finalAmount: prev.originalPrice }
+        : prev,
+    );
   }
 
   async function onUnlock() {
@@ -350,28 +378,50 @@ function PreviewPage() {
         setPaying(false);
         return;
       }
-      const q = quote && quote.orderId ? quote : (await createOrder(appliedCoupon));
-      if (!q) {
-        showToast("Payment could not start. Try again.");
-        setPaying(false);
-        return;
+      let o = order && order.couponCode === appliedCoupon ? order : null;
+      if (!o) {
+        const gen = priceGenRef.current;
+        const q = await createOrder(appliedCoupon);
+        if (!q) {
+          showToast("Payment could not start. Try again.");
+          setPaying(false);
+          return;
+        }
+        o = {
+          orderId: q.orderId,
+          internalOrderId: q.internalOrderId,
+          amount: q.amount,
+          currency: q.currency,
+          keyId: q.keyId,
+          couponCode: appliedCoupon,
+        };
+        if (gen === priceGenRef.current) {
+          // Reconcile the displayed amount with the authoritative server price.
+          setOrder(o);
+          setPricing({
+            listPrice: q.listPrice,
+            originalPrice: q.originalPrice,
+            discountApplied: q.discountApplied,
+            finalAmount: q.finalPrice,
+          });
+        }
       }
-      setQuote(q);
+      const gatewayOrder = o;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rzp = new (window as any).Razorpay({
-        key: q.keyId,
-        amount: q.amount,
-        currency: q.currency,
+        key: gatewayOrder.keyId,
+        amount: gatewayOrder.amount,
+        currency: gatewayOrder.currency,
         name: "Love Match",
         description: "Compatibility Report",
-        order_id: q.orderId,
+        order_id: gatewayOrder.orderId,
         prefill: {
           name: `${input.person_a.first} ${input.person_a.last}`.trim(),
           contact: input.person_a.phone,
         },
         theme: { color: "#f2ca50" },
         handler: () => {
-          navigate({ to: "/success", search: { order_id: q.internalOrderId, phone: input.person_a.phone } });
+          navigate({ to: "/success", search: { order_id: gatewayOrder.internalOrderId, phone: input.person_a.phone } });
         },
         modal: {
           ondismiss: () => {
@@ -390,6 +440,7 @@ function PreviewPage() {
       setPaying(false);
     }
   }
+
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background text-on-background">
@@ -534,20 +585,20 @@ function PreviewPage() {
             <section className="hidden lg:block">
               <div className="glass-card rounded-2xl border border-primary/25 p-8 text-center shadow-2xl">
                 <div className="mb-2 text-label-sm uppercase tracking-widest text-primary">
-                  {quote && quote.discountApplied > 0 ? "Coupon applied" : "Limited introductory price"}
+                  {pricing && pricing.discountApplied > 0 ? "Coupon applied" : "Limited introductory price"}
                 </div>
                 <div className="mb-1 flex items-baseline justify-center gap-3">
-                  {quote ? (
+                  {pricing ? (
                     <>
                       <span
                         className="text-gold-gradient"
                         style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "3rem" }}
                       >
-                        ₹{quote.finalPrice}
+                        ₹{pricing.finalAmount}
                       </span>
-                      {quote.listPrice > quote.finalPrice && (
+                      {pricing.listPrice > pricing.finalAmount && (
                         <span className="text-body-lg text-on-surface-variant line-through">
-                          ₹{quote.listPrice}
+                          ₹{pricing.listPrice}
                         </span>
                       )}
                     </>
@@ -555,9 +606,9 @@ function PreviewPage() {
                     <span className="h-[3rem] w-32 animate-pulse rounded-full bg-surface-container" />
                   )}
                 </div>
-                {quote && quote.discountApplied > 0 && (
+                {pricing && pricing.discountApplied > 0 && (
                   <div className="mb-2 text-label-sm text-primary">
-                    You save ₹{quote.discountApplied}
+                    You save ₹{pricing.discountApplied}
                   </div>
                 )}
                 <p className="mx-auto mb-6 max-w-md font-body-md text-on-surface-variant">
@@ -651,17 +702,17 @@ function PreviewPage() {
             <div className="flex items-center gap-3">
               <div className="flex flex-col leading-tight">
                 <span className="flex items-baseline gap-2">
-                  {quote ? (
+                  {pricing ? (
                     <>
                       <span
                         className="text-gold-gradient"
                         style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "1.5rem" }}
                       >
-                        ₹{quote.finalPrice}
+                        ₹{pricing.finalAmount}
                       </span>
-                      {quote.listPrice > quote.finalPrice && (
+                      {pricing.listPrice > pricing.finalAmount && (
                         <span className="text-label-sm text-on-surface-variant line-through">
-                          ₹{quote.listPrice}
+                          ₹{pricing.listPrice}
                         </span>
                       )}
                     </>
@@ -670,7 +721,7 @@ function PreviewPage() {
                   )}
                 </span>
                 <span className="text-[10px] uppercase tracking-widest text-primary">
-                  {quote && quote.discountApplied > 0 ? `Saved ₹${quote.discountApplied}` : "Full Report"}
+                  {pricing && pricing.discountApplied > 0 ? `Saved ₹${pricing.discountApplied}` : "Full Report"}
                 </span>
               </div>
               <button

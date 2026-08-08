@@ -585,20 +585,20 @@ function PreviewPage() {
             <section className="hidden lg:block">
               <div className="glass-card rounded-2xl border border-primary/25 p-8 text-center shadow-2xl">
                 <div className="mb-2 text-label-sm uppercase tracking-widest text-primary">
-                  {quote && quote.discountApplied > 0 ? "Coupon applied" : "Limited introductory price"}
+                  {pricing && pricing.discountApplied > 0 ? "Coupon applied" : "Limited introductory price"}
                 </div>
                 <div className="mb-1 flex items-baseline justify-center gap-3">
-                  {quote ? (
+                  {pricing ? (
                     <>
                       <span
                         className="text-gold-gradient"
                         style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "3rem" }}
                       >
-                        ₹{quote.finalPrice}
+                        ₹{pricing.finalAmount}
                       </span>
-                      {quote.listPrice > quote.finalPrice && (
+                      {pricing.listPrice > pricing.finalAmount && (
                         <span className="text-body-lg text-on-surface-variant line-through">
-                          ₹{quote.listPrice}
+                          ₹{pricing.listPrice}
                         </span>
                       )}
                     </>
@@ -606,9 +606,9 @@ function PreviewPage() {
                     <span className="h-[3rem] w-32 animate-pulse rounded-full bg-surface-container" />
                   )}
                 </div>
-                {quote && quote.discountApplied > 0 && (
+                {pricing && pricing.discountApplied > 0 && (
                   <div className="mb-2 text-label-sm text-primary">
-                    You save ₹{quote.discountApplied}
+                    You save ₹{pricing.discountApplied}
                   </div>
                 )}
                 <p className="mx-auto mb-6 max-w-md font-body-md text-on-surface-variant">
@@ -702,17 +702,17 @@ function PreviewPage() {
             <div className="flex items-center gap-3">
               <div className="flex flex-col leading-tight">
                 <span className="flex items-baseline gap-2">
-                  {quote ? (
+                  {pricing ? (
                     <>
                       <span
                         className="text-gold-gradient"
                         style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "1.5rem" }}
                       >
-                        ₹{quote.finalPrice}
+                        ₹{pricing.finalAmount}
                       </span>
-                      {quote.listPrice > quote.finalPrice && (
+                      {pricing.listPrice > pricing.finalAmount && (
                         <span className="text-label-sm text-on-surface-variant line-through">
-                          ₹{quote.listPrice}
+                          ₹{pricing.listPrice}
                         </span>
                       )}
                     </>
@@ -721,7 +721,7 @@ function PreviewPage() {
                   )}
                 </span>
                 <span className="text-[10px] uppercase tracking-widest text-primary">
-                  {quote && quote.discountApplied > 0 ? `Saved ₹${quote.discountApplied}` : "Full Report"}
+                  {pricing && pricing.discountApplied > 0 ? `Saved ₹${pricing.discountApplied}` : "Full Report"}
                 </span>
               </div>
               <button

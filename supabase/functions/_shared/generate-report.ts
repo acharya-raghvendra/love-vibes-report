@@ -450,6 +450,17 @@ export async function runGeneration(
     const pdfUrl = signed?.signedUrl ?? null;
     if (!pdfUrl) return await fail("storage_failed", "type=storage_error stage=storage sign_url_failed");
 
+    // Second signed URL, download-flagged: used ONLY for the email button so
+    // the PDF downloads as an attachment instead of opening in a browser tab.
+    const downloadName = reportFileName(a?.first, b?.first);
+    const { data: signedDownload } = await supabase.storage
+      .from("love-match-pdfs")
+      .createSignedUrl(path, 60 * 60 * 24 * 30, { download: downloadName });
+    const emailPdfUrl = signedDownload?.signedUrl ?? pdfUrl;
+    if (!signedDownload?.signedUrl) {
+      console.error(`[generate] order=${orderId} download_url_sign_failed name=${downloadName}`);
+    }
+
     // ready: report exists and is viewable even if email delivery fails.
     const nowIso = new Date().toISOString();
     await supabase.from("love_match_orders")
@@ -469,7 +480,7 @@ export async function runGeneration(
     const emailResult = await deliverEmail({
       to: (typeof a?.email === "string" ? a.email : null) ?? order.email ?? null,
       firstName: a?.first ?? "",
-      pdfUrl,
+      emailPdfUrl,
       orderId,
     });
 

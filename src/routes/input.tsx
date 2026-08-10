@@ -58,6 +58,8 @@ function PartnerCard({
   icon,
   name,
   setName,
+  nameError,
+  onValidateName,
   dob,
   setDob,
   gender,
@@ -68,11 +70,14 @@ function PartnerCard({
   icon: string;
   name: string;
   setName: (v: string) => void;
+  nameError: string | null;
+  onValidateName: (v: string) => void;
   dob: string;
   setDob: (v: string) => void;
   gender: Gender;
   setGender: (v: Gender) => void;
 }) {
+  const errorId = `p${index}-name-error`;
   return (
     <div className="glass-card relative rounded-2xl border border-outline-variant/25 p-6 shadow-2xl lg:p-8">
       <span className="ornate-corner top-left" aria-hidden="true" />
@@ -96,11 +101,25 @@ function PartnerCard({
           <input
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter full name"
-            className="w-full border-0 border-b border-outline-variant bg-transparent px-0 py-2 font-headline-sm text-headline-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/40 focus:border-primary"
+            aria-invalid={nameError ? true : undefined}
+            aria-describedby={nameError ? errorId : undefined}
+            onChange={(e) => {
+              setName(e.target.value);
+              onValidateName(e.target.value);
+            }}
+            onBlur={(e) => onValidateName(e.target.value)}
+            placeholder="Enter full name in English"
+            className={`w-full border-0 border-b bg-transparent px-0 py-2 font-headline-sm text-headline-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/40 ${
+              nameError ? "border-error focus:border-error" : "border-outline-variant focus:border-primary"
+            }`}
           />
+          {nameError && (
+            <p id={errorId} role="alert" className="mt-2 font-label-md text-label-sm text-error">
+              {nameError}
+            </p>
+          )}
         </div>
+
 
         <div className="grid gap-6 md:grid-cols-2">
           <div className="group relative">

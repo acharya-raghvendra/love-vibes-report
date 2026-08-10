@@ -127,6 +127,12 @@ function PartnerCard({
   );
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
+
+function normaliseEmail(v: string): string {
+  return v.trim().toLowerCase().slice(0, 254);
+}
+
 function InputPage() {
   const navigate = useNavigate();
   const [p1Name, setP1Name] = useState("");
@@ -136,9 +142,23 @@ function InputPage() {
   const [p2Dob, setP2Dob] = useState("");
   const [p2Gender, setP2Gender] = useState<Gender>("FEMALE");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
+
+    const cleanEmail = normaliseEmail(email);
+    if (!cleanEmail) {
+      setEmailError("Email address is required — we send your report here.");
+      return;
+    }
+    if (!EMAIL_RE.test(cleanEmail)) {
+      setEmailError("Enter a valid email address, e.g. name@example.com");
+      return;
+    }
+    setEmailError(null);
+
     if (!p1Name.trim() || !p1Dob || !p2Name.trim() || !p2Dob || phone.replace(/\D/g, "").length < 10) return;
 
     const splitName = (n: string) => {
@@ -148,7 +168,13 @@ function InputPage() {
     const a = splitName(p1Name);
     const b = splitName(p2Name);
     const payload = {
-      person_a: { ...a, dob: p1Dob, gender: p1Gender, phone: phone.replace(/\D/g, "") },
+      person_a: {
+        ...a,
+        dob: p1Dob,
+        gender: p1Gender,
+        phone: phone.replace(/\D/g, ""),
+        email: cleanEmail,
+      },
       person_b: { ...b, dob: p2Dob, gender: p2Gender },
     };
     try {
@@ -158,6 +184,7 @@ function InputPage() {
     }
     navigate({ to: "/preview" });
   }
+
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background text-on-background">

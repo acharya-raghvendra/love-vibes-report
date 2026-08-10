@@ -297,7 +297,7 @@ function PreviewPage() {
             last: input.person_b.last,
             dob: input.person_b.dob,
           },
-          language: "en",
+          language: input.language ?? "hi",
           // No amount is ever sent; the server is authoritative on price.
           couponCode: couponCode ?? undefined,
         },

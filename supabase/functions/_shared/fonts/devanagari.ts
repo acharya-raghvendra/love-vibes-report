@@ -125,11 +125,13 @@ export default async function ({ page, context }) {
       const clusterWidth = measure(FAM, cfg.cluster);
       const partsWidth = cfg.parts.reduce((sum, p) => sum + measure(FAM, p), 0);
 
+      // Hard gates. `fallbackWidth` is diagnostic only: on a host that also
+      // ships Noto Sans Devanagari the widths legitimately match, and that is
+      // still a correct Hindi render — so it must not fail the report.
       let reason;
       if (loadedFaces === 0) reason = 'no_loaded_face';
       else if (!covers) reason = 'face_missing_glyphs';
       else if (!(width > 0)) reason = 'zero_width';
-      else if (Math.abs(width - fallbackWidth) < 1) reason = 'fallback_metrics';
       else if (!(clusterWidth < partsWidth * 0.95)) reason = 'no_conjunct_shaping';
 
       return { ok: !reason, reason, loadedFaces, covers, width, fallbackWidth, clusterWidth, partsWidth };

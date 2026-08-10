@@ -135,12 +135,25 @@ function analyticalPage(id: string, nameA: string, nameB: string, s: AnalyticalS
 export function buildReportHtml(
   facts: Facts,
   sections: Record<string, unknown>,
-  opts?: { logoUrl?: string; footerText?: string; companyName?: string; showUpsell?: boolean },
+  opts?: {
+    logoUrl?: string;
+    footerText?: string;
+    companyName?: string;
+    showUpsell?: boolean;
+    /**
+     * `@font-face` CSS with the Devanagari woff2 bytes inlined as a data URL
+     * (see _shared/fonts/devanagari.ts). Inlined so Chrome needs no network
+     * access for Hindi glyphs at print time. Callers rendering Hindi MUST pass
+     * it; without it there is no Devanagari face in the document at all.
+     */
+    fontFaceCss?: string;
+  },
 ): string {
   const logoUrl = opts?.logoUrl ?? LOGO_URL;
   const footerOverride = opts?.footerText;
   const companyName = opts?.companyName ?? "Inno-One Service LLP";
   const showUpsell = opts?.showUpsell ?? true;
+  const fontFaceCss = opts?.fontFaceCss ?? "";
 
   const hi = facts.language === "hi";
   const nameA = facts.person_a?.first || facts.names?.a || "Person A";

@@ -11,12 +11,15 @@ type FailureRow = {
   order_id: string;
   status: string;
   whatsapp_sent: boolean;
+  email: string | null;
+  email_sent: boolean;
   failure_reason: string | null;
   error_detail: string | null;
   attempt_count: number | null;
   created_at: string;
   person_a: { first?: string; last?: string; phone?: string };
 };
+
 
 
 async function invokeEdge(fn: string, body: Record<string, unknown>) {

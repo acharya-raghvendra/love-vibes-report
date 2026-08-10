@@ -179,7 +179,7 @@ function findClaims(original: string, claims: CoreClaims): Found[] {
         index: numIndex,
         length: numStr.length,
         person: whichPerson(text, m.index, claims),
-        snippet: text.slice(Math.max(0, m.index - 30), m.index + m[0].length + 20),
+        snippet: original.slice(Math.max(0, m.index - 30), m.index + m[0].length + 20),
       });
     }
   }

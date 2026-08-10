@@ -1,6 +1,47 @@
 # Email delivery for Love Match reports
 
-Today the pipeline already tries to email the PDF via Resend using `person_a.email`, but nothing on the site ever collects an email, so `toEmail` is always null and no email is ever sent. This plan collects the email, validates it, stores it, and makes email a first-class delivery stage with its own retry and failure reporting.
+Today the pipeline already tries to email the PDF via Resend using `person_a.email`, but nothing on the site ever collects an email, so `toEmail` is always null and no email is ever sent. This plan first closes an affiliate data-exposure gap, then collects the email, validates it, stores it, and makes email a first-class delivery stage with its own retry and failure reporting.
+
+## 0. Affiliate exposure — must be fixed BEFORE the email column exists
+
+Verified against the live database. The affiliate read path is row-level only, with no column restriction, so affiliates can already read customer contact data — and would automatically inherit the new email column.
+
+Before:
+
+```text
+Policy on public.love_match_orders
+  "Affiliates can read own coupon orders"  SELECT  TO authenticated
+  USING ((coupon_code IS NOT NULL) AND is_affiliate_of_coupon(coupon_code))
+
+Table grant: authenticated has SELECT on ALL columns (arwdDxtm), no column list.
+```
+
+Consequence today: the affiliate portal's My Sales page literally queries
+`select order_id, person_a, coupon_code, final_price, discount_applied, created_at, status`,
+and `person_a` is the JSON blob holding the customer's first name, last name, DOB and **phone**. So customer contact info is already visible to affiliates, and `email` would land in the same blob plus a new column.
+
+After:
+
+```text
+Policy on public.love_match_orders
+  "Admins can read all orders"  SELECT  TO authenticated
+  USING (has_role(auth.uid(), 'admin'))
+  -- the affiliate policy is DROPPED from the base table
+
+New: public.affiliate_order_sales  (view, owned by postgres, security_invoker = off)
+  SELECT order_id, coupon_code, final_price, discount_applied,
+         status, created_at, ready_at, delivered_at
+  FROM public.love_match_orders
+  WHERE coupon_code IS NOT NULL AND public.is_affiliate_of_coupon(coupon_code)
+
+GRANT SELECT ON public.affiliate_order_sales TO authenticated;
+-- no anon grant; person_a, person_b, email, phone, pdf_url, error columns are not in the view at all
+```
+
+Because the view is defined without `security_invoker`, it runs as its owner and does not need any affiliate policy on the base table — the view's own `WHERE` clause is the row filter, and the column list is the hard boundary. Affiliates get commission data only: amount, coupon, status, timestamps.
+
+App changes in the same step: `_affiliate.portal.sales.tsx` and `_affiliate.portal.index.tsx` read from `affiliate_order_sales` instead of `love_match_orders`, and the Sales table's customer column is replaced with a short order reference (no name, no phone). Admin pages keep reading the base table under the admin policy.
+
 
 ## 1. Collect the email
 
@@ -54,7 +95,8 @@ Notes:
 
 ## Technical notes
 
-- Migration: add `email text` and `email_sent boolean not null default false` to `public.love_match_orders`. No new grants needed (existing admin/affiliate read policies cover it); the pipeline writes with the service role.
-- Files touched: `src/routes/input.tsx`, `src/routes/preview.tsx`, `src/routes/success.tsx`, `supabase/functions/create-love-match-order/index.ts`, `supabase/functions/_shared/generate-report.ts` (new `deliverEmail` helper with backoff), `src/routes/api/public/love-match-status.ts`, `src/routes/_admin.dashboard.failures.tsx`, `src/routes/_admin.dashboard.orders.tsx`.
+- Migration 1 (runs first): drop the affiliate SELECT policy on `love_match_orders`, create the `affiliate_order_sales` view with the explicit safe-column list, grant SELECT on it to `authenticated` only.
+- Migration 2: add `email text` and `email_sent boolean not null default false` to `public.love_match_orders`. No new grants needed (admin policy covers reads, view excludes the column); the pipeline writes with the service role.
+- Files touched: `src/routes/_affiliate.portal.sales.tsx`, `src/routes/_affiliate.portal.index.tsx`, `src/routes/input.tsx`, `src/routes/preview.tsx`, `src/routes/success.tsx`, `supabase/functions/create-love-match-order/index.ts`, `supabase/functions/_shared/generate-report.ts` (new `deliverEmail` helper with backoff), `src/routes/api/public/love-match-status.ts`, `src/routes/_admin.dashboard.failures.tsx`, `src/routes/_admin.dashboard.orders.tsx`.
 - Untouched: Razorpay signature verification, order claiming/idempotency, prose generation and number guard, PDF build, storage upload and signing.
 - `admin-create-free-report` already has its own recipient email field; it will reuse the same backoff helper so behaviour matches the paid path.

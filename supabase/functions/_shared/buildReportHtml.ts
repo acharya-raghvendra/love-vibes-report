@@ -300,13 +300,14 @@ export function buildReportHtml(
   return `<!DOCTYPE html><html lang="${hi ? "hi" : "en"}"><head><meta charset="UTF-8"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
+${fontFaceCss}
 :root{--ink:#3D2B2E;--muted:#9C8A8C;--soft:#6E5A5D;--coral:#D8746B;--coral-dk:#C25A50;--coral-lt:#F3D4CF;--coral-wash:#FBEDEA;--gold:#C9A25E;--blush:#F7E9E6;--cream:#FDF6F3;--line:#F0E2DE;--peach1:#F9E0D6;--peach2:#F3CBC5;}
 *{box-sizing:border-box;margin:0;padding:0;}html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-body{font-family:'Inter',sans-serif;color:var(--ink);}
+body{font-family:'Inter','Noto Sans Devanagari',sans-serif;color:var(--ink);}
 body.hi{font-family:'Noto Sans Devanagari',sans-serif;}
-.serif{font-family:'Fraunces',serif;}
+.serif{font-family:'Fraunces','Noto Sans Devanagari',serif;}
 body.hi .serif{font-family:'Fraunces','Noto Sans Devanagari',serif;}
 @page{size:A4;margin:0;}
 .page{width:210mm;min-height:297mm;padding:26mm 24mm 22mm;position:relative;page-break-after:always;background:var(--cream);display:flex;flex-direction:column;}
@@ -343,7 +344,7 @@ p.body b{color:var(--ink);}
 .score-hero{display:flex;flex-direction:column;align-items:center;text-align:center;margin:6px 0 18px;}
 .ring{position:relative;width:180px;height:180px;}
 .ring .lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.ring .lbl b{font-family:'Fraunces',serif;font-size:50px;font-weight:500;line-height:1;color:var(--ink);}
+.ring .lbl b{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:50px;font-weight:500;line-height:1;color:var(--ink);}
 .ring .lbl span{font-size:10.5px;color:var(--muted);letter-spacing:.16em;margin-top:4px;text-transform:uppercase;}
 .band-pill{margin-top:16px;background:#fff;border:1.5px solid var(--coral-lt);color:var(--coral-dk);font-family:'Fraunces',serif;font-size:16px;padding:6px 20px;border-radius:24px;}
 .band-sub{font-size:12.5px;color:var(--muted);margin-top:8px;max-width:80%;}

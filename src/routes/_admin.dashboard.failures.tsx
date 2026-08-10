@@ -75,7 +75,9 @@ function FailuresPage() {
                 <th className="px-4 py-3">Phone</th>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">WhatsApp</th>
+
                 <th className="px-4 py-3">Failure Reason</th>
                 <th className="px-4 py-3">Technical detail</th>
                 <th className="px-4 py-3">Attempts</th>

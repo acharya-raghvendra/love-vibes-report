@@ -31,16 +31,31 @@ Deno.serve(async (req: Request) => {
 
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const internalKey = req.headers.get("x-internal-key") ?? "";
-    const isInternal = internalKey.length > 0 && timingSafeEqual(internalKey, serviceKey);
+
+    // Self-validating internal auth: the presented key must actually be a
+    // service-role key. love_match_cache denies anon/authenticated entirely,
+    // so a successful read proves service-role privileges. This avoids
+    // depending on both runtimes seeing the identical key string.
+    let isInternal = false;
+    let internalClient: ReturnType<typeof createClient> | null = null;
+    if (internalKey.length > 20) {
+      const candidate = createClient(Deno.env.get("SUPABASE_URL")!, internalKey);
+      const probe = await candidate.from("love_match_cache").select("cache_key").limit(1);
+      if (!probe.error) {
+        isInternal = true;
+        internalClient = candidate;
+      }
+    }
 
     let admin;
-    if (isInternal) {
+    if (isInternal && internalClient) {
       admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
     } else {
       const auth = await requireAdmin(req);
       if (!auth.ok) return auth.response;
       admin = auth.admin;
     }
+
 
     // force: admins/reconciler may re-run past the normal attempt cap and
     // may take over a stale `generating` row.

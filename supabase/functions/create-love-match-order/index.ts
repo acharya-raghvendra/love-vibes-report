@@ -46,6 +46,8 @@ Deno.serve(async (req) => {
     if (!aFirst || !aDob) return new Response(JSON.stringify({ error: "person_a invalid" }), { status: 422, headers: J });
     if (!bFirst || !bDob) return new Response(JSON.stringify({ error: "person_b invalid" }), { status: 422, headers: J });
     if (phone.length < 10) return new Response(JSON.stringify({ error: "phone required" }), { status: 422, headers: J });
+    if (!email) return new Response(JSON.stringify({ error: "email required" }), { status: 422, headers: J });
+
 
     const language = body.language === "hi" ? "hi" : "en";
     const couponCode = typeof body.couponCode === "string" ? body.couponCode.toUpperCase() : null;

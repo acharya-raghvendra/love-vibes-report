@@ -121,10 +121,16 @@ Deno.serve(async (req) => {
     // Kick off the long pipeline in the background so the client isn't waiting
     // on Gemini + Browserless (30–90s). UI polls love_match_orders by order_id.
     const runPipeline = async () => {
-      const markFail = async (reason: string) => {
+      const markFail = async (reason: string, detail?: string) => {
         await supabase.from("love_match_orders")
-          .update({ status: "failed", failure_reason: reason }).eq("order_id", orderId);
+          .update({
+            status: "failed",
+            failure_reason: reason,
+            error_detail: detail ? detail.slice(0, 2000) : null,
+          })
+          .eq("order_id", orderId);
       };
+
       try {
         const result = scoreMatch(aFirst, aLast, aDob, bFirst, bLast, bDob, refYear);
         const facts = {
@@ -140,17 +146,49 @@ Deno.serve(async (req) => {
           .from("love_match_prose_cache").select("sections").eq("prose_key", proseKey).maybeSingle();
         if (cachedProse?.sections) sections = cachedProse.sections as Record<string, unknown>;
 
+        let guardNote: string | null = null;
         if (!sections) {
-          const allowed = allowedNumberSet(result);
-          for (let attempt = 0; attempt < 2 && !sections; attempt++) {
+          const claims = buildCoreClaims(result, { a: aFirst, b: bFirst });
+          const MAX_CONTENT_RETRIES = 2;
+          let corrective: string | undefined;
+
+          for (let attempt = 0; attempt <= MAX_CONTENT_RETRIES; attempt++) {
+            let out: Record<string, unknown>;
             try {
-              const out = await generateProse(facts, language);
-              if (validateNoInventedNumbers(out, allowed)) sections = out;
-            } catch (_) { /* retry */ }
+              out = await generateProse(facts, language, corrective ? { corrective } : {});
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : String(err);
+              console.error(`[free-report] prose attempt=${attempt} err=${msg.slice(0, 300)}`);
+              const reason = msg.startsWith("gemini_overloaded")
+                ? "gemini_overloaded"
+                : msg.startsWith("gemini_truncated")
+                ? "gemini_truncated"
+                : "generation_failed";
+              await markFail(
+                reason,
+                `stage=prose attempt=${attempt + 1}/${MAX_CONTENT_RETRIES + 1} ${msg.slice(0, 400)}`,
+              );
+              return;
+            }
+            const check = verifyCoreNumbers(out, claims);
+            if (check.ok) { sections = out; break; }
+            const note = describeMismatches(check.mismatches);
+            console.error(`[free-report] number_guard_mismatch attempt=${attempt} ${note}`);
+            if (attempt < MAX_CONTENT_RETRIES) {
+              corrective = correctiveInstruction(claims, check.mismatches);
+              continue;
+            }
+            const fixed = correctCoreNumbers(out, claims);
+            sections = fixed.sections as Record<string, unknown>;
+            guardNote =
+              `type=number_guard_mismatch stage=prose attempt=${attempt + 1}/${MAX_CONTENT_RETRIES + 1} ` +
+              `auto_corrected=${fixed.corrections} (${note})`;
+            console.error(`[free-report] ${guardNote}`);
           }
-          if (!sections) { await markFail("generation_failed"); return; }
+          if (!sections) { await markFail("generation_failed", "stage=prose exhausted"); return; }
           await supabase.from("love_match_prose_cache").upsert({ prose_key: proseKey, sections });
         }
+
 
         // PDF via Browserless — server-rendered HTML (Option 3).
         const browserlessKey = Deno.env.get("BROWSERLESS_API_KEY");

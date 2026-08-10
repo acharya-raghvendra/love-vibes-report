@@ -31,9 +31,25 @@ export function validateNoInventedNumbers(sections: unknown, allowed: Set<string
   return true;
 }
 
+const TRANSIENT_STATUSES = new Set([408, 409, 425, 429, 500, 502, 503, 504]);
+const MAX_TRANSIENT_ATTEMPTS = 4;      // total calls: ~1s, 2s, 4s backoff between
+const MAX_BACKOFF_MS = 8000;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function backoffMs(attempt: number, retryAfter?: string | null): number {
+  const ra = retryAfter ? Number(retryAfter) : NaN;
+  if (Number.isFinite(ra) && ra > 0) return Math.min(ra * 1000, MAX_BACKOFF_MS);
+  const base = Math.min(1000 * 2 ** attempt, MAX_BACKOFF_MS);
+  return base + Math.floor(Math.random() * 400); // jitter
+}
+
 export async function generateProse(
   facts: { names?: { a?: string; b?: string }; language?: string },
   language: string,
+  opts: { corrective?: string } = {},
 ): Promise<Record<string, unknown>> {
   const key = Deno.env.get("GEMINI_API_KEY");
   if (!key) throw new Error("gemini_missing_key");
@@ -43,25 +59,64 @@ export async function generateProse(
 
   const A = facts.names?.a || "Person A";
   const B = facts.names?.b || "Person B";
-  const system = buildSystemPrompt(A, B, language);
+  const system = opts.corrective
+    ? `${buildSystemPrompt(A, B, language)}\n\n${opts.corrective}`
+    : buildSystemPrompt(A, B, language);
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: [{ role: "user", parts: [{ text: JSON.stringify(facts) }] }],
-      generationConfig: {
-        temperature: 0.55,
-        responseMimeType: "application/json",
-        maxOutputTokens: 32768,
-      },
-    }),
+  const body = JSON.stringify({
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [{ role: "user", parts: [{ text: JSON.stringify(facts) }] }],
+    generationConfig: {
+      temperature: 0.55,
+      responseMimeType: "application/json",
+      maxOutputTokens: 32768,
+    },
   });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`gemini_http status=${res.status} body=${body.slice(0, 500)}`);
+
+  // Transient-error budget. This is SEPARATE from any content/guard retries
+  // the caller runs, so neither eats the other's attempts. Worst case wall
+  // time stays well under the 6 minute stale-generating cutoff.
+  let res: Response | null = null;
+  let lastTransient = "";
+  for (let attempt = 0; attempt < MAX_TRANSIENT_ATTEMPTS; attempt++) {
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+    } catch (err) {
+      // Network / timeout: transient.
+      lastTransient = `network:${err instanceof Error ? err.message.slice(0, 120) : "fetch_failed"}`;
+      res = null;
+      if (attempt < MAX_TRANSIENT_ATTEMPTS - 1) {
+        await sleep(backoffMs(attempt));
+        continue;
+      }
+      break;
+    }
+    if (res.ok) break;
+    if (!TRANSIENT_STATUSES.has(res.status)) {
+      // 400/401/403 and friends are permanent: do not retry.
+      const text = await res.text();
+      throw new Error(`gemini_http status=${res.status} body=${text.slice(0, 500)}`);
+    }
+    lastTransient = `status=${res.status}`;
+    const retryAfter = res.headers.get("retry-after");
+    await res.text().catch(() => "");
+    if (attempt < MAX_TRANSIENT_ATTEMPTS - 1) {
+      console.error(`[prose] transient gemini ${lastTransient} attempt=${attempt}, backing off`);
+      await sleep(backoffMs(attempt, retryAfter));
+      res = null;
+      continue;
+    }
+    res = null;
   }
+
+  if (!res) {
+    throw new Error(`gemini_overloaded ${lastTransient} attempts=${MAX_TRANSIENT_ATTEMPTS}`);
+  }
+
   const data = await res.json();
   const finishReason = data?.candidates?.[0]?.finishReason ?? "UNKNOWN";
   const outputTokens = data?.usageMetadata?.candidatesTokenCount ?? -1;
@@ -74,6 +129,7 @@ export async function generateProse(
   const parsed = JSON.parse(text);
   return parsed.sections ?? parsed;
 }
+
 
 export function allowedNumberSet(r: MatchResult): Set<string> {
   const s = new Set<string>();

@@ -12,18 +12,20 @@
 - Conjuncts and matras correct: श्त in रिश्ता, जबू in मजबूत, plus क्ष त्र ज्ञ श्री द्ध and कि की कु कू के कै को कौ कं कः.
 - `pdffonts` confirms `NotoSansDevanagari-Regular` is **embedded and subset** in the PDF. No tofu boxes anywhere.
 
-## The one real risk to fix
+## The one real risk — and why a wait guard is not enough
 
-Devanagari works only if the webfont finishes downloading before Chrome prints. The Browserless call currently sends just `{ html, options }` with no font/network wait, so a slow Google Fonts response can silently print with a fallback face and produce boxes intermittently.
+Today the font comes from the Google Fonts CDN at print time. Answering the question directly: **a `waitUntil` / `document.fonts.ready` guard does NOT fail the render.** `networkidle0` resolves once the network is quiet — including when the font request errored — and `document.fonts.ready` resolves whether each face loaded or failed. Chrome then prints with a fallback face. If Chrome's fallback has no Devanagari coverage, that is a silently shipped tofu PDF on a paid order. So a wait guard is the wrong fix.
 
-**Change:** in `generate-report.ts` and `partner-generate-full/index.ts`, add to the Browserless payload:
+## Fix: self-host Noto Sans Devanagari, no CDN at render time
 
-- `gotoOptions: { waitUntil: "networkidle0" }`
-- `waitForFunction`/`waitForTimeout` guard on `document.fonts.ready`
+- Bundle the Devanagari-subset woff2 for weights 400 and 600 (measured: ~121 KB and ~14 KB) as base64 in a new `supabase/functions/_shared/fonts/notoSansDevanagari.ts`, exported as `@font-face` CSS with `src: url(data:font/woff2;base64,…)`.
+- `buildReportHtml.ts` inlines that `@font-face` block in `<style>` and drops `Noto+Sans+Devanagari` from the Google Fonts `<link>`. Zero network dependency for Hindi glyphs — the font is inside the HTML payload Browserless receives, so it cannot be slow or unreachable.
+- Extend the CSS stacks so every family ends in `'Noto Sans Devanagari'`. `Fraunces` has no Devanagari glyphs; today only `body.hi .serif` lists Noto as a second choice, so the remaining `.serif` numeric/label rules get the same treatment.
+- Latin faces (`Inter`, `Fraunces`) stay on the CDN — a Latin fallback is cosmetic, not a correctness failure.
 
-and, as belt-and-braces, extend the CSS stacks so every family ends in `'Noto Sans Devanagari'` (headings use `Fraunces`, which has no Devanagari glyphs — today it only works because the `body.hi .serif` stack already lists Noto second; the remaining `.serif`-styled numeric/label rules should get the same treatment).
+### Fail-loud backstop (so tofu can never ship silently)
 
-No new font files, no new dependency.
+After the PDF comes back, for Hindi orders extract its text with a light check and assert the Devanagari font is actually embedded; a missing Devanagari face fails the stage as `pdf_font_missing`, which routes into the existing retry/reconcile path instead of delivering. Applied in `generate-report.ts` and `partner-generate-full/index.ts`.
 
 ## After approval
-Apply the two Browserless payload changes plus the font-stack tightening, re-render a Hindi PDF end to end through the real pipeline, and paste the page image before we build the language selector on the form.
+Bundle the fonts, wire the inline `@font-face`, tighten the stacks, add the backstop, then render a Hindi PDF end to end through the real pipeline **with the CDN blocked** and paste the page image — proving Hindi is correct with zero external font access, before we build the language selector on the form.

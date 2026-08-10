@@ -16,7 +16,15 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { scoreMatch } from "./engine/scorer.ts";
 import { buildReportHtml } from "./buildReportHtml.ts";
-import { sha256, generateProse, validateNoInventedNumbers, allowedNumberSet } from "./prose.ts";
+import { sha256, generateProse } from "./prose.ts";
+import {
+  buildCoreClaims,
+  correctCoreNumbers,
+  correctiveInstruction,
+  describeMismatches,
+  verifyCoreNumbers,
+} from "./numberGuard.ts";
+
 
 export const GENERATION_TIMEOUT_MS = 6 * 60 * 1000; // stale `generating` cutoff
 export const MAX_ATTEMPTS = 3;
@@ -99,12 +107,31 @@ export async function markFailed(
   supabase: SupabaseClient,
   orderId: string,
   reason: string,
+  detail?: string,
 ): Promise<void> {
   await supabase
     .from("love_match_orders")
-    .update({ status: "failed", failure_reason: reason, error_message: humanError(reason) })
+    .update({
+      status: "failed",
+      failure_reason: reason,
+      error_message: humanError(reason),
+      error_detail: detail ? detail.slice(0, 2000) : null,
+    })
     .eq("order_id", orderId);
 }
+
+/** Admin-only technical note; never surfaced through the public status API. */
+export async function noteDetail(
+  supabase: SupabaseClient,
+  orderId: string,
+  detail: string,
+): Promise<void> {
+  await supabase
+    .from("love_match_orders")
+    .update({ error_detail: detail.slice(0, 2000) })
+    .eq("order_id", orderId);
+}
+
 
 /** Flip stale `generating` rows to `failed` so nothing hangs forever. */
 export async function expireStaleGenerating(supabase: SupabaseClient): Promise<string[]> {
@@ -184,11 +211,12 @@ export async function runGeneration(
   supabase: SupabaseClient,
   orderId: string,
 ): Promise<GenerationOutcome> {
-  const fail = async (reason: string): Promise<GenerationOutcome> => {
-    console.error(`[generate] order=${orderId} failed reason=${reason}`);
-    await markFailed(supabase, orderId, reason);
+  const fail = async (reason: string, detail?: string): Promise<GenerationOutcome> => {
+    console.error(`[generate] order=${orderId} failed reason=${reason} detail=${detail ?? ""}`);
+    await markFailed(supabase, orderId, reason, detail);
     return { ok: false, reason };
   };
+
 
   try {
     const { data: order } = await supabase
@@ -226,23 +254,62 @@ export async function runGeneration(
       .from("love_match_prose_cache").select("sections").eq("prose_key", proseKey).maybeSingle();
     if (cachedProse?.sections) sections = cachedProse.sections;
 
+    let guardNote: string | null = null;
     if (!sections) {
-      const allowed = allowedNumberSet(result);
-      let lastReason = "generation_failed";
-      for (let attempt = 0; attempt < 2 && !sections; attempt++) {
+      const claims = buildCoreClaims(result, { a: a.first, b: b.first });
+      const MAX_CONTENT_RETRIES = 2; // corrective regenerations after the first call
+      let corrective: string | undefined;
+      let lastMismatchNote = "";
+
+      for (let attempt = 0; attempt <= MAX_CONTENT_RETRIES; attempt++) {
+        let out: Record<string, unknown>;
         try {
-          const out = await generateProse(facts, language);
-          if (validateNoInventedNumbers(out, allowed)) sections = out;
-          else lastReason = "generation_failed";
+          out = await generateProse(facts, language, corrective ? { corrective } : {});
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error(`[generate] order=${orderId} prose attempt=${attempt} err=${msg.slice(0, 300)}`);
-          lastReason = msg.startsWith("gemini_truncated") ? "gemini_truncated" : "generation_failed";
+          const reason = msg.startsWith("gemini_truncated")
+            ? "gemini_truncated"
+            : msg.startsWith("gemini_overloaded")
+            ? "gemini_overloaded"
+            : msg.startsWith("gemini_missing_key")
+            ? "gemini_config"
+            : "generation_failed";
+          return await fail(
+            reason,
+            `stage=prose attempt=${attempt + 1}/${MAX_CONTENT_RETRIES + 1} ${msg.slice(0, 400)}`,
+          );
         }
+
+        const check = verifyCoreNumbers(out, claims);
+        if (check.ok) {
+          sections = out;
+          break;
+        }
+        lastMismatchNote = describeMismatches(check.mismatches);
+        console.error(
+          `[generate] order=${orderId} number_guard_mismatch attempt=${attempt} ${lastMismatchNote}`,
+        );
+
+        if (attempt < MAX_CONTENT_RETRIES) {
+          corrective = correctiveInstruction(claims, check.mismatches);
+          continue;
+        }
+
+        // Never hard-fail a paid order on the guard: the correct values are
+        // known, so rewrite the contradicting numbers deterministically.
+        const fixed = correctCoreNumbers(out, claims);
+        sections = fixed.sections as Record<string, unknown>;
+        guardNote =
+          `type=number_guard_mismatch stage=prose attempt=${attempt + 1}/${MAX_CONTENT_RETRIES + 1} ` +
+          `auto_corrected=${fixed.corrections} (${lastMismatchNote})`;
+        console.error(`[generate] order=${orderId} ${guardNote}`);
       }
-      if (!sections) return await fail(lastReason);
+
+      if (!sections) return await fail("generation_failed", `stage=prose ${lastMismatchNote}`);
       await supabase.from("love_match_prose_cache").upsert({ prose_key: proseKey, sections });
     }
+
 
     // Browserless PDF from server-rendered HTML.
     const browserlessKey = Deno.env.get("BROWSERLESS_API_KEY");

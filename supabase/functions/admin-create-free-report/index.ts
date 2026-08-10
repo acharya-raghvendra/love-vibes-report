@@ -4,9 +4,17 @@
 // Persists a love_match_orders row with final_price=0 and coupon_code='ADMIN_FREE'.
 
 import { corsHeaders, J, requireAdmin } from "../_shared/admin-auth.ts";
-import { scoreMatch, MatchResult } from "../_shared/engine/scorer.ts";
+import { scoreMatch } from "../_shared/engine/scorer.ts";
 import { buildReportHtml } from "../_shared/buildReportHtml.ts";
-import { buildSystemPrompt } from "../_shared/prosePrompt.ts";
+import { generateProse } from "../_shared/prose.ts";
+import {
+  buildCoreClaims,
+  correctCoreNumbers,
+  correctiveInstruction,
+  describeMismatches,
+  verifyCoreNumbers,
+} from "../_shared/numberGuard.ts";
+
 
 
 async function sha256(s: string): Promise<string> {
@@ -66,85 +74,10 @@ function validDob(raw: unknown): string | null {
   return raw;
 }
 
-function collectStrings(v: unknown, out: string[]): void {
-  if (typeof v === "string") out.push(v);
-  else if (Array.isArray(v)) for (const x of v) collectStrings(x, out);
-  else if (v && typeof v === "object") for (const x of Object.values(v)) collectStrings(x, out);
-}
+// Prose generation, the transient-error backoff and the core-number guard all
+// live in _shared (prose.ts / numberGuard.ts) so this path behaves exactly
+// like the paid pipeline.
 
-function validateNoInventedNumbers(sections: unknown, allowed: Set<string>): boolean {
-  const strs: string[] = [];
-  collectStrings(sections, strs);
-  const prose = strs.join(" ");
-  const nums = prose.match(/\d+/g) ?? [];
-  for (const n of nums) {
-    if (allowed.has(n)) continue;
-    if (/^(19|20)\d\d$/.test(n)) continue;
-    if (n.length >= 4) continue;
-    return false;
-  }
-  return true;
-}
-
-async function generateProse(
-  facts: { names?: { a?: string; b?: string }; language?: string },
-  language: string,
-): Promise<Record<string, unknown>> {
-  const key = Deno.env.get("GEMINI_API_KEY");
-  if (!key) throw new Error("gemini_missing_key");
-  const model = "gemini-2.5-flash";
-  const url =
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-
-  const A = facts.names?.a || "Person A";
-  const B = facts.names?.b || "Person B";
-  const system = buildSystemPrompt(A, B, language);
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: [{ role: "user", parts: [{ text: JSON.stringify(facts) }] }],
-      generationConfig: {
-        temperature: 0.55,
-        responseMimeType: "application/json",
-        maxOutputTokens: 32768,
-      },
-    }),
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`gemini_http status=${res.status} body=${body.slice(0, 500)}`);
-  }
-  const data = await res.json();
-  const finishReason = data?.candidates?.[0]?.finishReason ?? "UNKNOWN";
-  const outputTokens = data?.usageMetadata?.candidatesTokenCount ?? -1;
-  console.log(`[free-report] gemini finish_reason=${finishReason} output_tokens=${outputTokens}`);
-  if (finishReason === "MAX_TOKENS") {
-    throw new Error(`gemini_truncated finish_reason=MAX_TOKENS output_tokens=${outputTokens}`);
-  }
-  let text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-  text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
-  const parsed = JSON.parse(text);
-  return parsed.sections ?? parsed;
-}
-function allowedNumberSet(r: MatchResult): Set<string> {
-  const s = new Set<string>();
-  s.add(String(r.score));
-  const add = (cn: typeof r.a) => {
-    for (const k of ["lifePath", "destiny", "soulUrge", "personality", "maturity"] as const) {
-      s.add(String(cn[k].display));
-      s.add(String(cn[k].compound));
-      s.add(String(cn[k].score));
-    }
-    s.add(String(cn.personalYear));
-  };
-  add(r.a); add(r.b);
-  for (let i = 1; i <= 9; i++) s.add(String(i));
-  s.add("11"); s.add("22"); s.add("33");
-  return s;
-}
 
 
 Deno.serve(async (req) => {

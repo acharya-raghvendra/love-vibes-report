@@ -8,12 +8,15 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { scoreMatch } from "../_shared/engine/scorer.ts";
 import { buildReportHtml } from "../_shared/buildReportHtml.ts";
+import { buildProseKey, generateProse } from "../_shared/prose.ts";
 import {
-  allowedNumberSet,
-  buildProseKey,
-  generateProse,
-  validateNoInventedNumbers,
-} from "../_shared/prose.ts";
+  buildCoreClaims,
+  correctCoreNumbers,
+  correctiveInstruction,
+  describeMismatches,
+  verifyCoreNumbers,
+} from "../_shared/numberGuard.ts";
+
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
@@ -94,26 +97,49 @@ Deno.serve(async (req: Request) => {
     if (cachedProse?.sections) sections = cachedProse.sections as Record<string, unknown>;
 
     if (!sections) {
-      const allowed = allowedNumberSet(result);
+      const claims = buildCoreClaims(result, { a: aFirst, b: bFirst });
+      const MAX_CONTENT_RETRIES = 2;
+      let corrective: string | undefined;
       let truncatedCount = 0;
-      for (let attempt = 0; attempt < 2 && !sections; attempt++) {
+      let overloaded = false;
+
+      for (let attempt = 0; attempt <= MAX_CONTENT_RETRIES; attempt++) {
+        let out: Record<string, unknown>;
         try {
-          const out = await generateProse(keyFacts, language);
-          if (validateNoInventedNumbers(out, allowed)) sections = out;
+          out = await generateProse(keyFacts, language, corrective ? { corrective } : {});
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           if (msg.startsWith("gemini_truncated")) truncatedCount++;
-          console.error("[partner] generateProse failed:", msg);
+          if (msg.startsWith("gemini_overloaded")) overloaded = true;
+          console.error("[partner] generateProse failed:", msg.slice(0, 300));
+          break;
         }
+        const check = verifyCoreNumbers(out, claims);
+        if (check.ok) {
+          sections = out;
+          break;
+        }
+        console.error("[partner] number_guard_mismatch:", describeMismatches(check.mismatches));
+        if (attempt < MAX_CONTENT_RETRIES) {
+          corrective = correctiveInstruction(claims, check.mismatches);
+          continue;
+        }
+        // Never fail on the guard: the correct numbers are known.
+        sections = correctCoreNumbers(out, claims).sections as Record<string, unknown>;
       }
+
       if (!sections) {
-        if (truncatedCount >= 2) {
+        if (overloaded) {
+          return ok({ status: "failed", error: { code: "PROVIDER_OVERLOADED" } }, 503);
+        }
+        if (truncatedCount >= 1) {
           return ok({ status: "failed", error: { code: "PROSE_TRUNCATED" } }, 500);
         }
         return ok({ status: "failed", error: { code: "GENERATION_FAILED" } }, 500);
       }
       await supabase.from("love_match_prose_cache").upsert({ prose_key: proseKey, sections });
     }
+
 
     // 5. HTML — branded, upsell gated.
     const pdfFacts = { ...keyFacts, chemistry };

@@ -6,6 +6,11 @@
 import { corsHeaders, J, requireAdmin } from "../_shared/admin-auth.ts";
 import { scoreMatch } from "../_shared/engine/scorer.ts";
 import { buildReportHtml } from "../_shared/buildReportHtml.ts";
+import {
+  assertDevanagariRendered,
+  describeProbe,
+  loadDevanagariFontFaceCss,
+} from "../_shared/fonts/devanagari.ts";
 import { generateProse } from "../_shared/prose.ts";
 import { reportFileName } from "../_shared/generate-report.ts";
 import {

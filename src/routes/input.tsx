@@ -285,11 +285,14 @@ function InputPage() {
               icon="person_2"
               name={p2Name}
               setName={setP2Name}
+              nameError={p2NameError}
+              onValidateName={(v) => validateName(v, setP2NameError)}
               dob={p2Dob}
               setDob={setP2Dob}
               gender={p2Gender}
               setGender={setP2Gender}
             />
+
           </div>
 
           {/* WhatsApp */}

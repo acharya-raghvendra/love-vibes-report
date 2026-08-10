@@ -92,7 +92,16 @@ function FailuresPage() {
                   <td className="px-4 py-3 font-mono">{r.person_a?.phone ?? "—"}</td>
                   <td className="px-4 py-3">{[r.person_a?.first, r.person_a?.last].filter(Boolean).join(" ") || "—"}</td>
                   <td className="px-4 py-3">{r.status}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-1">
+                      <span className={r.email_sent ? "text-green-500" : "text-error"}>
+                        {r.email_sent ? "Sent" : "Failed"}
+                      </span>
+                      <span className="break-all font-mono text-label-sm text-on-surface-variant">{r.email ?? "—"}</span>
+                    </div>
+                  </td>
                   <td className="px-4 py-3">{r.whatsapp_sent ? "Sent" : "No"}</td>
+
                   <td className="px-4 py-3 text-on-surface-variant">{r.failure_reason ?? "—"}</td>
                   <td className="px-4 py-3 max-w-[22rem] text-label-sm text-on-surface-variant">
                     <span className="line-clamp-3 break-words font-mono" title={r.error_detail ?? ""}>

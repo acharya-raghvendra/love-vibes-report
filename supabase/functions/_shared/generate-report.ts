@@ -417,7 +417,18 @@ export async function runGeneration(
       names: { a: a.first, b: b.first },
       chemistry,
     };
-    const html = buildReportHtml(pdfFacts, sections);
+    // Devanagari face, inlined as base64 into the HTML: no network fetch for
+    // Hindi glyphs at print time. If the bytes can't be read we fail rather
+    // than print a report that could come out as tofu.
+    let fontFaceCss: string;
+    try {
+      fontFaceCss = await loadDevanagariFontFaceCss(supabase);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[generate] order=${orderId} font_unavailable ${msg}`);
+      return await fail("pdf_font_missing", `type=pdf_error stage=font ${msg.slice(0, 300)}`);
+    }
+    const html = buildReportHtml(pdfFacts, sections, { fontFaceCss });
 
     const pdfRes = await fetch(
       `https://production-sfo.browserless.io/pdf?token=${browserlessKey}&timeout=60000`,
@@ -438,6 +449,21 @@ export async function runGeneration(
     const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
     if (pdfBytes.length < 10240) {
       return await fail("pdf_too_small", `type=pdf_error stage=pdf bytes=${pdfBytes.length}`);
+    }
+
+    // Fail-loud backstop for Hindi: prove the Devanagari glyphs actually
+    // painted from our embedded face (loaded + covers the sample + real
+    // metrics + conjunct shaping). "Could not verify" counts as a failure,
+    // so a Hindi report can never be delivered as tofu.
+    if (language === "hi") {
+      const probe = await assertDevanagariRendered(html, browserlessKey);
+      console.log(`[generate] order=${orderId} devanagari_probe ${describeProbe(probe)}`);
+      if (!probe.ok) {
+        return await fail(
+          "pdf_font_missing",
+          `type=pdf_error stage=font_verify ${describeProbe(probe)}`.slice(0, 600),
+        );
+      }
     }
 
     const path = `love-match/${orderId}.pdf`;

@@ -6,6 +6,11 @@
 import { corsHeaders, J, requireAdmin } from "../_shared/admin-auth.ts";
 import { scoreMatch } from "../_shared/engine/scorer.ts";
 import { buildReportHtml } from "../_shared/buildReportHtml.ts";
+import {
+  assertDevanagariRendered,
+  describeProbe,
+  loadDevanagariFontFaceCss,
+} from "../_shared/fonts/devanagari.ts";
 import { generateProse } from "../_shared/prose.ts";
 import { reportFileName } from "../_shared/generate-report.ts";
 import {
@@ -222,7 +227,18 @@ Deno.serve(async (req) => {
           names: { a: aFirst, b: bFirst },
           chemistry,
         };
-        const html = buildReportHtml(pdfFacts, sections);
+        // Devanagari face inlined as base64 — no network fetch for Hindi
+        // glyphs at print time; a failed read fails the stage.
+        let fontFaceCss: string;
+        try {
+          fontFaceCss = await loadDevanagariFontFaceCss(supabase);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error(`[free-report] font_unavailable ${msg}`);
+          await markFail("pdf_font_missing", `type=pdf_error stage=font ${msg.slice(0, 300)}`);
+          return;
+        }
+        const html = buildReportHtml(pdfFacts, sections, { fontFaceCss });
 
         const pdfRes = await fetch(
           `https://production-sfo.browserless.io/pdf?token=${browserlessKey}&timeout=60000`,
@@ -247,6 +263,20 @@ Deno.serve(async (req) => {
           await markFail("pdf_too_small", `type=pdf_error stage=pdf bytes=${pdfBytes.length}`);
           return;
         }
+
+        // Fail-loud Devanagari backstop for Hindi reports.
+        if (language === "hi") {
+          const probe = await assertDevanagariRendered(html, browserlessKey);
+          console.log(`[free-report] devanagari_probe ${describeProbe(probe)}`);
+          if (!probe.ok) {
+            await markFail(
+              "pdf_font_missing",
+              `type=pdf_error stage=font_verify ${describeProbe(probe)}`.slice(0, 600),
+            );
+            return;
+          }
+        }
+
 
 
         const path = `love-match/${orderId}.pdf`;

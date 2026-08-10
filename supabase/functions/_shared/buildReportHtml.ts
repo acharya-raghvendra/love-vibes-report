@@ -135,12 +135,25 @@ function analyticalPage(id: string, nameA: string, nameB: string, s: AnalyticalS
 export function buildReportHtml(
   facts: Facts,
   sections: Record<string, unknown>,
-  opts?: { logoUrl?: string; footerText?: string; companyName?: string; showUpsell?: boolean },
+  opts?: {
+    logoUrl?: string;
+    footerText?: string;
+    companyName?: string;
+    showUpsell?: boolean;
+    /**
+     * `@font-face` CSS with the Devanagari woff2 bytes inlined as a data URL
+     * (see _shared/fonts/devanagari.ts). Inlined so Chrome needs no network
+     * access for Hindi glyphs at print time. Callers rendering Hindi MUST pass
+     * it; without it there is no Devanagari face in the document at all.
+     */
+    fontFaceCss?: string;
+  },
 ): string {
   const logoUrl = opts?.logoUrl ?? LOGO_URL;
   const footerOverride = opts?.footerText;
   const companyName = opts?.companyName ?? "Inno-One Service LLP";
   const showUpsell = opts?.showUpsell ?? true;
+  const fontFaceCss = opts?.fontFaceCss ?? "";
 
   const hi = facts.language === "hi";
   const nameA = facts.person_a?.first || facts.names?.a || "Person A";
@@ -300,13 +313,14 @@ export function buildReportHtml(
   return `<!DOCTYPE html><html lang="${hi ? "hi" : "en"}"><head><meta charset="UTF-8"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
+${fontFaceCss}
 :root{--ink:#3D2B2E;--muted:#9C8A8C;--soft:#6E5A5D;--coral:#D8746B;--coral-dk:#C25A50;--coral-lt:#F3D4CF;--coral-wash:#FBEDEA;--gold:#C9A25E;--blush:#F7E9E6;--cream:#FDF6F3;--line:#F0E2DE;--peach1:#F9E0D6;--peach2:#F3CBC5;}
 *{box-sizing:border-box;margin:0;padding:0;}html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-body{font-family:'Inter',sans-serif;color:var(--ink);}
+body{font-family:'Inter','Noto Sans Devanagari',sans-serif;color:var(--ink);}
 body.hi{font-family:'Noto Sans Devanagari',sans-serif;}
-.serif{font-family:'Fraunces',serif;}
+.serif{font-family:'Fraunces','Noto Sans Devanagari',serif;}
 body.hi .serif{font-family:'Fraunces','Noto Sans Devanagari',serif;}
 @page{size:A4;margin:0;}
 .page{width:210mm;min-height:297mm;padding:26mm 24mm 22mm;position:relative;page-break-after:always;background:var(--cream);display:flex;flex-direction:column;}
@@ -343,9 +357,9 @@ p.body b{color:var(--ink);}
 .score-hero{display:flex;flex-direction:column;align-items:center;text-align:center;margin:6px 0 18px;}
 .ring{position:relative;width:180px;height:180px;}
 .ring .lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.ring .lbl b{font-family:'Fraunces',serif;font-size:50px;font-weight:500;line-height:1;color:var(--ink);}
+.ring .lbl b{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:50px;font-weight:500;line-height:1;color:var(--ink);}
 .ring .lbl span{font-size:10.5px;color:var(--muted);letter-spacing:.16em;margin-top:4px;text-transform:uppercase;}
-.band-pill{margin-top:16px;background:#fff;border:1.5px solid var(--coral-lt);color:var(--coral-dk);font-family:'Fraunces',serif;font-size:16px;padding:6px 20px;border-radius:24px;}
+.band-pill{margin-top:16px;background:#fff;border:1.5px solid var(--coral-lt);color:var(--coral-dk);font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:16px;padding:6px 20px;border-radius:24px;}
 .band-sub{font-size:12.5px;color:var(--muted);margin-top:8px;max-width:80%;}
 .hero-quote{background:var(--coral-wash);border-radius:16px;padding:15px 18px;font-size:13px;line-height:1.76;color:var(--soft);margin-bottom:16px;}
 .hero-quote b{color:var(--ink);}
@@ -354,10 +368,10 @@ p.body b{color:var(--ink);}
 .pcol{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 20px 8px;margin-bottom:14px;box-shadow:0 2px 0 var(--blush);position:relative;overflow:hidden;}
 .pcol::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;}
 .pcol.his::before{background:var(--gold);}.pcol.hers::before{background:var(--coral);}
-.pcol h3{font-family:'Fraunces',serif;font-size:19px;font-weight:500;margin-bottom:8px;}
+.pcol h3{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:19px;font-weight:500;margin-bottom:8px;}
 .nrow{display:flex;align-items:baseline;gap:14px;padding:9px 0;border-bottom:1px solid var(--line);}
 .nrow:last-child{border-bottom:0;}
-.nrow .v{font-family:'Fraunces',serif;font-size:24px;font-weight:500;color:var(--gold);min-width:48px;line-height:1;}
+.nrow .v{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:24px;font-weight:500;color:var(--gold);min-width:48px;line-height:1;}
 .pcol.hers .nrow .v{color:var(--coral);}
 .nrow .meta b{display:block;font-size:12.5px;color:var(--ink);}
 .nrow .meta span{font-size:10.5px;color:var(--muted);}
@@ -366,7 +380,7 @@ p.body b{color:var(--ink);}
 .mcard .who .d{width:8px;height:8px;border-radius:50%;}
 .mcard.his .who .d{background:var(--gold);}.mcard.hers .who .d{background:var(--coral);}
 .mcard p{font-size:12.5px;line-height:1.64;color:var(--soft);}
-.verdict{display:inline-block;background:#fff;color:var(--coral-dk);border:1.5px solid var(--coral-lt);font-family:'Fraunces',serif;font-size:14px;padding:6px 18px;border-radius:24px;margin:4px 0 16px;}
+.verdict{display:inline-block;background:#fff;color:var(--coral-dk);border:1.5px solid var(--coral-lt);font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:14px;padding:6px 18px;border-radius:24px;margin:4px 0 16px;}
 .blk-row{background:#fff;border-radius:14px;padding:13px 16px;margin-bottom:10px;border:1px solid var(--line);}
 .blk-row .lab{font-weight:700;font-size:11px;color:var(--coral);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
 .blk-row p{font-size:12.5px;line-height:1.7;color:var(--soft);}
@@ -375,12 +389,12 @@ p.body b{color:var(--ink);}
 .pair .pdot{width:8px;height:8px;border-radius:50%;}
 .pair small{color:var(--muted);}
 .listcol{margin-bottom:16px;}
-.listcol h4{font-family:'Fraunces',serif;font-size:17px;font-weight:500;margin-bottom:10px;color:var(--ink);}
+.listcol h4{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:17px;font-weight:500;margin-bottom:10px;color:var(--ink);}
 .li{display:flex;gap:10px;padding:8px 0;border-bottom:1px dotted var(--line);}
 .li .b{font-size:13px;line-height:1.4;}
 .li.good .b{color:var(--gold);}.li.watch .b{color:var(--coral);}
 .li .t b{font-size:12.5px;color:var(--ink);}.li .t span{font-size:12px;color:var(--soft);}
-.letter{font-family:'Fraunces',serif;font-size:14.5px;line-height:1.9;color:var(--soft);font-style:italic;}
+.letter{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:14.5px;line-height:1.9;color:var(--soft);font-style:italic;}
 .letter p{margin-bottom:14px;}
 .sign{margin-top:18px;display:flex;flex-direction:column;gap:6px;}
 .sign img{height:38px;object-fit:contain;opacity:1;}
@@ -388,7 +402,7 @@ p.body b{color:var(--ink);}
 .upsell{background:linear-gradient(160deg,#fff,var(--coral-wash));border:1px solid var(--coral-lt);border-radius:20px;padding:24px 24px 22px;margin-top:8px;box-shadow:0 3px 0 var(--blush);}
 .upsell .up-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
 .upsell .up-title{font-size:22px;font-weight:600;color:var(--ink);}
-.upsell .up-price{font-family:'Fraunces',serif;font-size:24px;font-weight:600;color:var(--coral-dk);}
+.upsell .up-price{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:24px;font-weight:600;color:var(--coral-dk);}
 .upsell .up-sub{font-size:12.5px;color:var(--soft);margin-top:4px;}
 .upsell .up-cta{display:inline-block;margin-top:16px;background:var(--coral);color:#fff;font-weight:600;font-size:13px;text-decoration:none;padding:11px 26px;border-radius:24px;letter-spacing:.02em;}
 .upsell .up-note{font-size:10.5px;color:var(--muted);margin-top:10px;}

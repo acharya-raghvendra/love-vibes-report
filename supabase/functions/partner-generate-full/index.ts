@@ -8,6 +8,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { scoreMatch } from "../_shared/engine/scorer.ts";
 import { buildReportHtml } from "../_shared/buildReportHtml.ts";
+import {
+  assertDevanagariRendered,
+  describeProbe,
+  loadDevanagariFontFaceCss,
+} from "../_shared/fonts/devanagari.ts";
 import { buildProseKey, generateProse } from "../_shared/prose.ts";
 import {
   buildCoreClaims,
@@ -141,13 +146,22 @@ Deno.serve(async (req: Request) => {
     }
 
 
-    // 5. HTML — branded, upsell gated.
+    // 5. HTML — branded, upsell gated. Devanagari face inlined as base64 so
+    // Chrome needs no network access for Hindi glyphs at print time.
+    let fontFaceCss: string;
+    try {
+      fontFaceCss = await loadDevanagariFontFaceCss(supabase);
+    } catch (err) {
+      console.error("[partner] font_unavailable:", err instanceof Error ? err.message : err);
+      return ok({ status: "failed", error: { code: "PDF_FONT_MISSING" } }, 500);
+    }
     const pdfFacts = { ...keyFacts, chemistry };
     const html = buildReportHtml(pdfFacts, sections, {
       logoUrl: typeof branding.logo_url === "string" ? branding.logo_url : undefined,
       footerText: typeof branding.footer_text === "string" ? branding.footer_text : undefined,
       companyName: typeof branding.company_name === "string" ? branding.company_name : undefined,
       showUpsell,
+      fontFaceCss,
     });
 
     // 6. Browserless PDF — same call as love-match-finalize (timeout=60000).
@@ -185,6 +199,18 @@ Deno.serve(async (req: Request) => {
       console.error(`[partner] browserless_pdf_too_small bytes=${pdfBytes.length}`);
       return ok({ status: "failed", error: { code: "GENERATION_FAILED" } }, 500);
     }
+
+    // 6b. Fail-loud Devanagari backstop for Hindi — proves the glyphs actually
+    // painted from our embedded face. "Could not verify" is a failure.
+    if (language === "hi") {
+      const probe = await assertDevanagariRendered(html, browserlessKey);
+      console.log(`[partner] devanagari_probe ${describeProbe(probe)}`);
+      if (!probe.ok) {
+        console.error(`[partner] pdf_font_missing ${describeProbe(probe)}`);
+        return ok({ status: "failed", error: { code: "PDF_FONT_MISSING" } }, 500);
+      }
+    }
+
 
     // 7. Storage upload + 30-day signed URL under partner/ prefix.
     const path = `love-match/partner/${orderId}.pdf`;

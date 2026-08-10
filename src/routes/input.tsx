@@ -455,6 +455,50 @@ function InputPage() {
 
           </div>
 
+          {/* Report language */}
+          <div className="glass-card rounded-2xl border border-dashed border-outline-variant/40 p-6">
+            <span
+              id="language-label"
+              className="mb-2 flex items-center gap-2 font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant"
+            >
+              <span className="material-symbols-outlined text-base">translate</span>
+              Report Language <span className="text-primary">*</span>
+              <span className="ml-1 normal-case tracking-normal text-on-surface-variant/70">
+                (your report is written in this language)
+              </span>
+            </span>
+            <div
+              role="radiogroup"
+              aria-labelledby="language-label"
+              className="flex rounded-full border border-outline-variant/30 bg-surface-container/60 p-1"
+            >
+              {([
+                { value: "hi", label: "हिंदी (Hindi)" },
+                { value: "en", label: "English" },
+              ] as const).map((opt) => {
+                const active = language === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setLanguage(opt.value)}
+                    className={`flex-1 rounded-full py-3 font-label-md text-label-md transition-all ${
+                      active
+                        ? "bg-primary text-on-primary-fixed shadow-lg"
+                        : "text-on-surface-variant hover:text-on-surface"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+
+
 
           {/* CTA */}
           <div className="pt-4">

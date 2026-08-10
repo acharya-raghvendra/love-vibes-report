@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent, type RefObject } from "react";
 
 export const Route = createFileRoute("/input")({
   head: () => ({
@@ -52,6 +52,20 @@ function GenderToggle({
   );
 }
 
+function FieldError({ id, message }: { id: string; message: string | null }) {
+  if (!message) return null;
+  return (
+    <p
+      id={id}
+      role="alert"
+      className="mt-2 flex items-center gap-1.5 font-label-md text-label-md font-medium text-error"
+    >
+      <span className="material-symbols-outlined text-base leading-none">error</span>
+      {message}
+    </p>
+  );
+}
+
 function PartnerCard({
   index,
   label,
@@ -60,8 +74,12 @@ function PartnerCard({
   setName,
   nameError,
   onValidateName,
+  nameRef,
   dob,
   setDob,
+  dobError,
+  onValidateDob,
+  dobRef,
   gender,
   setGender,
 }: {
@@ -72,12 +90,18 @@ function PartnerCard({
   setName: (v: string) => void;
   nameError: string | null;
   onValidateName: (v: string) => void;
+  nameRef: RefObject<HTMLInputElement | null>;
   dob: string;
   setDob: (v: string) => void;
+  dobError: string | null;
+  onValidateDob: (v: string) => void;
+  dobRef: RefObject<HTMLInputElement | null>;
   gender: Gender;
   setGender: (v: Gender) => void;
 }) {
   const errorId = `p${index}-name-error`;
+  const dobErrorId = `p${index}-dob-error`;
+
   return (
     <div className="glass-card relative rounded-2xl border border-outline-variant/25 p-6 shadow-2xl lg:p-8">
       <span className="ornate-corner top-left" aria-hidden="true" />
@@ -101,6 +125,7 @@ function PartnerCard({
           <input
             type="text"
             value={name}
+            ref={nameRef}
             aria-invalid={nameError ? true : undefined}
             aria-describedby={nameError ? errorId : undefined}
             onChange={(e) => {
@@ -113,11 +138,7 @@ function PartnerCard({
               nameError ? "border-error focus:border-error" : "border-outline-variant focus:border-primary"
             }`}
           />
-          {nameError && (
-            <p id={errorId} role="alert" className="mt-2 font-label-md text-label-sm text-error">
-              {nameError}
-            </p>
-          )}
+          <FieldError id={errorId} message={nameError} />
         </div>
 
 
@@ -129,11 +150,22 @@ function PartnerCard({
             <input
               type="date"
               value={dob}
-              onChange={(e) => setDob(e.target.value)}
+              ref={dobRef}
+              aria-invalid={dobError ? true : undefined}
+              aria-describedby={dobError ? dobErrorId : undefined}
+              onChange={(e) => {
+                setDob(e.target.value);
+                onValidateDob(e.target.value);
+              }}
+              onBlur={(e) => onValidateDob(e.target.value)}
               style={{ colorScheme: "dark" }}
-              className="w-full border-0 border-b border-outline-variant bg-transparent px-0 py-2 font-body-lg text-body-lg text-on-surface outline-none transition-colors focus:border-primary"
+              className={`w-full border-0 border-b bg-transparent px-0 py-2 font-body-lg text-body-lg text-on-surface outline-none transition-colors ${
+                dobError ? "border-error focus:border-error" : "border-outline-variant focus:border-primary"
+              }`}
             />
+            <FieldError id={dobErrorId} message={dobError} />
           </div>
+
           <div>
             <label className="mb-1 block font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant">
               Gender
@@ -152,6 +184,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
 // Must start and end with a letter; at least 2 chars.
 const LATIN_NAME_RE = /^[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F'\u2019 -]*[A-Za-z\u00C0-\u024F]$/;
 const NAME_ERROR = "Please enter the name in English.";
+const DOB_ERROR = "Please select a date of birth.";
+const PHONE_ERROR = "Enter a 10-digit WhatsApp number.";
 
 function isLatinName(v: string): boolean {
   return LATIN_NAME_RE.test(v.trim());
@@ -166,14 +200,24 @@ function InputPage() {
   const [p1Name, setP1Name] = useState("");
   const [p1NameError, setP1NameError] = useState<string | null>(null);
   const [p1Dob, setP1Dob] = useState("");
+  const [p1DobError, setP1DobError] = useState<string | null>(null);
   const [p1Gender, setP1Gender] = useState<Gender>("MALE");
   const [p2Name, setP2Name] = useState("");
   const [p2NameError, setP2NameError] = useState<string | null>(null);
   const [p2Dob, setP2Dob] = useState("");
+  const [p2DobError, setP2DobError] = useState<string | null>(null);
   const [p2Gender, setP2Gender] = useState<Gender>("FEMALE");
   const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
+
+  const p1NameRef = useRef<HTMLInputElement>(null);
+  const p1DobRef = useRef<HTMLInputElement>(null);
+  const p2NameRef = useRef<HTMLInputElement>(null);
+  const p2DobRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
 
   function validateName(value: string, setError: (v: string | null) => void): boolean {
     const valid = isLatinName(value);
@@ -181,26 +225,58 @@ function InputPage() {
     return valid;
   }
 
+  function validateDob(value: string, setError: (v: string | null) => void): boolean {
+    const valid = Boolean(value);
+    setError(valid ? null : DOB_ERROR);
+    return valid;
+  }
+
+  function validatePhone(value: string): boolean {
+    const valid = value.replace(/\D/g, "").length >= 10;
+    setPhoneError(valid ? null : PHONE_ERROR);
+    return valid;
+  }
+
+  function validateEmail(value: string): boolean {
+    const clean = normaliseEmail(value);
+    if (!clean) {
+      setEmailError("Email address is required — we send your report here.");
+      return false;
+    }
+    if (!EMAIL_RE.test(clean)) {
+      setEmailError("Enter a valid email address, e.g. name@example.com");
+      return false;
+    }
+    setEmailError(null);
+    return true;
+  }
+
+  function focusField(ref: React.RefObject<HTMLInputElement | null>) {
+    const el = ref.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.focus({ preventScroll: true });
+  }
+
   function onSubmit(e: FormEvent) {
     e.preventDefault();
 
-    const p1Ok = validateName(p1Name, setP1NameError);
-    const p2Ok = validateName(p2Name, setP2NameError);
+    const checks: Array<{ ok: boolean; ref: React.RefObject<HTMLInputElement | null> }> = [
+      { ok: validateName(p1Name, setP1NameError), ref: p1NameRef },
+      { ok: validateDob(p1Dob, setP1DobError), ref: p1DobRef },
+      { ok: validateName(p2Name, setP2NameError), ref: p2NameRef },
+      { ok: validateDob(p2Dob, setP2DobError), ref: p2DobRef },
+      { ok: validatePhone(phone), ref: phoneRef },
+      { ok: validateEmail(email), ref: emailRef },
+    ];
+
+    const firstInvalid = checks.find((c) => !c.ok);
+    if (firstInvalid) {
+      focusField(firstInvalid.ref);
+      return;
+    }
 
     const cleanEmail = normaliseEmail(email);
-    if (!cleanEmail) {
-      setEmailError("Email address is required — we send your report here.");
-      return;
-    }
-    if (!EMAIL_RE.test(cleanEmail)) {
-      setEmailError("Enter a valid email address, e.g. name@example.com");
-      return;
-    }
-    setEmailError(null);
-
-    if (!p1Ok || !p2Ok) return;
-    if (!p1Dob || !p2Dob || phone.replace(/\D/g, "").length < 10) return;
-
 
     const splitName = (n: string) => {
       const parts = n.trim().split(/\s+/);
@@ -225,6 +301,7 @@ function InputPage() {
     }
     navigate({ to: "/preview" });
   }
+
 
 
   return (
@@ -257,8 +334,12 @@ function InputPage() {
               setName={setP1Name}
               nameError={p1NameError}
               onValidateName={(v) => validateName(v, setP1NameError)}
+              nameRef={p1NameRef}
               dob={p1Dob}
               setDob={setP1Dob}
+              dobError={p1DobError}
+              onValidateDob={(v) => validateDob(v, setP1DobError)}
+              dobRef={p1DobRef}
               gender={p1Gender}
               setGender={setP1Gender}
             />
@@ -287,8 +368,12 @@ function InputPage() {
               setName={setP2Name}
               nameError={p2NameError}
               onValidateName={(v) => validateName(v, setP2NameError)}
+              nameRef={p2NameRef}
               dob={p2Dob}
               setDob={setP2Dob}
+              dobError={p2DobError}
+              onValidateDob={(v) => validateDob(v, setP2DobError)}
+              dobRef={p2DobRef}
               gender={p2Gender}
               setGender={setP2Gender}
             />
@@ -309,13 +394,25 @@ function InputPage() {
               <input
                 type="tel"
                 inputMode="numeric"
-                required
+                ref={phoneRef}
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                aria-invalid={phoneError ? true : undefined}
+                aria-describedby={phoneError ? "phone-error" : undefined}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  if (phoneError) setPhoneError(null);
+                }}
+                onBlur={(e) => validatePhone(e.target.value)}
                 placeholder="WhatsApp Number"
-                className="font-body-lg flex-1 rounded-lg border border-outline-variant/30 bg-surface-container px-4 py-3 text-on-surface outline-none placeholder:text-on-surface-variant/40 focus:border-primary focus:ring-1 focus:ring-primary"
+                className={`font-body-lg flex-1 rounded-lg border bg-surface-container px-4 py-3 text-on-surface outline-none placeholder:text-on-surface-variant/40 focus:ring-1 ${
+                  phoneError
+                    ? "border-error focus:border-error focus:ring-error"
+                    : "border-outline-variant/30 focus:border-primary focus:ring-primary"
+                }`}
               />
             </div>
+            <FieldError id="phone-error" message={phoneError} />
+
           </div>
 
           {/* Email */}
@@ -334,7 +431,7 @@ function InputPage() {
               type="email"
               inputMode="email"
               autoComplete="email"
-              required
+              ref={emailRef}
               maxLength={254}
               aria-invalid={emailError ? true : undefined}
               aria-describedby={emailError ? "email-error" : undefined}
@@ -343,6 +440,7 @@ function InputPage() {
                 setEmail(e.target.value);
                 if (emailError) setEmailError(null);
               }}
+              onBlur={(e) => validateEmail(e.target.value)}
               placeholder="name@example.com"
               className={`font-body-lg w-full rounded-lg border bg-surface-container px-4 py-3 text-on-surface outline-none placeholder:text-on-surface-variant/40 focus:ring-1 ${
                 emailError
@@ -350,11 +448,8 @@ function InputPage() {
                   : "border-outline-variant/30 focus:border-primary focus:ring-primary"
               }`}
             />
-            {emailError && (
-              <p id="email-error" role="alert" className="mt-2 font-label-md text-label-sm text-error">
-                {emailError}
-              </p>
-            )}
+            <FieldError id="email-error" message={emailError} />
+
           </div>
 
 

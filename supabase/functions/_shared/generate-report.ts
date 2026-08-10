@@ -295,7 +295,7 @@ export async function runGeneration(
   try {
     const { data: order } = await supabase
       .from("love_match_orders")
-      .select("person_a, person_b, language, ref_year, coupon_code")
+      .select("person_a, person_b, language, ref_year, coupon_code, email, whatsapp_sent")
       .eq("order_id", orderId)
       .maybeSingle();
     if (!order) return await fail("bad_order_data", "type=bad_order_data stage=load order row missing");

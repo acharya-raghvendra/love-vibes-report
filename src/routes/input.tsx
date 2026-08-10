@@ -255,11 +255,14 @@ function InputPage() {
               icon="person"
               name={p1Name}
               setName={setP1Name}
+              nameError={p1NameError}
+              onValidateName={(v) => validateName(v, setP1NameError)}
               dob={p1Dob}
               setDob={setP1Dob}
               gender={p1Gender}
               setGender={setP1Gender}
             />
+
 
             {/* Heart divider — mobile only (between stacked cards) */}
             <div className="flex items-center justify-center py-1 lg:hidden">

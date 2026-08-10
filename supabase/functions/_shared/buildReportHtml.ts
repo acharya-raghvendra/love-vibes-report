@@ -367,7 +367,7 @@ p.body b{color:var(--ink);}
 .mcard .who .d{width:8px;height:8px;border-radius:50%;}
 .mcard.his .who .d{background:var(--gold);}.mcard.hers .who .d{background:var(--coral);}
 .mcard p{font-size:12.5px;line-height:1.64;color:var(--soft);}
-.verdict{display:inline-block;background:#fff;color:var(--coral-dk);border:1.5px solid var(--coral-lt);font-family:'Fraunces',serif;font-size:14px;padding:6px 18px;border-radius:24px;margin:4px 0 16px;}
+.verdict{display:inline-block;background:#fff;color:var(--coral-dk);border:1.5px solid var(--coral-lt);font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:14px;padding:6px 18px;border-radius:24px;margin:4px 0 16px;}
 .blk-row{background:#fff;border-radius:14px;padding:13px 16px;margin-bottom:10px;border:1px solid var(--line);}
 .blk-row .lab{font-weight:700;font-size:11px;color:var(--coral);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
 .blk-row p{font-size:12.5px;line-height:1.7;color:var(--soft);}

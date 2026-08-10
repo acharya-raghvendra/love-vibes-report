@@ -41,9 +41,9 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
-function buildReportEmailHtml(firstName: string, pdfUrl: string): string {
+function buildReportEmailHtml(firstName: string, emailPdfUrl: string): string {
   const name = escapeHtml(firstName || "there");
-  const url = escapeHtml(pdfUrl);
+  const url = escapeHtml(emailPdfUrl);
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#f6f4ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1c1b1f;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f4ef;padding:32px 0;">

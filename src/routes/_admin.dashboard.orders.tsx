@@ -18,6 +18,9 @@ type OrderRow = {
   discount_applied: number;
   coupon_code: string | null;
   whatsapp_sent: boolean;
+  email: string | null;
+  email_sent: boolean;
+
   pdf_url: string | null;
   created_at: string;
 };

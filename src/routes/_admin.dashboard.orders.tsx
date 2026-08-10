@@ -18,6 +18,9 @@ type OrderRow = {
   discount_applied: number;
   coupon_code: string | null;
   whatsapp_sent: boolean;
+  email: string | null;
+  email_sent: boolean;
+
   pdf_url: string | null;
   created_at: string;
 };
@@ -38,7 +41,7 @@ function OrdersPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("love_match_orders")
-        .select("order_id, person_a, person_b, status, final_price, discount_applied, coupon_code, whatsapp_sent, pdf_url, created_at")
+        .select("order_id, person_a, person_b, status, final_price, discount_applied, coupon_code, whatsapp_sent, email, email_sent, pdf_url, created_at")
         .order("created_at", { ascending: false })
         .limit(500);
       if (error) throw error;
@@ -122,7 +125,9 @@ function OrdersPage() {
                 <th className="px-4 py-3">Price</th>
                 <th className="px-4 py-3">Discount</th>
                 <th className="px-4 py-3">Coupon</th>
+                <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">WhatsApp</th>
+
                 <th className="px-4 py-3">PDF</th>
                 <th className="px-4 py-3">Created</th>
                 <th className="px-4 py-3"></th>
@@ -138,10 +143,19 @@ function OrdersPage() {
                   <td className="px-4 py-3">{r.discount_applied ? `₹${r.discount_applied}` : "—"}</td>
                   <td className="px-4 py-3">{r.coupon_code || "—"}</td>
                   <td className="px-4 py-3">
+                    <div className="flex flex-col gap-1">
+                      <span className="break-all font-mono text-label-sm text-on-surface-variant">{r.email ?? "—"}</span>
+                      <span className={`inline-flex w-fit items-center rounded-full px-2 py-0.5 text-label-sm ${r.email_sent ? "bg-green-500/15 text-green-500" : "bg-error/15 text-error"}`}>
+                        {r.email_sent ? "Sent" : "Not sent"}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-label-sm ${r.whatsapp_sent ? "bg-green-500/15 text-green-500" : "bg-error/15 text-error"}`}>
                       {r.whatsapp_sent ? "Sent" : "No"}
                     </span>
                   </td>
+
                   <td className="px-4 py-3">
                     {r.pdf_url ? (
                       <a href={r.pdf_url} target="_blank" rel="noreferrer" className="text-primary hover:underline">Open</a>
@@ -154,7 +168,7 @@ function OrdersPage() {
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={10} className="px-4 py-8 text-center text-on-surface-variant">No orders match</td></tr>
+                <tr><td colSpan={11} className="px-4 py-8 text-center text-on-surface-variant">No orders match</td></tr>
               )}
             </tbody>
           </table>

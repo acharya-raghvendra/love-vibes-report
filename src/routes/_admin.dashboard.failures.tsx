@@ -11,12 +11,15 @@ type FailureRow = {
   order_id: string;
   status: string;
   whatsapp_sent: boolean;
+  email: string | null;
+  email_sent: boolean;
   failure_reason: string | null;
   error_detail: string | null;
   attempt_count: number | null;
   created_at: string;
   person_a: { first?: string; last?: string; phone?: string };
 };
+
 
 
 async function invokeEdge(fn: string, body: Record<string, unknown>) {
@@ -36,10 +39,11 @@ function FailuresPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("love_match_orders")
-        .select("order_id, status, whatsapp_sent, failure_reason, error_detail, attempt_count, created_at, person_a")
-        .or("status.eq.failed,and(status.eq.delivered,whatsapp_sent.eq.false)")
+        .select("order_id, status, whatsapp_sent, email, email_sent, failure_reason, error_detail, attempt_count, created_at, person_a")
+        .or("status.eq.failed,and(status.eq.ready,email_sent.eq.false),and(status.eq.delivered,whatsapp_sent.eq.false,email_sent.eq.false)")
         .order("created_at", { ascending: false })
         .limit(200);
+
       if (error) throw error;
       return (data ?? []) as unknown as FailureRow[];
     },
@@ -71,7 +75,9 @@ function FailuresPage() {
                 <th className="px-4 py-3">Phone</th>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">WhatsApp</th>
+
                 <th className="px-4 py-3">Failure Reason</th>
                 <th className="px-4 py-3">Technical detail</th>
                 <th className="px-4 py-3">Attempts</th>
@@ -86,7 +92,16 @@ function FailuresPage() {
                   <td className="px-4 py-3 font-mono">{r.person_a?.phone ?? "—"}</td>
                   <td className="px-4 py-3">{[r.person_a?.first, r.person_a?.last].filter(Boolean).join(" ") || "—"}</td>
                   <td className="px-4 py-3">{r.status}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-1">
+                      <span className={r.email_sent ? "text-green-500" : "text-error"}>
+                        {r.email_sent ? "Sent" : "Failed"}
+                      </span>
+                      <span className="break-all font-mono text-label-sm text-on-surface-variant">{r.email ?? "—"}</span>
+                    </div>
+                  </td>
                   <td className="px-4 py-3">{r.whatsapp_sent ? "Sent" : "No"}</td>
+
                   <td className="px-4 py-3 text-on-surface-variant">{r.failure_reason ?? "—"}</td>
                   <td className="px-4 py-3 max-w-[22rem] text-label-sm text-on-surface-variant">
                     <span className="line-clamp-3 break-words font-mono" title={r.error_detail ?? ""}>
@@ -108,7 +123,7 @@ function FailuresPage() {
                 </tr>
               ))}
               {(data ?? []).length === 0 && (
-                <tr><td colSpan={9} className="px-4 py-8 text-center text-on-surface-variant">No failures 🎉</td></tr>
+                <tr><td colSpan={10} className="px-4 py-8 text-center text-on-surface-variant">No failures 🎉</td></tr>
               )}
             </tbody>
           </table>

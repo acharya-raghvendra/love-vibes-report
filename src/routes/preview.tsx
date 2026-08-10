@@ -17,7 +17,7 @@ export const Route = createFileRoute("/preview")({
 });
 
 type InputPayload = {
-  person_a: { first: string; last: string; dob: string; phone: string };
+  person_a: { first: string; last: string; dob: string; phone: string; email?: string };
   person_b: { first: string; last: string; dob: string };
 };
 
@@ -288,6 +288,8 @@ function PreviewPage() {
             last: input.person_a.last,
             dob: input.person_a.dob,
             phone: input.person_a.phone,
+            email: input.person_a.email,
+
           },
           person_b: {
             first: input.person_b.first,

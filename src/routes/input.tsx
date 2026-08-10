@@ -127,6 +127,12 @@ function PartnerCard({
   );
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
+
+function normaliseEmail(v: string): string {
+  return v.trim().toLowerCase().slice(0, 254);
+}
+
 function InputPage() {
   const navigate = useNavigate();
   const [p1Name, setP1Name] = useState("");
@@ -136,9 +142,23 @@ function InputPage() {
   const [p2Dob, setP2Dob] = useState("");
   const [p2Gender, setP2Gender] = useState<Gender>("FEMALE");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
+
+    const cleanEmail = normaliseEmail(email);
+    if (!cleanEmail) {
+      setEmailError("Email address is required — we send your report here.");
+      return;
+    }
+    if (!EMAIL_RE.test(cleanEmail)) {
+      setEmailError("Enter a valid email address, e.g. name@example.com");
+      return;
+    }
+    setEmailError(null);
+
     if (!p1Name.trim() || !p1Dob || !p2Name.trim() || !p2Dob || phone.replace(/\D/g, "").length < 10) return;
 
     const splitName = (n: string) => {
@@ -148,7 +168,13 @@ function InputPage() {
     const a = splitName(p1Name);
     const b = splitName(p2Name);
     const payload = {
-      person_a: { ...a, dob: p1Dob, gender: p1Gender, phone: phone.replace(/\D/g, "") },
+      person_a: {
+        ...a,
+        dob: p1Dob,
+        gender: p1Gender,
+        phone: phone.replace(/\D/g, ""),
+        email: cleanEmail,
+      },
       person_b: { ...b, dob: p2Dob, gender: p2Gender },
     };
     try {
@@ -158,6 +184,7 @@ function InputPage() {
     }
     navigate({ to: "/preview" });
   }
+
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background text-on-background">
@@ -243,6 +270,46 @@ function InputPage() {
               />
             </div>
           </div>
+
+          {/* Email */}
+          <div className="glass-card rounded-2xl border border-dashed border-outline-variant/40 p-6">
+            <label
+              htmlFor="email"
+              className="mb-2 flex items-center gap-2 font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant"
+            >
+              <span className="material-symbols-outlined text-base">mail</span>
+              Email Address <span className="text-primary">*</span>
+              <span className="ml-1 normal-case tracking-normal text-on-surface-variant/70">(your report is emailed here)</span>
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              required
+              maxLength={254}
+              aria-invalid={emailError ? true : undefined}
+              aria-describedby={emailError ? "email-error" : undefined}
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (emailError) setEmailError(null);
+              }}
+              placeholder="name@example.com"
+              className={`font-body-lg w-full rounded-lg border bg-surface-container px-4 py-3 text-on-surface outline-none placeholder:text-on-surface-variant/40 focus:ring-1 ${
+                emailError
+                  ? "border-error focus:border-error focus:ring-error"
+                  : "border-outline-variant/30 focus:border-primary focus:ring-primary"
+              }`}
+            />
+            {emailError && (
+              <p id="email-error" role="alert" className="mt-2 font-label-md text-label-sm text-error">
+                {emailError}
+              </p>
+            )}
+          </div>
+
 
           {/* CTA */}
           <div className="pt-4">

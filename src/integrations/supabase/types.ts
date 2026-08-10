@@ -81,6 +81,8 @@ export type Database = {
           created_at: string
           delivered_at: string | null
           discount_applied: number
+          email: string | null
+          email_sent: boolean
           error_detail: string | null
           error_message: string | null
           failure_reason: string | null
@@ -103,6 +105,8 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           discount_applied?: number
+          email?: string | null
+          email_sent?: boolean
           error_detail?: string | null
           error_message?: string | null
           failure_reason?: string | null
@@ -125,6 +129,8 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           discount_applied?: number
+          email?: string | null
+          email_sent?: boolean
           error_detail?: string | null
           error_message?: string | null
           failure_reason?: string | null

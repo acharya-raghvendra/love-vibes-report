@@ -18,7 +18,15 @@ function cleanName(v: unknown): string {
 function cleanPhone(v: unknown): string {
   return typeof v === "string" ? v.replace(/[^\d]/g, "").slice(0, 15) : "";
 }
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
+// trim + lowercase + 254-char cap + format check; "" means invalid/missing.
+function cleanEmail(v: unknown): string {
+  if (typeof v !== "string") return "";
+  const e = v.trim().toLowerCase().slice(0, 254);
+  return EMAIL_RE.test(e) ? e : "";
+}
 function validDob(raw: unknown): string | null {
+
   if (typeof raw !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
   const [y, m, d] = raw.split("-").map((n) => parseInt(n, 10));
   if (y < 1900 || y > new Date().getUTCFullYear()) return null;
@@ -41,11 +49,15 @@ Deno.serve(async (req) => {
     const aFirst = cleanName(body?.person_a?.first);
     const aDob = validDob(body?.person_a?.dob);
     const phone = cleanPhone(body?.person_a?.phone);
+    const email = cleanEmail(body?.person_a?.email);
+
     const bFirst = cleanName(body?.person_b?.first);
     const bDob = validDob(body?.person_b?.dob);
     if (!aFirst || !aDob) return new Response(JSON.stringify({ error: "person_a invalid" }), { status: 422, headers: J });
     if (!bFirst || !bDob) return new Response(JSON.stringify({ error: "person_b invalid" }), { status: 422, headers: J });
     if (phone.length < 10) return new Response(JSON.stringify({ error: "phone required" }), { status: 422, headers: J });
+    if (!email) return new Response(JSON.stringify({ error: "email required" }), { status: 422, headers: J });
+
 
     const language = body.language === "hi" ? "hi" : "en";
     const couponCode = typeof body.couponCode === "string" ? body.couponCode.toUpperCase() : null;
@@ -100,7 +112,9 @@ Deno.serve(async (req) => {
     // Persist our order BEFORE Razorpay so a captured payment always has a row.
     const { error: insErr } = await supabase.from("love_match_orders").insert({
       order_id: orderId,
-      person_a: { first: aFirst, last: cleanName(body?.person_a?.last), dob: aDob, phone },
+      person_a: { first: aFirst, last: cleanName(body?.person_a?.last), dob: aDob, phone, email },
+      email,
+
       person_b: { first: bFirst, last: cleanName(body?.person_b?.last), dob: bDob },
       language, ref_year: refYear, status: "created",
       final_price: finalAmount,

@@ -15,7 +15,7 @@ export const Route = createFileRoute("/api/public/love-match-status")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: order } = await supabaseAdmin
           .from("love_match_orders")
-          .select("status, pdf_url, error_message, attempt_count, whatsapp_sent")
+          .select("status, pdf_url, error_message, attempt_count, whatsapp_sent, email_sent")
           .eq("order_id", orderId)
           .maybeSingle();
 
@@ -23,13 +23,19 @@ export const Route = createFileRoute("/api/public/love-match-status")({
 
         const status = order.status ?? "created";
         const ready = status === "ready" || status === "delivered";
+        const emailSent = order.email_sent === true;
+        const whatsappSent = order.whatsapp_sent === true;
 
         return Response.json(
           {
             order_id: orderId,
             status,
             ready,
-            delivered: status === "delivered" || order.whatsapp_sent === true,
+            // An order counts as delivered when EITHER channel succeeded.
+            delivered: emailSent || whatsappSent,
+            email_sent: emailSent,
+            whatsapp_sent: whatsappSent,
+
             pdf_url: ready ? order.pdf_url : null,
             error_message:
               status === "failed"

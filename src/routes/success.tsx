@@ -26,6 +26,9 @@ type OrderStatus = {
   status: string;
   ready: boolean;
   delivered: boolean;
+  email_sent?: boolean;
+  whatsapp_sent?: boolean;
+
   pdf_url: string | null;
   error_message: string | null;
   can_retry: boolean;
@@ -265,16 +268,21 @@ function SuccessPage() {
             />
             <Step
               state={deliverState}
-              label="Sending by email"
+              label="Delivering your report"
               sub={
-                order?.delivered
+                order?.email_sent
                   ? "Sent to your inbox"
-                  : isReady
-                    ? "Ready to download above"
-                    : "Awaiting generation"
+                  : order?.whatsapp_sent
+                    ? "Sent on WhatsApp"
+                    : order?.delivered
+                      ? "Delivered"
+                      : isReady
+                        ? "Ready to download above"
+                        : "Awaiting generation"
               }
 
               last
+
             />
           </div>
         </div>

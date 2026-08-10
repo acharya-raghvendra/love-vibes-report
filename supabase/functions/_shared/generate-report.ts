@@ -325,7 +325,7 @@ export async function runGeneration(
     }
 
 
-    const language = order.language ?? "en";
+    const language = order.language ?? "hi";
     const refYear = order.ref_year ?? new Date().getUTCFullYear();
     const result = scoreMatch(a.first, a.last, a.dob, b.first, b.last, b.dob, refYear);
 

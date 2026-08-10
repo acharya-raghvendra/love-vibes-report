@@ -157,9 +157,22 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-function buildReportEmailHtml(firstName: string, pdfUrl: string): string {
+/** First word only, accent-stripped, ASCII-safe, 20 chars max. */
+export function nameSlug(raw: unknown): string {
+  const first = (typeof raw === "string" ? raw : "").trim().split(/\s+/)[0] ?? "";
+  const ascii = first.normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Za-z0-9]/g, "");
+  return ascii.slice(0, 20) || "Partner";
+}
+
+/** Branded, personalised attachment filename for the email download link. */
+export function reportFileName(a: unknown, b: unknown): string {
+  return `${nameSlug(a)}-${nameSlug(b)}-Love-Report.pdf`;
+}
+
+function buildReportEmailHtml(firstName: string, emailPdfUrl: string): string {
   const name = escapeHtml(firstName || "there");
-  const url = escapeHtml(pdfUrl);
+  const url = escapeHtml(emailPdfUrl);
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#f6f4ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1c1b1f;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f4ef;padding:32px 0;">

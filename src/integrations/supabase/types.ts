@@ -76,49 +76,64 @@ export type Database = {
       }
       love_match_orders: {
         Row: {
+          attempt_count: number
           coupon_code: string | null
           created_at: string
+          delivered_at: string | null
           discount_applied: number
+          error_message: string | null
           failure_reason: string | null
           final_price: number | null
+          generation_started_at: string | null
           language: string
           order_id: string
           pdf_url: string | null
           person_a: Json
           person_b: Json
           razorpay_order_id: string | null
+          ready_at: string | null
           ref_year: number
           status: string
           whatsapp_sent: boolean
         }
         Insert: {
+          attempt_count?: number
           coupon_code?: string | null
           created_at?: string
+          delivered_at?: string | null
           discount_applied?: number
+          error_message?: string | null
           failure_reason?: string | null
           final_price?: number | null
+          generation_started_at?: string | null
           language?: string
           order_id: string
           pdf_url?: string | null
           person_a: Json
           person_b: Json
           razorpay_order_id?: string | null
+          ready_at?: string | null
           ref_year: number
           status?: string
           whatsapp_sent?: boolean
         }
         Update: {
+          attempt_count?: number
           coupon_code?: string | null
           created_at?: string
+          delivered_at?: string | null
           discount_applied?: number
+          error_message?: string | null
           failure_reason?: string | null
           final_price?: number | null
+          generation_started_at?: string | null
           language?: string
           order_id?: string
           pdf_url?: string | null
           person_a?: Json
           person_b?: Json
           razorpay_order_id?: string | null
+          ready_at?: string | null
           ref_year?: number
           status?: string
           whatsapp_sent?: boolean

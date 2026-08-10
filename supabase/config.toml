@@ -22,7 +22,9 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.admin-retry-delivery]
-verify_jwt = true
+# Auth is enforced inside the function: admin role OR trusted internal caller.
+verify_jwt = false
+
 
 [functions.admin-list-affiliates]
 verify_jwt = true

@@ -1,32 +1,76 @@
-// admin-retry-delivery — placeholder for retrying a failed order delivery.
-// Currently returns 501 Not Implemented; UI wires the button but no retry logic yet.
-import { corsHeaders, J, requireAdmin } from "../_shared/admin-auth.ts";
+// admin-retry-delivery — re-run generation for a paid-but-failed order.
+//
+// Two callers allowed:
+//   1. An admin user (Authorization bearer, has_role 'admin').
+//   2. Trusted server-side code in this app, which presents the service-role
+//      key in x-internal-key (used by the public retry + reconciler routes,
+//      which do their own eligibility checks before calling).
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireAdmin, corsHeaders, J } from "../_shared/admin-auth.ts";
+import { generateReport } from "../_shared/generate-report.ts";
 
-  const auth = await requireAdmin(req);
-  if (!auth.ok) return auth.response;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { order_id } = await req.json();
-    if (!order_id) {
-      return new Response(JSON.stringify({ error: "order_id required" }), { status: 422, headers: J });
+    const body = await req.json().catch(() => ({}));
+    const orderId = typeof body?.order_id === "string" ? body.order_id : "";
+    if (!UUID_RE.test(orderId)) {
+      return new Response(JSON.stringify({ error: "invalid_order_id" }), { status: 400, headers: J });
     }
-    // Confirm the order exists before returning the stub response.
-    const { data, error } = await auth.admin
-      .from("love_match_orders")
-      .select("order_id, status, whatsapp_sent")
-      .eq("order_id", order_id)
-      .maybeSingle();
-    if (error || !data) {
-      return new Response(JSON.stringify({ error: "order not found" }), { status: 404, headers: J });
+
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const internalKey = req.headers.get("x-internal-key") ?? "";
+
+    // Self-validating internal auth: the presented key must actually be a
+    // service-role key. love_match_cache denies anon/authenticated entirely,
+    // so a successful read proves service-role privileges. This avoids
+    // depending on both runtimes seeing the identical key string.
+    let isInternal = false;
+    let internalClient: ReturnType<typeof createClient> | null = null;
+    if (internalKey.length > 20) {
+      const candidate = createClient(Deno.env.get("SUPABASE_URL")!, internalKey);
+      const probe = await candidate.from("love_match_cache").select("cache_key").limit(1);
+      if (!probe.error) {
+        isInternal = true;
+        internalClient = candidate;
+      }
+    }
+
+    let admin;
+    if (isInternal && internalClient) {
+      admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
+    } else {
+      const auth = await requireAdmin(req);
+      if (!auth.ok) return auth.response;
+      admin = auth.admin;
+    }
+
+
+    // force: admins/reconciler may re-run past the normal attempt cap and
+    // may take over a stale `generating` row.
+    const run = await generateReport(admin, orderId, { force: Boolean(body?.force) || !isInternal, allowStale: true });
+    if (!run.started) {
+      return new Response(
+        JSON.stringify({ order_id: orderId, skipped: run.reason }),
+        { status: run.reason === "not_found" ? 404 : 200, headers: J },
+      );
+    }
+    if (!run.outcome?.ok) {
+      return new Response(
+        JSON.stringify({ order_id: orderId, status: "failed", error: run.outcome?.reason }),
+        { status: 200, headers: J },
+      );
     }
     return new Response(
-      JSON.stringify({ error: "Retry pipeline not implemented yet", order_id }),
-      { status: 501, headers: J },
+      JSON.stringify({ order_id: orderId, status: run.outcome.status, pdf_url: run.outcome.pdf_url }),
+      { status: 200, headers: J },
     );
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "failed" }), { status: 400, headers: J });
+  } catch (_err) {
+    return new Response(JSON.stringify({ error: "internal" }), { status: 500, headers: J });
   }
 });

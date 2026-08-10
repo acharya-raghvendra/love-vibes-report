@@ -58,6 +58,8 @@ function PartnerCard({
   icon,
   name,
   setName,
+  nameError,
+  onValidateName,
   dob,
   setDob,
   gender,
@@ -68,11 +70,14 @@ function PartnerCard({
   icon: string;
   name: string;
   setName: (v: string) => void;
+  nameError: string | null;
+  onValidateName: (v: string) => void;
   dob: string;
   setDob: (v: string) => void;
   gender: Gender;
   setGender: (v: Gender) => void;
 }) {
+  const errorId = `p${index}-name-error`;
   return (
     <div className="glass-card relative rounded-2xl border border-outline-variant/25 p-6 shadow-2xl lg:p-8">
       <span className="ornate-corner top-left" aria-hidden="true" />
@@ -96,11 +101,25 @@ function PartnerCard({
           <input
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter full name"
-            className="w-full border-0 border-b border-outline-variant bg-transparent px-0 py-2 font-headline-sm text-headline-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/40 focus:border-primary"
+            aria-invalid={nameError ? true : undefined}
+            aria-describedby={nameError ? errorId : undefined}
+            onChange={(e) => {
+              setName(e.target.value);
+              onValidateName(e.target.value);
+            }}
+            onBlur={(e) => onValidateName(e.target.value)}
+            placeholder="Enter full name in English"
+            className={`w-full border-0 border-b bg-transparent px-0 py-2 font-headline-sm text-headline-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/40 ${
+              nameError ? "border-error focus:border-error" : "border-outline-variant focus:border-primary"
+            }`}
           />
+          {nameError && (
+            <p id={errorId} role="alert" className="mt-2 font-label-md text-label-sm text-error">
+              {nameError}
+            </p>
+          )}
         </div>
+
 
         <div className="grid gap-6 md:grid-cols-2">
           <div className="group relative">
@@ -129,6 +148,15 @@ function PartnerCard({
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
 
+// Latin letters (incl. accents) plus space, hyphen, apostrophe.
+// Must start and end with a letter; at least 2 chars.
+const LATIN_NAME_RE = /^[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F'\u2019 -]*[A-Za-z\u00C0-\u024F]$/;
+const NAME_ERROR = "Please enter the name in English.";
+
+function isLatinName(v: string): boolean {
+  return LATIN_NAME_RE.test(v.trim());
+}
+
 function normaliseEmail(v: string): string {
   return v.trim().toLowerCase().slice(0, 254);
 }
@@ -136,17 +164,28 @@ function normaliseEmail(v: string): string {
 function InputPage() {
   const navigate = useNavigate();
   const [p1Name, setP1Name] = useState("");
+  const [p1NameError, setP1NameError] = useState<string | null>(null);
   const [p1Dob, setP1Dob] = useState("");
   const [p1Gender, setP1Gender] = useState<Gender>("MALE");
   const [p2Name, setP2Name] = useState("");
+  const [p2NameError, setP2NameError] = useState<string | null>(null);
   const [p2Dob, setP2Dob] = useState("");
   const [p2Gender, setP2Gender] = useState<Gender>("FEMALE");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
 
+  function validateName(value: string, setError: (v: string | null) => void): boolean {
+    const valid = isLatinName(value);
+    setError(valid ? null : NAME_ERROR);
+    return valid;
+  }
+
   function onSubmit(e: FormEvent) {
     e.preventDefault();
+
+    const p1Ok = validateName(p1Name, setP1NameError);
+    const p2Ok = validateName(p2Name, setP2NameError);
 
     const cleanEmail = normaliseEmail(email);
     if (!cleanEmail) {
@@ -159,7 +198,9 @@ function InputPage() {
     }
     setEmailError(null);
 
-    if (!p1Name.trim() || !p1Dob || !p2Name.trim() || !p2Dob || phone.replace(/\D/g, "").length < 10) return;
+    if (!p1Ok || !p2Ok) return;
+    if (!p1Dob || !p2Dob || phone.replace(/\D/g, "").length < 10) return;
+
 
     const splitName = (n: string) => {
       const parts = n.trim().split(/\s+/);
@@ -214,11 +255,14 @@ function InputPage() {
               icon="person"
               name={p1Name}
               setName={setP1Name}
+              nameError={p1NameError}
+              onValidateName={(v) => validateName(v, setP1NameError)}
               dob={p1Dob}
               setDob={setP1Dob}
               gender={p1Gender}
               setGender={setP1Gender}
             />
+
 
             {/* Heart divider — mobile only (between stacked cards) */}
             <div className="flex items-center justify-center py-1 lg:hidden">
@@ -241,11 +285,14 @@ function InputPage() {
               icon="person_2"
               name={p2Name}
               setName={setP2Name}
+              nameError={p2NameError}
+              onValidateName={(v) => validateName(v, setP2NameError)}
               dob={p2Dob}
               setDob={setP2Dob}
               gender={p2Gender}
               setGender={setP2Gender}
             />
+
           </div>
 
           {/* WhatsApp */}

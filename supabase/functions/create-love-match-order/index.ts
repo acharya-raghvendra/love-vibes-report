@@ -15,6 +15,15 @@ const J = { ...corsHeaders, "Content-Type": "application/json" };
 function cleanName(v: unknown): string {
   return typeof v === "string" ? v.replace(/[<>]/g, "").replace(/[\u0000-\u001F]/g, "").trim().slice(0, 60) : "";
 }
+// Latin letters (incl. accents) plus space, hyphen, apostrophe.
+// Must start and end with a letter; at least 2 chars. Same rule as /input.
+const LATIN_NAME_RE = /^[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F'\u2019 -]*[A-Za-z\u00C0-\u024F]$/;
+/** Cleaned name if it is Latin-script, else "" (never trust the client). */
+function validLatinName(v: unknown): string {
+  const n = cleanName(v);
+  return LATIN_NAME_RE.test(n) ? n : "";
+}
+
 function cleanPhone(v: unknown): string {
   return typeof v === "string" ? v.replace(/[^\d]/g, "").slice(0, 15) : "";
 }
@@ -46,17 +55,28 @@ Deno.serve(async (req) => {
     if (body.amount !== undefined) console.warn("[create-love-match-order] ignoring client amount");
 
     // Validate both people. person_a carries the delivery phone.
-    const aFirst = cleanName(body?.person_a?.first);
+    const aFirst = validLatinName(body?.person_a?.first);
+    const aLastRaw = cleanName(body?.person_a?.last);
     const aDob = validDob(body?.person_a?.dob);
     const phone = cleanPhone(body?.person_a?.phone);
     const email = cleanEmail(body?.person_a?.email);
 
-    const bFirst = cleanName(body?.person_b?.first);
+    const bFirst = validLatinName(body?.person_b?.first);
+    const bLastRaw = cleanName(body?.person_b?.last);
     const bDob = validDob(body?.person_b?.dob);
-    if (!aFirst || !aDob) return new Response(JSON.stringify({ error: "person_a invalid" }), { status: 422, headers: J });
-    if (!bFirst || !bDob) return new Response(JSON.stringify({ error: "person_b invalid" }), { status: 422, headers: J });
+
+    // Names must be Latin-script — the numerology engine scores Latin letters.
+    const englishNameError = () =>
+      new Response(JSON.stringify({ error: "name must be in English" }), { status: 422, headers: J });
+    if (!aFirst || !bFirst) return englishNameError();
+    if (aLastRaw && !LATIN_NAME_RE.test(aLastRaw)) return englishNameError();
+    if (bLastRaw && !LATIN_NAME_RE.test(bLastRaw)) return englishNameError();
+
+    if (!aDob) return new Response(JSON.stringify({ error: "person_a invalid" }), { status: 422, headers: J });
+    if (!bDob) return new Response(JSON.stringify({ error: "person_b invalid" }), { status: 422, headers: J });
     if (phone.length < 10) return new Response(JSON.stringify({ error: "phone required" }), { status: 422, headers: J });
     if (!email) return new Response(JSON.stringify({ error: "email required" }), { status: 422, headers: J });
+
 
 
     const language = body.language === "hi" ? "hi" : "en";
@@ -112,10 +132,10 @@ Deno.serve(async (req) => {
     // Persist our order BEFORE Razorpay so a captured payment always has a row.
     const { error: insErr } = await supabase.from("love_match_orders").insert({
       order_id: orderId,
-      person_a: { first: aFirst, last: cleanName(body?.person_a?.last), dob: aDob, phone, email },
+      person_a: { first: aFirst, last: aLastRaw, dob: aDob, phone, email },
       email,
 
-      person_b: { first: bFirst, last: cleanName(body?.person_b?.last), dob: bDob },
+      person_b: { first: bFirst, last: bLastRaw, dob: bDob },
       language, ref_year: refYear, status: "created",
       final_price: finalAmount,
       discount_applied: discountApplied,

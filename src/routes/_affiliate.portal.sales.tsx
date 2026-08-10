@@ -10,7 +10,6 @@ export const Route = createFileRoute("/_affiliate/portal/sales")({
 
 type Order = {
   order_id: string;
-  person_a: { first?: string } | null;
   coupon_code: string | null;
   final_price: number | null;
   discount_applied: number;
@@ -27,17 +26,11 @@ function MySalesPage() {
     enabled: !!user,
     queryKey: ["affiliate-sales", user?.id],
     queryFn: async () => {
-      const { data: coupons } = await supabase
-        .from("coupon_codes")
-        .select("code")
-        .eq("affiliate_user_id", user!.id);
-      const codes = (coupons ?? []).map((c: { code: string }) => c.code);
-      if (codes.length === 0) return [];
       const { data, error } = await supabase
-        .from("love_match_orders")
-        .select("order_id, person_a, coupon_code, final_price, discount_applied, created_at, status")
-        .in("coupon_code", codes)
+        .from("affiliate_order_sales")
+        .select("order_id, coupon_code, final_price, discount_applied, created_at, status")
         .eq("status", "delivered")
+
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Order[];
@@ -99,7 +92,7 @@ function MySalesPage() {
           <thead className="bg-surface-container text-left text-label-sm text-on-surface-variant">
             <tr>
               <th className="px-4 py-3">Date</th>
-              <th className="px-4 py-3">Customer</th>
+              <th className="px-4 py-3">Order ref</th>
               <th className="px-4 py-3">Coupon</th>
               <th className="px-4 py-3">Discount</th>
               <th className="px-4 py-3">Final</th>
@@ -109,7 +102,7 @@ function MySalesPage() {
             {filtered.map((o) => (
               <tr key={o.order_id} className="hover:bg-surface-container/50">
                 <td className="px-4 py-3">{new Date(o.created_at).toLocaleDateString()}</td>
-                <td className="px-4 py-3">{o.person_a?.first ?? "—"}</td>
+                <td className="px-4 py-3"><code className="font-mono text-on-surface-variant">{o.order_id.slice(0, 8)}</code></td>
                 <td className="px-4 py-3"><code className="font-mono">{o.coupon_code ?? "—"}</code></td>
                 <td className="px-4 py-3 text-green-500">-₹{(o.discount_applied ?? 0).toLocaleString("en-IN")}</td>
                 <td className="px-4 py-3 font-semibold">₹{(o.final_price ?? 0).toLocaleString("en-IN")}</td>

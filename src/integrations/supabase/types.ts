@@ -208,7 +208,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      affiliate_order_sales: {
+        Row: {
+          coupon_code: string | null
+          created_at: string | null
+          delivered_at: string | null
+          discount_applied: number | null
+          final_price: number | null
+          order_id: string | null
+          ready_at: string | null
+          status: string | null
+        }
+        Insert: {
+          coupon_code?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          discount_applied?: number | null
+          final_price?: number | null
+          order_id?: string | null
+          ready_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          coupon_code?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          discount_applied?: number | null
+          final_price?: number | null
+          order_id?: string | null
+          ready_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {

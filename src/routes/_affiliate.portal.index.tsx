@@ -25,9 +25,8 @@ function AffiliateHome() {
         return { totalCoupons: 0, totalSales: 0, totalRevenue: 0, totalDiscount: 0 };
       }
       const { data: orders } = await supabase
-        .from("love_match_orders")
+        .from("affiliate_order_sales")
         .select("final_price, discount_applied, status")
-        .in("coupon_code", codes)
         .eq("status", "delivered");
       const totalRevenue = (orders ?? []).reduce((s: number, o: { final_price: number | null }) => s + (o.final_price ?? 0), 0);
       const totalDiscount = (orders ?? []).reduce((s: number, o: { discount_applied: number | null }) => s + (o.discount_applied ?? 0), 0);

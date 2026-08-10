@@ -143,10 +143,19 @@ function OrdersPage() {
                   <td className="px-4 py-3">{r.discount_applied ? `₹${r.discount_applied}` : "—"}</td>
                   <td className="px-4 py-3">{r.coupon_code || "—"}</td>
                   <td className="px-4 py-3">
+                    <div className="flex flex-col gap-1">
+                      <span className="break-all font-mono text-label-sm text-on-surface-variant">{r.email ?? "—"}</span>
+                      <span className={`inline-flex w-fit items-center rounded-full px-2 py-0.5 text-label-sm ${r.email_sent ? "bg-green-500/15 text-green-500" : "bg-error/15 text-error"}`}>
+                        {r.email_sent ? "Sent" : "Not sent"}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-label-sm ${r.whatsapp_sent ? "bg-green-500/15 text-green-500" : "bg-error/15 text-error"}`}>
                       {r.whatsapp_sent ? "Sent" : "No"}
                     </span>
                   </td>
+
                   <td className="px-4 py-3">
                     {r.pdf_url ? (
                       <a href={r.pdf_url} target="_blank" rel="noreferrer" className="text-primary hover:underline">Open</a>

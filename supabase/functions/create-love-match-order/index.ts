@@ -41,6 +41,8 @@ Deno.serve(async (req) => {
     const aFirst = cleanName(body?.person_a?.first);
     const aDob = validDob(body?.person_a?.dob);
     const phone = cleanPhone(body?.person_a?.phone);
+    const email = cleanEmail(body?.person_a?.email);
+
     const bFirst = cleanName(body?.person_b?.first);
     const bDob = validDob(body?.person_b?.dob);
     if (!aFirst || !aDob) return new Response(JSON.stringify({ error: "person_a invalid" }), { status: 422, headers: J });

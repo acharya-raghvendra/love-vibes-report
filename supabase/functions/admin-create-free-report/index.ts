@@ -255,6 +255,16 @@ Deno.serve(async (req) => {
           .from("love-match-pdfs").createSignedUrl(path, 60 * 60 * 24 * 30);
         const pdfUrl = signed?.signedUrl ?? null;
 
+        // Download-flagged signed URL, used ONLY for the email button.
+        const downloadName = reportFileName(aFirst, bFirst);
+        const { data: signedDownload } = await supabase.storage
+          .from("love-match-pdfs")
+          .createSignedUrl(path, 60 * 60 * 24 * 30, { download: downloadName });
+        const emailPdfUrl = signedDownload?.signedUrl ?? pdfUrl;
+        if (!signedDownload?.signedUrl) {
+          console.error(`[free-report] download_url_sign_failed name=${downloadName}`);
+        }
+
         // Resend email delivery (optional).
         let delivered = false;
         if (sendEmail) {

@@ -125,7 +125,9 @@ function OrdersPage() {
                 <th className="px-4 py-3">Price</th>
                 <th className="px-4 py-3">Discount</th>
                 <th className="px-4 py-3">Coupon</th>
+                <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">WhatsApp</th>
+
                 <th className="px-4 py-3">PDF</th>
                 <th className="px-4 py-3">Created</th>
                 <th className="px-4 py-3"></th>

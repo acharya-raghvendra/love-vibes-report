@@ -227,10 +227,13 @@ export async function runGeneration(
       .select("person_a, person_b, language, ref_year, coupon_code")
       .eq("order_id", orderId)
       .maybeSingle();
-    if (!order) return await fail("bad_order_data");
+    if (!order) return await fail("bad_order_data", "type=bad_order_data stage=load order row missing");
 
     const a = order.person_a, b = order.person_b;
-    if (!a?.first || !a?.dob || !b?.first || !b?.dob) return await fail("bad_order_data");
+    if (!a?.first || !a?.dob || !b?.first || !b?.dob) {
+      return await fail("bad_order_data", "type=bad_order_data stage=load missing name or dob");
+    }
+
 
     const language = order.language ?? "en";
     const refYear = order.ref_year ?? new Date().getUTCFullYear();

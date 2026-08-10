@@ -100,7 +100,9 @@ Deno.serve(async (req) => {
     // Persist our order BEFORE Razorpay so a captured payment always has a row.
     const { error: insErr } = await supabase.from("love_match_orders").insert({
       order_id: orderId,
-      person_a: { first: aFirst, last: cleanName(body?.person_a?.last), dob: aDob, phone },
+      person_a: { first: aFirst, last: cleanName(body?.person_a?.last), dob: aDob, phone, email },
+      email,
+
       person_b: { first: bFirst, last: cleanName(body?.person_b?.last), dob: bDob },
       language, ref_year: refYear, status: "created",
       final_price: finalAmount,

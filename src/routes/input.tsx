@@ -166,14 +166,24 @@ function InputPage() {
   const [p1Name, setP1Name] = useState("");
   const [p1NameError, setP1NameError] = useState<string | null>(null);
   const [p1Dob, setP1Dob] = useState("");
+  const [p1DobError, setP1DobError] = useState<string | null>(null);
   const [p1Gender, setP1Gender] = useState<Gender>("MALE");
   const [p2Name, setP2Name] = useState("");
   const [p2NameError, setP2NameError] = useState<string | null>(null);
   const [p2Dob, setP2Dob] = useState("");
+  const [p2DobError, setP2DobError] = useState<string | null>(null);
   const [p2Gender, setP2Gender] = useState<Gender>("FEMALE");
   const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
+
+  const p1NameRef = useRef<HTMLInputElement>(null);
+  const p1DobRef = useRef<HTMLInputElement>(null);
+  const p2NameRef = useRef<HTMLInputElement>(null);
+  const p2DobRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
 
   function validateName(value: string, setError: (v: string | null) => void): boolean {
     const valid = isLatinName(value);
@@ -181,26 +191,58 @@ function InputPage() {
     return valid;
   }
 
+  function validateDob(value: string, setError: (v: string | null) => void): boolean {
+    const valid = Boolean(value);
+    setError(valid ? null : DOB_ERROR);
+    return valid;
+  }
+
+  function validatePhone(value: string): boolean {
+    const valid = value.replace(/\D/g, "").length >= 10;
+    setPhoneError(valid ? null : PHONE_ERROR);
+    return valid;
+  }
+
+  function validateEmail(value: string): boolean {
+    const clean = normaliseEmail(value);
+    if (!clean) {
+      setEmailError("Email address is required — we send your report here.");
+      return false;
+    }
+    if (!EMAIL_RE.test(clean)) {
+      setEmailError("Enter a valid email address, e.g. name@example.com");
+      return false;
+    }
+    setEmailError(null);
+    return true;
+  }
+
+  function focusField(ref: React.RefObject<HTMLInputElement | null>) {
+    const el = ref.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.focus({ preventScroll: true });
+  }
+
   function onSubmit(e: FormEvent) {
     e.preventDefault();
 
-    const p1Ok = validateName(p1Name, setP1NameError);
-    const p2Ok = validateName(p2Name, setP2NameError);
+    const checks: Array<{ ok: boolean; ref: React.RefObject<HTMLInputElement | null> }> = [
+      { ok: validateName(p1Name, setP1NameError), ref: p1NameRef },
+      { ok: validateDob(p1Dob, setP1DobError), ref: p1DobRef },
+      { ok: validateName(p2Name, setP2NameError), ref: p2NameRef },
+      { ok: validateDob(p2Dob, setP2DobError), ref: p2DobRef },
+      { ok: validatePhone(phone), ref: phoneRef },
+      { ok: validateEmail(email), ref: emailRef },
+    ];
+
+    const firstInvalid = checks.find((c) => !c.ok);
+    if (firstInvalid) {
+      focusField(firstInvalid.ref);
+      return;
+    }
 
     const cleanEmail = normaliseEmail(email);
-    if (!cleanEmail) {
-      setEmailError("Email address is required — we send your report here.");
-      return;
-    }
-    if (!EMAIL_RE.test(cleanEmail)) {
-      setEmailError("Enter a valid email address, e.g. name@example.com");
-      return;
-    }
-    setEmailError(null);
-
-    if (!p1Ok || !p2Ok) return;
-    if (!p1Dob || !p2Dob || phone.replace(/\D/g, "").length < 10) return;
-
 
     const splitName = (n: string) => {
       const parts = n.trim().split(/\s+/);
@@ -225,6 +267,7 @@ function InputPage() {
     }
     navigate({ to: "/preview" });
   }
+
 
 
   return (

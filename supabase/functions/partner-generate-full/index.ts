@@ -47,7 +47,7 @@ Deno.serve(async (req: Request) => {
     if (!aFirst || !aDob || !bFirst || !bDob) {
       return ok({ error: "invalid_input" }, 400);
     }
-    const language: "en" | "hi" = body?.language === "hi" ? "hi" : "en";
+    const language: "en" | "hi" = body?.language === "en" ? "en" : "hi";
     const branding = body?.branding ?? {};
     const showUpsell = body?.show_upsell === true;
     const orderId: string = typeof body?.order_id === "string" && body.order_id.trim()

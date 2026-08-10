@@ -381,7 +381,7 @@ p.body b{color:var(--ink);}
 .li .b{font-size:13px;line-height:1.4;}
 .li.good .b{color:var(--gold);}.li.watch .b{color:var(--coral);}
 .li .t b{font-size:12.5px;color:var(--ink);}.li .t span{font-size:12px;color:var(--soft);}
-.letter{font-family:'Fraunces',serif;font-size:14.5px;line-height:1.9;color:var(--soft);font-style:italic;}
+.letter{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:14.5px;line-height:1.9;color:var(--soft);font-style:italic;}
 .letter p{margin-bottom:14px;}
 .sign{margin-top:18px;display:flex;flex-direction:column;gap:6px;}
 .sign img{height:38px;object-fit:contain;opacity:1;}

@@ -200,6 +200,18 @@ Deno.serve(async (req: Request) => {
       return ok({ status: "failed", error: { code: "GENERATION_FAILED" } }, 500);
     }
 
+    // 6b. Fail-loud Devanagari backstop for Hindi — proves the glyphs actually
+    // painted from our embedded face. "Could not verify" is a failure.
+    if (language === "hi") {
+      const probe = await assertDevanagariRendered(html, browserlessKey);
+      console.log(`[partner] devanagari_probe ${describeProbe(probe)}`);
+      if (!probe.ok) {
+        console.error(`[partner] pdf_font_missing ${describeProbe(probe)}`);
+        return ok({ status: "failed", error: { code: "PDF_FONT_MISSING" } }, 500);
+      }
+    }
+
+
     // 7. Storage upload + 30-day signed URL under partner/ prefix.
     const path = `love-match/partner/${orderId}.pdf`;
     const { error: upErr } = await supabase.storage.from("love-match-pdfs")

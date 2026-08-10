@@ -181,6 +181,77 @@ function buildReportEmailHtml(firstName: string, pdfUrl: string): string {
 </body></html>`;
 }
 
+/**
+ * Resend delivery with its own retry policy.
+ * Retries 429 + 5xx (honouring Retry-After) up to 4 attempts with exponential
+ * backoff + jitter. Any other 4xx is permanent and is NOT retried.
+ * Never throws — returns whether the mail went out plus an admin-only detail.
+ */
+export async function deliverEmail(args: {
+  to: string | null;
+  firstName: string;
+  pdfUrl: string;
+  orderId: string;
+}): Promise<{ sent: boolean; detail: string | null }> {
+  const { to, firstName, pdfUrl, orderId } = args;
+  const resendKey = Deno.env.get("RESEND_API_KEY");
+  if (!resendKey) return { sent: false, detail: "type=email_error stage=email resend_key_missing" };
+  if (!to) return { sent: false, detail: "type=email_error stage=email no_recipient_email" };
+
+  const MAX_ATTEMPTS = 4;
+  let lastDetail = "type=email_error stage=email unknown";
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    let res: Response;
+    try {
+      res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${resendKey}` },
+        body: JSON.stringify({
+          from: "TalkToGuruji <alerts@update.talktoguruji.com>",
+          to: [to],
+          subject: "Your Love Match Report is ready — TalkToGuruji",
+          html: buildReportEmailHtml(firstName, pdfUrl),
+        }),
+      });
+    } catch (err) {
+      // Network-level error: treat as transient.
+      lastDetail = `type=email_error stage=email network attempt=${attempt} ${
+        err instanceof Error ? err.message.slice(0, 200) : "fetch_failed"
+      }`;
+      console.error(`[generate] order=${orderId} resend ${lastDetail}`);
+      if (attempt === MAX_ATTEMPTS) break;
+      await sleepBackoff(attempt, null);
+      continue;
+    }
+
+    if (res.ok) return { sent: true, detail: null };
+
+    const bodyText = (await res.text().catch(() => "")).slice(0, 300);
+    const transient = res.status === 429 || res.status >= 500;
+    lastDetail = `type=email_error stage=email status=${res.status} attempt=${attempt} ${bodyText}`;
+    console.error(`[generate] order=${orderId} resend ${lastDetail}`);
+
+    if (!transient) return { sent: false, detail: lastDetail };
+    if (attempt === MAX_ATTEMPTS) break;
+    await sleepBackoff(attempt, res.headers.get("Retry-After"));
+  }
+
+  return { sent: false, detail: lastDetail };
+}
+
+async function sleepBackoff(attempt: number, retryAfter: string | null): Promise<void> {
+  let waitMs: number;
+  const parsed = retryAfter ? Number(retryAfter) : NaN;
+  if (Number.isFinite(parsed) && parsed > 0) {
+    waitMs = Math.min(parsed * 1000, 30_000);
+  } else {
+    waitMs = Math.min(500 * 2 ** (attempt - 1), 8_000) + Math.floor(Math.random() * 400);
+  }
+  await new Promise((r) => setTimeout(r, waitMs));
+}
+
+
 const PLANETS: Record<number, string> = {
   1: "Sun", 2: "Moon", 3: "Jupiter", 4: "Rahu", 5: "Mercury",
   6: "Venus", 7: "Ketu", 8: "Saturn", 9: "Mars",

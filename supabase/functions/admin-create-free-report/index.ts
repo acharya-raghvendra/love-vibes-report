@@ -264,6 +264,20 @@ Deno.serve(async (req) => {
           return;
         }
 
+        // Fail-loud Devanagari backstop for Hindi reports.
+        if (language === "hi") {
+          const probe = await assertDevanagariRendered(html, browserlessKey);
+          console.log(`[free-report] devanagari_probe ${describeProbe(probe)}`);
+          if (!probe.ok) {
+            await markFail(
+              "pdf_font_missing",
+              `type=pdf_error stage=font_verify ${describeProbe(probe)}`.slice(0, 600),
+            );
+            return;
+          }
+        }
+
+
 
         const path = `love-match/${orderId}.pdf`;
         await supabase.storage.from("love-match-pdfs")

@@ -141,13 +141,22 @@ Deno.serve(async (req: Request) => {
     }
 
 
-    // 5. HTML — branded, upsell gated.
+    // 5. HTML — branded, upsell gated. Devanagari face inlined as base64 so
+    // Chrome needs no network access for Hindi glyphs at print time.
+    let fontFaceCss: string;
+    try {
+      fontFaceCss = await loadDevanagariFontFaceCss(supabase);
+    } catch (err) {
+      console.error("[partner] font_unavailable:", err instanceof Error ? err.message : err);
+      return ok({ status: "failed", error: { code: "PDF_FONT_MISSING" } }, 500);
+    }
     const pdfFacts = { ...keyFacts, chemistry };
     const html = buildReportHtml(pdfFacts, sections, {
       logoUrl: typeof branding.logo_url === "string" ? branding.logo_url : undefined,
       footerText: typeof branding.footer_text === "string" ? branding.footer_text : undefined,
       companyName: typeof branding.company_name === "string" ? branding.company_name : undefined,
       showUpsell,
+      fontFaceCss,
     });
 
     // 6. Browserless PDF — same call as love-match-finalize (timeout=60000).

@@ -358,7 +358,7 @@ p.body b{color:var(--ink);}
 .pcol h3{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:19px;font-weight:500;margin-bottom:8px;}
 .nrow{display:flex;align-items:baseline;gap:14px;padding:9px 0;border-bottom:1px solid var(--line);}
 .nrow:last-child{border-bottom:0;}
-.nrow .v{font-family:'Fraunces',serif;font-size:24px;font-weight:500;color:var(--gold);min-width:48px;line-height:1;}
+.nrow .v{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:24px;font-weight:500;color:var(--gold);min-width:48px;line-height:1;}
 .pcol.hers .nrow .v{color:var(--coral);}
 .nrow .meta b{display:block;font-size:12.5px;color:var(--ink);}
 .nrow .meta span{font-size:10.5px;color:var(--muted);}

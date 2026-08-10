@@ -271,6 +271,46 @@ function InputPage() {
             </div>
           </div>
 
+          {/* Email */}
+          <div className="glass-card rounded-2xl border border-dashed border-outline-variant/40 p-6">
+            <label
+              htmlFor="email"
+              className="mb-2 flex items-center gap-2 font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant"
+            >
+              <span className="material-symbols-outlined text-base">mail</span>
+              Email Address <span className="text-primary">*</span>
+              <span className="ml-1 normal-case tracking-normal text-on-surface-variant/70">(your report is emailed here)</span>
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              required
+              maxLength={254}
+              aria-invalid={emailError ? true : undefined}
+              aria-describedby={emailError ? "email-error" : undefined}
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (emailError) setEmailError(null);
+              }}
+              placeholder="name@example.com"
+              className={`font-body-lg w-full rounded-lg border bg-surface-container px-4 py-3 text-on-surface outline-none placeholder:text-on-surface-variant/40 focus:ring-1 ${
+                emailError
+                  ? "border-error focus:border-error focus:ring-error"
+                  : "border-outline-variant/30 focus:border-primary focus:ring-primary"
+              }`}
+            />
+            {emailError && (
+              <p id="email-error" role="alert" className="mt-2 font-label-md text-label-sm text-error">
+                {emailError}
+              </p>
+            )}
+          </div>
+
+
           {/* CTA */}
           <div className="pt-4">
             <button

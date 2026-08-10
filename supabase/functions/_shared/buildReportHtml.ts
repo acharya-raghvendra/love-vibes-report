@@ -355,7 +355,7 @@ p.body b{color:var(--ink);}
 .pcol{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 20px 8px;margin-bottom:14px;box-shadow:0 2px 0 var(--blush);position:relative;overflow:hidden;}
 .pcol::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;}
 .pcol.his::before{background:var(--gold);}.pcol.hers::before{background:var(--coral);}
-.pcol h3{font-family:'Fraunces',serif;font-size:19px;font-weight:500;margin-bottom:8px;}
+.pcol h3{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:19px;font-weight:500;margin-bottom:8px;}
 .nrow{display:flex;align-items:baseline;gap:14px;padding:9px 0;border-bottom:1px solid var(--line);}
 .nrow:last-child{border-bottom:0;}
 .nrow .v{font-family:'Fraunces',serif;font-size:24px;font-weight:500;color:var(--gold);min-width:48px;line-height:1;}

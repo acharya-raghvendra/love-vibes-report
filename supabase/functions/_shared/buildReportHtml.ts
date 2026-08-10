@@ -389,7 +389,7 @@ p.body b{color:var(--ink);}
 .upsell{background:linear-gradient(160deg,#fff,var(--coral-wash));border:1px solid var(--coral-lt);border-radius:20px;padding:24px 24px 22px;margin-top:8px;box-shadow:0 3px 0 var(--blush);}
 .upsell .up-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
 .upsell .up-title{font-size:22px;font-weight:600;color:var(--ink);}
-.upsell .up-price{font-family:'Fraunces',serif;font-size:24px;font-weight:600;color:var(--coral-dk);}
+.upsell .up-price{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:24px;font-weight:600;color:var(--coral-dk);}
 .upsell .up-sub{font-size:12.5px;color:var(--soft);margin-top:4px;}
 .upsell .up-cta{display:inline-block;margin-top:16px;background:var(--coral);color:#fff;font-weight:600;font-size:13px;text-decoration:none;padding:11px 26px;border-radius:24px;letter-spacing:.02em;}
 .upsell .up-note{font-size:10.5px;color:var(--muted);margin-top:10px;}

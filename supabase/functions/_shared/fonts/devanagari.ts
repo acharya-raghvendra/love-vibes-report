@@ -99,6 +99,7 @@ export interface DevanagariProbe {
 const PROBE_FN = `
 export default async function ({ page, context }) {
   await page.setContent(context.html, { waitUntil: 'load' });
+  const cfg = context.cfg;
   const probe = await page.evaluate(async (cfg) => {
     try {
       await document.fonts.ready;

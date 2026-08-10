@@ -168,7 +168,7 @@ function OrdersPage() {
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={10} className="px-4 py-8 text-center text-on-surface-variant">No orders match</td></tr>
+                <tr><td colSpan={11} className="px-4 py-8 text-center text-on-surface-variant">No orders match</td></tr>
               )}
             </tbody>
           </table>

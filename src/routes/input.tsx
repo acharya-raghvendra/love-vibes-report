@@ -125,6 +125,7 @@ function PartnerCard({
           <input
             type="text"
             value={name}
+            ref={nameRef}
             aria-invalid={nameError ? true : undefined}
             aria-describedby={nameError ? errorId : undefined}
             onChange={(e) => {
@@ -137,11 +138,7 @@ function PartnerCard({
               nameError ? "border-error focus:border-error" : "border-outline-variant focus:border-primary"
             }`}
           />
-          {nameError && (
-            <p id={errorId} role="alert" className="mt-2 font-label-md text-label-sm text-error">
-              {nameError}
-            </p>
-          )}
+          <FieldError id={errorId} message={nameError} />
         </div>
 
 
@@ -153,11 +150,22 @@ function PartnerCard({
             <input
               type="date"
               value={dob}
-              onChange={(e) => setDob(e.target.value)}
+              ref={dobRef}
+              aria-invalid={dobError ? true : undefined}
+              aria-describedby={dobError ? dobErrorId : undefined}
+              onChange={(e) => {
+                setDob(e.target.value);
+                onValidateDob(e.target.value);
+              }}
+              onBlur={(e) => onValidateDob(e.target.value)}
               style={{ colorScheme: "dark" }}
-              className="w-full border-0 border-b border-outline-variant bg-transparent px-0 py-2 font-body-lg text-body-lg text-on-surface outline-none transition-colors focus:border-primary"
+              className={`w-full border-0 border-b bg-transparent px-0 py-2 font-body-lg text-body-lg text-on-surface outline-none transition-colors ${
+                dobError ? "border-error focus:border-error" : "border-outline-variant focus:border-primary"
+              }`}
             />
+            <FieldError id={dobErrorId} message={dobError} />
           </div>
+
           <div>
             <label className="mb-1 block font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant">
               Gender

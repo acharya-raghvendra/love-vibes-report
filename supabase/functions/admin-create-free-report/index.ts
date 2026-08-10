@@ -234,15 +234,19 @@ Deno.serve(async (req) => {
         if (!pdfRes.ok) {
           const errBody = await pdfRes.text().catch(() => "");
           console.error(`[free-report] browserless_http status=${pdfRes.status} body=${errBody.slice(0, 500)}`);
-          await markFail("pdf_failed");
+          await markFail(
+            "pdf_failed",
+            `type=pdf_error stage=pdf status=${pdfRes.status} body=${errBody.slice(0, 300)}`,
+          );
           return;
         }
         const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
         if (pdfBytes.length < 10240) {
           console.error(`[free-report] browserless_pdf_too_small bytes=${pdfBytes.length}`);
-          await markFail("pdf_too_small");
+          await markFail("pdf_too_small", `type=pdf_error stage=pdf bytes=${pdfBytes.length}`);
           return;
         }
+
 
         const path = `love-match/${orderId}.pdf`;
         await supabase.storage.from("love-match-pdfs")
@@ -276,8 +280,14 @@ Deno.serve(async (req) => {
         }
 
         await supabase.from("love_match_orders")
-          .update({ status: "delivered", pdf_url: pdfUrl, whatsapp_sent: delivered })
+          .update({
+            status: "delivered",
+            pdf_url: pdfUrl,
+            whatsapp_sent: delivered,
+            error_detail: guardNote,
+          })
           .eq("order_id", orderId);
+
       } catch (err) {
         await markFail(err instanceof Error ? err.message.slice(0, 200) : "internal");
       }

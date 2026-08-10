@@ -81,6 +81,7 @@ export type Database = {
           created_at: string
           delivered_at: string | null
           discount_applied: number
+          error_detail: string | null
           error_message: string | null
           failure_reason: string | null
           final_price: number | null
@@ -102,6 +103,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           discount_applied?: number
+          error_detail?: string | null
           error_message?: string | null
           failure_reason?: string | null
           final_price?: number | null
@@ -123,6 +125,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           discount_applied?: number
+          error_detail?: string | null
           error_message?: string | null
           failure_reason?: string | null
           final_price?: number | null

@@ -4,9 +4,17 @@
 // Persists a love_match_orders row with final_price=0 and coupon_code='ADMIN_FREE'.
 
 import { corsHeaders, J, requireAdmin } from "../_shared/admin-auth.ts";
-import { scoreMatch, MatchResult } from "../_shared/engine/scorer.ts";
+import { scoreMatch } from "../_shared/engine/scorer.ts";
 import { buildReportHtml } from "../_shared/buildReportHtml.ts";
-import { buildSystemPrompt } from "../_shared/prosePrompt.ts";
+import { generateProse } from "../_shared/prose.ts";
+import {
+  buildCoreClaims,
+  correctCoreNumbers,
+  correctiveInstruction,
+  describeMismatches,
+  verifyCoreNumbers,
+} from "../_shared/numberGuard.ts";
+
 
 
 async function sha256(s: string): Promise<string> {
@@ -66,85 +74,10 @@ function validDob(raw: unknown): string | null {
   return raw;
 }
 
-function collectStrings(v: unknown, out: string[]): void {
-  if (typeof v === "string") out.push(v);
-  else if (Array.isArray(v)) for (const x of v) collectStrings(x, out);
-  else if (v && typeof v === "object") for (const x of Object.values(v)) collectStrings(x, out);
-}
+// Prose generation, the transient-error backoff and the core-number guard all
+// live in _shared (prose.ts / numberGuard.ts) so this path behaves exactly
+// like the paid pipeline.
 
-function validateNoInventedNumbers(sections: unknown, allowed: Set<string>): boolean {
-  const strs: string[] = [];
-  collectStrings(sections, strs);
-  const prose = strs.join(" ");
-  const nums = prose.match(/\d+/g) ?? [];
-  for (const n of nums) {
-    if (allowed.has(n)) continue;
-    if (/^(19|20)\d\d$/.test(n)) continue;
-    if (n.length >= 4) continue;
-    return false;
-  }
-  return true;
-}
-
-async function generateProse(
-  facts: { names?: { a?: string; b?: string }; language?: string },
-  language: string,
-): Promise<Record<string, unknown>> {
-  const key = Deno.env.get("GEMINI_API_KEY");
-  if (!key) throw new Error("gemini_missing_key");
-  const model = "gemini-2.5-flash";
-  const url =
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-
-  const A = facts.names?.a || "Person A";
-  const B = facts.names?.b || "Person B";
-  const system = buildSystemPrompt(A, B, language);
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: [{ role: "user", parts: [{ text: JSON.stringify(facts) }] }],
-      generationConfig: {
-        temperature: 0.55,
-        responseMimeType: "application/json",
-        maxOutputTokens: 32768,
-      },
-    }),
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`gemini_http status=${res.status} body=${body.slice(0, 500)}`);
-  }
-  const data = await res.json();
-  const finishReason = data?.candidates?.[0]?.finishReason ?? "UNKNOWN";
-  const outputTokens = data?.usageMetadata?.candidatesTokenCount ?? -1;
-  console.log(`[free-report] gemini finish_reason=${finishReason} output_tokens=${outputTokens}`);
-  if (finishReason === "MAX_TOKENS") {
-    throw new Error(`gemini_truncated finish_reason=MAX_TOKENS output_tokens=${outputTokens}`);
-  }
-  let text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-  text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
-  const parsed = JSON.parse(text);
-  return parsed.sections ?? parsed;
-}
-function allowedNumberSet(r: MatchResult): Set<string> {
-  const s = new Set<string>();
-  s.add(String(r.score));
-  const add = (cn: typeof r.a) => {
-    for (const k of ["lifePath", "destiny", "soulUrge", "personality", "maturity"] as const) {
-      s.add(String(cn[k].display));
-      s.add(String(cn[k].compound));
-      s.add(String(cn[k].score));
-    }
-    s.add(String(cn.personalYear));
-  };
-  add(r.a); add(r.b);
-  for (let i = 1; i <= 9; i++) s.add(String(i));
-  s.add("11"); s.add("22"); s.add("33");
-  return s;
-}
 
 
 Deno.serve(async (req) => {
@@ -188,10 +121,16 @@ Deno.serve(async (req) => {
     // Kick off the long pipeline in the background so the client isn't waiting
     // on Gemini + Browserless (30–90s). UI polls love_match_orders by order_id.
     const runPipeline = async () => {
-      const markFail = async (reason: string) => {
+      const markFail = async (reason: string, detail?: string) => {
         await supabase.from("love_match_orders")
-          .update({ status: "failed", failure_reason: reason }).eq("order_id", orderId);
+          .update({
+            status: "failed",
+            failure_reason: reason,
+            error_detail: detail ? detail.slice(0, 2000) : null,
+          })
+          .eq("order_id", orderId);
       };
+
       try {
         const result = scoreMatch(aFirst, aLast, aDob, bFirst, bLast, bDob, refYear);
         const facts = {
@@ -207,17 +146,49 @@ Deno.serve(async (req) => {
           .from("love_match_prose_cache").select("sections").eq("prose_key", proseKey).maybeSingle();
         if (cachedProse?.sections) sections = cachedProse.sections as Record<string, unknown>;
 
+        let guardNote: string | null = null;
         if (!sections) {
-          const allowed = allowedNumberSet(result);
-          for (let attempt = 0; attempt < 2 && !sections; attempt++) {
+          const claims = buildCoreClaims(result, { a: aFirst, b: bFirst });
+          const MAX_CONTENT_RETRIES = 2;
+          let corrective: string | undefined;
+
+          for (let attempt = 0; attempt <= MAX_CONTENT_RETRIES; attempt++) {
+            let out: Record<string, unknown>;
             try {
-              const out = await generateProse(facts, language);
-              if (validateNoInventedNumbers(out, allowed)) sections = out;
-            } catch (_) { /* retry */ }
+              out = await generateProse(facts, language, corrective ? { corrective } : {});
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : String(err);
+              console.error(`[free-report] prose attempt=${attempt} err=${msg.slice(0, 300)}`);
+              const reason = msg.startsWith("gemini_overloaded")
+                ? "gemini_overloaded"
+                : msg.startsWith("gemini_truncated")
+                ? "gemini_truncated"
+                : "generation_failed";
+              await markFail(
+                reason,
+                `stage=prose attempt=${attempt + 1}/${MAX_CONTENT_RETRIES + 1} ${msg.slice(0, 400)}`,
+              );
+              return;
+            }
+            const check = verifyCoreNumbers(out, claims);
+            if (check.ok) { sections = out; break; }
+            const note = describeMismatches(check.mismatches);
+            console.error(`[free-report] number_guard_mismatch attempt=${attempt} ${note}`);
+            if (attempt < MAX_CONTENT_RETRIES) {
+              corrective = correctiveInstruction(claims, check.mismatches);
+              continue;
+            }
+            const fixed = correctCoreNumbers(out, claims);
+            sections = fixed.sections as Record<string, unknown>;
+            guardNote =
+              `type=number_guard_mismatch stage=prose attempt=${attempt + 1}/${MAX_CONTENT_RETRIES + 1} ` +
+              `auto_corrected=${fixed.corrections} (${note})`;
+            console.error(`[free-report] ${guardNote}`);
           }
-          if (!sections) { await markFail("generation_failed"); return; }
+          if (!sections) { await markFail("generation_failed", "stage=prose exhausted"); return; }
           await supabase.from("love_match_prose_cache").upsert({ prose_key: proseKey, sections });
         }
+
 
         // PDF via Browserless — server-rendered HTML (Option 3).
         const browserlessKey = Deno.env.get("BROWSERLESS_API_KEY");
@@ -263,15 +234,19 @@ Deno.serve(async (req) => {
         if (!pdfRes.ok) {
           const errBody = await pdfRes.text().catch(() => "");
           console.error(`[free-report] browserless_http status=${pdfRes.status} body=${errBody.slice(0, 500)}`);
-          await markFail("pdf_failed");
+          await markFail(
+            "pdf_failed",
+            `type=pdf_error stage=pdf status=${pdfRes.status} body=${errBody.slice(0, 300)}`,
+          );
           return;
         }
         const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
         if (pdfBytes.length < 10240) {
           console.error(`[free-report] browserless_pdf_too_small bytes=${pdfBytes.length}`);
-          await markFail("pdf_too_small");
+          await markFail("pdf_too_small", `type=pdf_error stage=pdf bytes=${pdfBytes.length}`);
           return;
         }
+
 
         const path = `love-match/${orderId}.pdf`;
         await supabase.storage.from("love-match-pdfs")
@@ -305,10 +280,19 @@ Deno.serve(async (req) => {
         }
 
         await supabase.from("love_match_orders")
-          .update({ status: "delivered", pdf_url: pdfUrl, whatsapp_sent: delivered })
+          .update({
+            status: "delivered",
+            pdf_url: pdfUrl,
+            whatsapp_sent: delivered,
+            error_detail: guardNote,
+          })
           .eq("order_id", orderId);
+
       } catch (err) {
-        await markFail(err instanceof Error ? err.message.slice(0, 200) : "internal");
+        const msg = err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err);
+        console.error(`[free-report] unexpected err=${msg.slice(0, 500)}`);
+        await markFail("internal", `type=internal ${msg.slice(0, 600)}`);
+
       }
     };
 

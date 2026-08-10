@@ -16,7 +16,15 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { scoreMatch } from "./engine/scorer.ts";
 import { buildReportHtml } from "./buildReportHtml.ts";
-import { sha256, generateProse, validateNoInventedNumbers, allowedNumberSet } from "./prose.ts";
+import { sha256, generateProse } from "./prose.ts";
+import {
+  buildCoreClaims,
+  correctCoreNumbers,
+  correctiveInstruction,
+  describeMismatches,
+  verifyCoreNumbers,
+} from "./numberGuard.ts";
+
 
 export const GENERATION_TIMEOUT_MS = 6 * 60 * 1000; // stale `generating` cutoff
 export const MAX_ATTEMPTS = 3;
@@ -26,6 +34,8 @@ const JSON_HEADERS = { "Content-Type": "application/json" };
 const HUMAN_ERRORS: Record<string, string> = {
   generation_failed: "We couldn't compose your report text. Please retry.",
   gemini_truncated: "The report text came back incomplete. Please retry.",
+  gemini_overloaded: "Our report writer is busy right now. Please retry in a minute.",
+  gemini_config: "Report text service is not configured. Our team has been notified.",
   pdf_config: "Report PDF service is not configured. Our team has been notified.",
   pdf_failed: "We couldn't render your report PDF. Please retry.",
   pdf_too_small: "The generated PDF looked invalid. Please retry.",
@@ -34,6 +44,7 @@ const HUMAN_ERRORS: Record<string, string> = {
   generation_timeout: "Report generation took too long and was stopped. Please retry.",
   internal: "Something went wrong while generating your report. Please retry.",
 };
+
 
 export function humanError(reason: string): string {
   return HUMAN_ERRORS[reason] ?? HUMAN_ERRORS.internal;
@@ -99,12 +110,31 @@ export async function markFailed(
   supabase: SupabaseClient,
   orderId: string,
   reason: string,
+  detail?: string,
 ): Promise<void> {
   await supabase
     .from("love_match_orders")
-    .update({ status: "failed", failure_reason: reason, error_message: humanError(reason) })
+    .update({
+      status: "failed",
+      failure_reason: reason,
+      error_message: humanError(reason),
+      error_detail: detail ? detail.slice(0, 2000) : null,
+    })
     .eq("order_id", orderId);
 }
+
+/** Admin-only technical note; never surfaced through the public status API. */
+export async function noteDetail(
+  supabase: SupabaseClient,
+  orderId: string,
+  detail: string,
+): Promise<void> {
+  await supabase
+    .from("love_match_orders")
+    .update({ error_detail: detail.slice(0, 2000) })
+    .eq("order_id", orderId);
+}
+
 
 /** Flip stale `generating` rows to `failed` so nothing hangs forever. */
 export async function expireStaleGenerating(supabase: SupabaseClient): Promise<string[]> {
@@ -184,11 +214,12 @@ export async function runGeneration(
   supabase: SupabaseClient,
   orderId: string,
 ): Promise<GenerationOutcome> {
-  const fail = async (reason: string): Promise<GenerationOutcome> => {
-    console.error(`[generate] order=${orderId} failed reason=${reason}`);
-    await markFailed(supabase, orderId, reason);
+  const fail = async (reason: string, detail?: string): Promise<GenerationOutcome> => {
+    console.error(`[generate] order=${orderId} failed reason=${reason} detail=${detail ?? ""}`);
+    await markFailed(supabase, orderId, reason, detail);
     return { ok: false, reason };
   };
+
 
   try {
     const { data: order } = await supabase
@@ -196,10 +227,13 @@ export async function runGeneration(
       .select("person_a, person_b, language, ref_year, coupon_code")
       .eq("order_id", orderId)
       .maybeSingle();
-    if (!order) return await fail("bad_order_data");
+    if (!order) return await fail("bad_order_data", "type=bad_order_data stage=load order row missing");
 
     const a = order.person_a, b = order.person_b;
-    if (!a?.first || !a?.dob || !b?.first || !b?.dob) return await fail("bad_order_data");
+    if (!a?.first || !a?.dob || !b?.first || !b?.dob) {
+      return await fail("bad_order_data", "type=bad_order_data stage=load missing name or dob");
+    }
+
 
     const language = order.language ?? "en";
     const refYear = order.ref_year ?? new Date().getUTCFullYear();
@@ -226,27 +260,66 @@ export async function runGeneration(
       .from("love_match_prose_cache").select("sections").eq("prose_key", proseKey).maybeSingle();
     if (cachedProse?.sections) sections = cachedProse.sections;
 
+    let guardNote: string | null = null;
     if (!sections) {
-      const allowed = allowedNumberSet(result);
-      let lastReason = "generation_failed";
-      for (let attempt = 0; attempt < 2 && !sections; attempt++) {
+      const claims = buildCoreClaims(result, { a: a.first, b: b.first });
+      const MAX_CONTENT_RETRIES = 2; // corrective regenerations after the first call
+      let corrective: string | undefined;
+      let lastMismatchNote = "";
+
+      for (let attempt = 0; attempt <= MAX_CONTENT_RETRIES; attempt++) {
+        let out: Record<string, unknown>;
         try {
-          const out = await generateProse(facts, language);
-          if (validateNoInventedNumbers(out, allowed)) sections = out;
-          else lastReason = "generation_failed";
+          out = await generateProse(facts, language, corrective ? { corrective } : {});
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error(`[generate] order=${orderId} prose attempt=${attempt} err=${msg.slice(0, 300)}`);
-          lastReason = msg.startsWith("gemini_truncated") ? "gemini_truncated" : "generation_failed";
+          const reason = msg.startsWith("gemini_truncated")
+            ? "gemini_truncated"
+            : msg.startsWith("gemini_overloaded")
+            ? "gemini_overloaded"
+            : msg.startsWith("gemini_missing_key")
+            ? "gemini_config"
+            : "generation_failed";
+          return await fail(
+            reason,
+            `stage=prose attempt=${attempt + 1}/${MAX_CONTENT_RETRIES + 1} ${msg.slice(0, 400)}`,
+          );
         }
+
+        const check = verifyCoreNumbers(out, claims);
+        if (check.ok) {
+          sections = out;
+          break;
+        }
+        lastMismatchNote = describeMismatches(check.mismatches);
+        console.error(
+          `[generate] order=${orderId} number_guard_mismatch attempt=${attempt} ${lastMismatchNote}`,
+        );
+
+        if (attempt < MAX_CONTENT_RETRIES) {
+          corrective = correctiveInstruction(claims, check.mismatches);
+          continue;
+        }
+
+        // Never hard-fail a paid order on the guard: the correct values are
+        // known, so rewrite the contradicting numbers deterministically.
+        const fixed = correctCoreNumbers(out, claims);
+        sections = fixed.sections as Record<string, unknown>;
+        guardNote =
+          `type=number_guard_mismatch stage=prose attempt=${attempt + 1}/${MAX_CONTENT_RETRIES + 1} ` +
+          `auto_corrected=${fixed.corrections} (${lastMismatchNote})`;
+        console.error(`[generate] order=${orderId} ${guardNote}`);
       }
-      if (!sections) return await fail(lastReason);
+
+      if (!sections) return await fail("generation_failed", `stage=prose ${lastMismatchNote}`);
       await supabase.from("love_match_prose_cache").upsert({ prose_key: proseKey, sections });
     }
 
+
     // Browserless PDF from server-rendered HTML.
     const browserlessKey = Deno.env.get("BROWSERLESS_API_KEY");
-    if (!browserlessKey) return await fail("pdf_config");
+    if (!browserlessKey) return await fail("pdf_config", "type=pdf_error stage=pdf missing BROWSERLESS_API_KEY");
     const pdfFacts = {
       language,
       score: result.score, band: result.band, shared: result.shared,
@@ -265,29 +338,47 @@ export async function runGeneration(
       },
     );
     if (!pdfRes.ok) {
+      const body = (await pdfRes.text().catch(() => "")).slice(0, 300);
       console.error(`[generate] order=${orderId} browserless status=${pdfRes.status}`);
-      return await fail("pdf_failed");
+      return await fail(
+        "pdf_failed",
+        `type=pdf_error stage=pdf status=${pdfRes.status} body=${body}`,
+      );
     }
     const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
-    if (pdfBytes.length < 10240) return await fail("pdf_too_small");
+    if (pdfBytes.length < 10240) {
+      return await fail("pdf_too_small", `type=pdf_error stage=pdf bytes=${pdfBytes.length}`);
+    }
 
     const path = `love-match/${orderId}.pdf`;
     const { error: upErr } = await supabase.storage.from("love-match-pdfs")
       .upload(path, pdfBytes, { contentType: "application/pdf", upsert: true });
     if (upErr) {
       console.error(`[generate] order=${orderId} storage err=${upErr.message}`);
-      return await fail("storage_failed");
+      return await fail(
+        "storage_failed",
+        `type=storage_error stage=storage ${upErr.message.slice(0, 300)}`,
+      );
     }
     const { data: signed } = await supabase.storage
       .from("love-match-pdfs").createSignedUrl(path, 60 * 60 * 24 * 30); // 30 days
     const pdfUrl = signed?.signedUrl ?? null;
-    if (!pdfUrl) return await fail("storage_failed");
+    if (!pdfUrl) return await fail("storage_failed", "type=storage_error stage=storage sign_url_failed");
 
     // ready: report exists and is viewable even if email delivery fails.
     const nowIso = new Date().toISOString();
     await supabase.from("love_match_orders")
-      .update({ status: "ready", pdf_url: pdfUrl, ready_at: nowIso, error_message: null, failure_reason: null })
+      .update({
+        status: "ready",
+        pdf_url: pdfUrl,
+        ready_at: nowIso,
+        error_message: null,
+        failure_reason: null,
+        // keep the guard incident (admin-only) even on a successful report
+        error_detail: guardNote,
+      })
       .eq("order_id", orderId);
+
 
     // Resend email delivery (best-effort).
     let delivered = false;
@@ -332,9 +423,11 @@ export async function runGeneration(
       delivered,
     };
   } catch (err) {
-    console.error(`[generate] order=${orderId} unexpected err=${err instanceof Error ? err.message : err}`);
-    return await fail("internal");
+    const msg = err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err);
+    console.error(`[generate] order=${orderId} unexpected err=${msg.slice(0, 500)}`);
+    return await fail("internal", `type=internal ${msg.slice(0, 600)}`);
   }
+
 }
 
 /** Claim + run in one call. Safe to invoke concurrently. */

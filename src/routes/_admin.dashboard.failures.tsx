@@ -12,9 +12,12 @@ type FailureRow = {
   status: string;
   whatsapp_sent: boolean;
   failure_reason: string | null;
+  error_detail: string | null;
+  attempt_count: number | null;
   created_at: string;
   person_a: { first?: string; last?: string; phone?: string };
 };
+
 
 async function invokeEdge(fn: string, body: Record<string, unknown>) {
   const { data: { session } } = await supabase.auth.getSession();
@@ -33,7 +36,7 @@ function FailuresPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("love_match_orders")
-        .select("order_id, status, whatsapp_sent, failure_reason, created_at, person_a")
+        .select("order_id, status, whatsapp_sent, failure_reason, error_detail, attempt_count, created_at, person_a")
         .or("status.eq.failed,and(status.eq.delivered,whatsapp_sent.eq.false)")
         .order("created_at", { ascending: false })
         .limit(200);
@@ -70,8 +73,11 @@ function FailuresPage() {
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">WhatsApp</th>
                 <th className="px-4 py-3">Failure Reason</th>
+                <th className="px-4 py-3">Technical detail</th>
+                <th className="px-4 py-3">Attempts</th>
                 <th className="px-4 py-3">Created</th>
                 <th className="px-4 py-3"></th>
+
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -82,7 +88,14 @@ function FailuresPage() {
                   <td className="px-4 py-3">{r.status}</td>
                   <td className="px-4 py-3">{r.whatsapp_sent ? "Sent" : "No"}</td>
                   <td className="px-4 py-3 text-on-surface-variant">{r.failure_reason ?? "—"}</td>
+                  <td className="px-4 py-3 max-w-[22rem] text-label-sm text-on-surface-variant">
+                    <span className="line-clamp-3 break-words font-mono" title={r.error_detail ?? ""}>
+                      {r.error_detail ?? "—"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-on-surface-variant">{r.attempt_count ?? 0}</td>
                   <td className="px-4 py-3 text-on-surface-variant">{new Date(r.created_at).toLocaleString()}</td>
+
                   <td className="px-4 py-3">
                     <button
                       onClick={() => retryMut.mutate(r.order_id)}
@@ -95,7 +108,7 @@ function FailuresPage() {
                 </tr>
               ))}
               {(data ?? []).length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-on-surface-variant">No failures 🎉</td></tr>
+                <tr><td colSpan={9} className="px-4 py-8 text-center text-on-surface-variant">No failures 🎉</td></tr>
               )}
             </tbody>
           </table>

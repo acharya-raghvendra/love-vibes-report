@@ -289,7 +289,10 @@ Deno.serve(async (req) => {
           .eq("order_id", orderId);
 
       } catch (err) {
-        await markFail(err instanceof Error ? err.message.slice(0, 200) : "internal");
+        const msg = err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err);
+        console.error(`[free-report] unexpected err=${msg.slice(0, 500)}`);
+        await markFail("internal", `type=internal ${msg.slice(0, 600)}`);
+
       }
     };
 

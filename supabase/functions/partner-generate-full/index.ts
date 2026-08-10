@@ -8,6 +8,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { scoreMatch } from "../_shared/engine/scorer.ts";
 import { buildReportHtml } from "../_shared/buildReportHtml.ts";
+import {
+  assertDevanagariRendered,
+  describeProbe,
+  loadDevanagariFontFaceCss,
+} from "../_shared/fonts/devanagari.ts";
 import { buildProseKey, generateProse } from "../_shared/prose.ts";
 import {
   buildCoreClaims,

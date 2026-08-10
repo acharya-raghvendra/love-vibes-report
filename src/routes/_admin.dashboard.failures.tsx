@@ -39,10 +39,11 @@ function FailuresPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("love_match_orders")
-        .select("order_id, status, whatsapp_sent, failure_reason, error_detail, attempt_count, created_at, person_a")
-        .or("status.eq.failed,and(status.eq.delivered,whatsapp_sent.eq.false)")
+        .select("order_id, status, whatsapp_sent, email, email_sent, failure_reason, error_detail, attempt_count, created_at, person_a")
+        .or("status.eq.failed,and(status.eq.ready,email_sent.eq.false),and(status.eq.delivered,whatsapp_sent.eq.false,email_sent.eq.false)")
         .order("created_at", { ascending: false })
         .limit(200);
+
       if (error) throw error;
       return (data ?? []) as unknown as FailureRow[];
     },

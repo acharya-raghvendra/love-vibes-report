@@ -95,7 +95,8 @@ Notes:
 
 ## Technical notes
 
-- Migration: add `email text` and `email_sent boolean not null default false` to `public.love_match_orders`. No new grants needed (existing admin/affiliate read policies cover it); the pipeline writes with the service role.
-- Files touched: `src/routes/input.tsx`, `src/routes/preview.tsx`, `src/routes/success.tsx`, `supabase/functions/create-love-match-order/index.ts`, `supabase/functions/_shared/generate-report.ts` (new `deliverEmail` helper with backoff), `src/routes/api/public/love-match-status.ts`, `src/routes/_admin.dashboard.failures.tsx`, `src/routes/_admin.dashboard.orders.tsx`.
+- Migration 1 (runs first): drop the affiliate SELECT policy on `love_match_orders`, create the `affiliate_order_sales` view with the explicit safe-column list, grant SELECT on it to `authenticated` only.
+- Migration 2: add `email text` and `email_sent boolean not null default false` to `public.love_match_orders`. No new grants needed (admin policy covers reads, view excludes the column); the pipeline writes with the service role.
+- Files touched: `src/routes/_affiliate.portal.sales.tsx`, `src/routes/_affiliate.portal.index.tsx`, `src/routes/input.tsx`, `src/routes/preview.tsx`, `src/routes/success.tsx`, `supabase/functions/create-love-match-order/index.ts`, `supabase/functions/_shared/generate-report.ts` (new `deliverEmail` helper with backoff), `src/routes/api/public/love-match-status.ts`, `src/routes/_admin.dashboard.failures.tsx`, `src/routes/_admin.dashboard.orders.tsx`.
 - Untouched: Razorpay signature verification, order claiming/idempotency, prose generation and number guard, PDF build, storage upload and signing.
 - `admin-create-free-report` already has its own recipient email field; it will reuse the same backoff helper so behaviour matches the paid path.

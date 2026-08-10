@@ -270,9 +270,10 @@ function SuccessPage() {
                 order?.delivered
                   ? "Sent to your inbox"
                   : isReady
-                    ? "Sending now…"
+                    ? "Ready to download above"
                     : "Awaiting generation"
               }
+
               last
             />
           </div>

@@ -157,9 +157,22 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-function buildReportEmailHtml(firstName: string, pdfUrl: string): string {
+/** First word only, accent-stripped, ASCII-safe, 20 chars max. */
+export function nameSlug(raw: unknown): string {
+  const first = (typeof raw === "string" ? raw : "").trim().split(/\s+/)[0] ?? "";
+  const ascii = first.normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Za-z0-9]/g, "");
+  return ascii.slice(0, 20) || "Partner";
+}
+
+/** Branded, personalised attachment filename for the email download link. */
+export function reportFileName(a: unknown, b: unknown): string {
+  return `${nameSlug(a)}-${nameSlug(b)}-Love-Report.pdf`;
+}
+
+function buildReportEmailHtml(firstName: string, emailPdfUrl: string): string {
   const name = escapeHtml(firstName || "there");
-  const url = escapeHtml(pdfUrl);
+  const url = escapeHtml(emailPdfUrl);
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#f6f4ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1c1b1f;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f4ef;padding:32px 0;">
@@ -190,10 +203,11 @@ function buildReportEmailHtml(firstName: string, pdfUrl: string): string {
 export async function deliverEmail(args: {
   to: string | null;
   firstName: string;
-  pdfUrl: string;
+  /** Signed URL minted with the { download } option — forces attachment download. */
+  emailPdfUrl: string;
   orderId: string;
 }): Promise<{ sent: boolean; detail: string | null }> {
-  const { to, firstName, pdfUrl, orderId } = args;
+  const { to, firstName, emailPdfUrl, orderId } = args;
   const resendKey = Deno.env.get("RESEND_API_KEY");
   if (!resendKey) return { sent: false, detail: "type=email_error stage=email resend_key_missing" };
   if (!to) return { sent: false, detail: "type=email_error stage=email no_recipient_email" };
@@ -211,7 +225,7 @@ export async function deliverEmail(args: {
           from: "TalkToGuruji <alerts@update.talktoguruji.com>",
           to: [to],
           subject: "Your Love Match Report is ready — TalkToGuruji",
-          html: buildReportEmailHtml(firstName, pdfUrl),
+          html: buildReportEmailHtml(firstName, emailPdfUrl),
         }),
       });
     } catch (err) {
@@ -436,6 +450,17 @@ export async function runGeneration(
     const pdfUrl = signed?.signedUrl ?? null;
     if (!pdfUrl) return await fail("storage_failed", "type=storage_error stage=storage sign_url_failed");
 
+    // Second signed URL, download-flagged: used ONLY for the email button so
+    // the PDF downloads as an attachment instead of opening in a browser tab.
+    const downloadName = reportFileName(a?.first, b?.first);
+    const { data: signedDownload } = await supabase.storage
+      .from("love-match-pdfs")
+      .createSignedUrl(path, 60 * 60 * 24 * 30, { download: downloadName });
+    const emailPdfUrl = signedDownload?.signedUrl ?? pdfUrl;
+    if (!signedDownload?.signedUrl) {
+      console.error(`[generate] order=${orderId} download_url_sign_failed name=${downloadName}`);
+    }
+
     // ready: report exists and is viewable even if email delivery fails.
     const nowIso = new Date().toISOString();
     await supabase.from("love_match_orders")
@@ -455,7 +480,7 @@ export async function runGeneration(
     const emailResult = await deliverEmail({
       to: (typeof a?.email === "string" ? a.email : null) ?? order.email ?? null,
       firstName: a?.first ?? "",
-      pdfUrl,
+      emailPdfUrl,
       orderId,
     });
 

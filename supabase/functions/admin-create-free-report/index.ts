@@ -7,6 +7,7 @@ import { corsHeaders, J, requireAdmin } from "../_shared/admin-auth.ts";
 import { scoreMatch } from "../_shared/engine/scorer.ts";
 import { buildReportHtml } from "../_shared/buildReportHtml.ts";
 import { generateProse } from "../_shared/prose.ts";
+import { reportFileName } from "../_shared/generate-report.ts";
 import {
   buildCoreClaims,
   correctCoreNumbers,
@@ -41,9 +42,9 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
-function buildReportEmailHtml(firstName: string, pdfUrl: string): string {
+function buildReportEmailHtml(firstName: string, emailPdfUrl: string): string {
   const name = escapeHtml(firstName || "there");
-  const url = escapeHtml(pdfUrl);
+  const url = escapeHtml(emailPdfUrl);
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#f6f4ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1c1b1f;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f4ef;padding:32px 0;">
@@ -255,6 +256,16 @@ Deno.serve(async (req) => {
           .from("love-match-pdfs").createSignedUrl(path, 60 * 60 * 24 * 30);
         const pdfUrl = signed?.signedUrl ?? null;
 
+        // Download-flagged signed URL, used ONLY for the email button.
+        const downloadName = reportFileName(aFirst, bFirst);
+        const { data: signedDownload } = await supabase.storage
+          .from("love-match-pdfs")
+          .createSignedUrl(path, 60 * 60 * 24 * 30, { download: downloadName });
+        const emailPdfUrl = signedDownload?.signedUrl ?? pdfUrl;
+        if (!signedDownload?.signedUrl) {
+          console.error(`[free-report] download_url_sign_failed name=${downloadName}`);
+        }
+
         // Resend email delivery (optional).
         let delivered = false;
         if (sendEmail) {
@@ -271,7 +282,7 @@ Deno.serve(async (req) => {
                   from: "TalkToGuruji <alerts@update.talktoguruji.com>",
                   to: [email],
                   subject: "Your Love Match Report is ready — TalkToGuruji",
-                  html: buildReportEmailHtml(aFirst, pdfUrl),
+                  html: buildReportEmailHtml(aFirst, emailPdfUrl ?? pdfUrl),
                 }),
               });
               delivered = rres.ok;

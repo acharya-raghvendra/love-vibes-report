@@ -16,6 +16,11 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { scoreMatch } from "./engine/scorer.ts";
 import { buildReportHtml } from "./buildReportHtml.ts";
+import {
+  assertDevanagariRendered,
+  describeProbe,
+  loadDevanagariFontFaceCss,
+} from "./fonts/devanagari.ts";
 import { sha256, generateProse } from "./prose.ts";
 import {
   buildCoreClaims,

@@ -26,6 +26,9 @@ type OrderStatus = {
   status: string;
   ready: boolean;
   delivered: boolean;
+  email_sent?: boolean;
+  whatsapp_sent?: boolean;
+
   pdf_url: string | null;
   error_message: string | null;
   can_retry: boolean;

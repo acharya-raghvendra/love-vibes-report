@@ -17,7 +17,7 @@ function cleanName(v: unknown): string {
 }
 // Latin letters (incl. accents) plus space, hyphen, apostrophe.
 // Must start and end with a letter; at least 2 chars. Same rule as /input.
-const LATIN_NAME_RE = /^[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F' -]*[A-Za-z\u00C0-\u024F]$/;
+const LATIN_NAME_RE = /^[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F'\u2019 -]*[A-Za-z\u00C0-\u024F]$/;
 /** Cleaned name if it is Latin-script, else "" (never trust the client). */
 function validLatinName(v: unknown): string {
   const n = cleanName(v);

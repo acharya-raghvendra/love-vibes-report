@@ -150,7 +150,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
 
 // Latin letters (incl. accents) plus space, hyphen, apostrophe.
 // Must start and end with a letter; at least 2 chars.
-const LATIN_NAME_RE = /^[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F' -]*[A-Za-z\u00C0-\u024F]$/;
+const LATIN_NAME_RE = /^[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F'\u2019 -]*[A-Za-z\u00C0-\u024F]$/;
 const NAME_ERROR = "Please enter the name in English.";
 
 function isLatinName(v: string): boolean {

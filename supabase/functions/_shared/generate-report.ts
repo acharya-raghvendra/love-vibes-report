@@ -380,34 +380,30 @@ export async function runGeneration(
       .eq("order_id", orderId);
 
 
-    // Resend email delivery (best-effort).
-    let delivered = false;
-    try {
-      const resendKey = Deno.env.get("RESEND_API_KEY");
-      const toEmail = a?.email ?? null;
-      if (resendKey && toEmail) {
-        const rres = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${resendKey}` },
-          body: JSON.stringify({
-            from: "TalkToGuruji <alerts@update.talktoguruji.com>",
-            to: [toEmail],
-            subject: "Your Love Match Report is ready — TalkToGuruji",
-            html: buildReportEmailHtml(a?.first ?? "", pdfUrl),
-          }),
-        });
-        delivered = rres.ok;
-        if (!rres.ok) console.error(`[generate] order=${orderId} resend status=${rres.status}`);
-      }
-    } catch (err) {
-      console.error(`[generate] order=${orderId} resend err=${err instanceof Error ? err.message : err}`);
-    }
+    // Email delivery stage (own retry policy; never fails the order).
+    const emailResult = await deliverEmail({
+      to: (typeof a?.email === "string" ? a.email : null) ?? order.email ?? null,
+      firstName: a?.first ?? "",
+      pdfUrl,
+      orderId,
+    });
 
-    if (delivered) {
+    if (emailResult.sent) {
       await supabase.from("love_match_orders")
-        .update({ status: "delivered", whatsapp_sent: true, delivered_at: new Date().toISOString() })
+        .update({
+          status: "delivered",
+          email_sent: true,
+          delivered_at: new Date().toISOString(),
+        })
+        .eq("order_id", orderId);
+    } else if (emailResult.detail) {
+      const merged = [guardNote, emailResult.detail].filter(Boolean).join(" | ");
+      await supabase.from("love_match_orders")
+        .update({ email_sent: false, error_detail: merged.slice(0, 2000) })
         .eq("order_id", orderId);
     }
+
+    const delivered = emailResult.sent || order.whatsapp_sent === true;
 
     // Coupon usage bump (non-fatal). Claim guard makes this run once per order.
     if (order.coupon_code) {
@@ -422,6 +418,7 @@ export async function runGeneration(
       pdf_url: pdfUrl,
       delivered,
     };
+
   } catch (err) {
     const msg = err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err);
     console.error(`[generate] order=${orderId} unexpected err=${msg.slice(0, 500)}`);

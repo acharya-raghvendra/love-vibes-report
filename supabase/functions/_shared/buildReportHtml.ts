@@ -346,7 +346,7 @@ p.body b{color:var(--ink);}
 .ring .lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .ring .lbl b{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:50px;font-weight:500;line-height:1;color:var(--ink);}
 .ring .lbl span{font-size:10.5px;color:var(--muted);letter-spacing:.16em;margin-top:4px;text-transform:uppercase;}
-.band-pill{margin-top:16px;background:#fff;border:1.5px solid var(--coral-lt);color:var(--coral-dk);font-family:'Fraunces',serif;font-size:16px;padding:6px 20px;border-radius:24px;}
+.band-pill{margin-top:16px;background:#fff;border:1.5px solid var(--coral-lt);color:var(--coral-dk);font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:16px;padding:6px 20px;border-radius:24px;}
 .band-sub{font-size:12.5px;color:var(--muted);margin-top:8px;max-width:80%;}
 .hero-quote{background:var(--coral-wash);border-radius:16px;padding:15px 18px;font-size:13px;line-height:1.76;color:var(--soft);margin-bottom:16px;}
 .hero-quote b{color:var(--ink);}

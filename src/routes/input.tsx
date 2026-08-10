@@ -309,13 +309,25 @@ function InputPage() {
               <input
                 type="tel"
                 inputMode="numeric"
-                required
+                ref={phoneRef}
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                aria-invalid={phoneError ? true : undefined}
+                aria-describedby={phoneError ? "phone-error" : undefined}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  if (phoneError) setPhoneError(null);
+                }}
+                onBlur={(e) => validatePhone(e.target.value)}
                 placeholder="WhatsApp Number"
-                className="font-body-lg flex-1 rounded-lg border border-outline-variant/30 bg-surface-container px-4 py-3 text-on-surface outline-none placeholder:text-on-surface-variant/40 focus:border-primary focus:ring-1 focus:ring-primary"
+                className={`font-body-lg flex-1 rounded-lg border bg-surface-container px-4 py-3 text-on-surface outline-none placeholder:text-on-surface-variant/40 focus:ring-1 ${
+                  phoneError
+                    ? "border-error focus:border-error focus:ring-error"
+                    : "border-outline-variant/30 focus:border-primary focus:ring-primary"
+                }`}
               />
             </div>
+            <FieldError id="phone-error" message={phoneError} />
+
           </div>
 
           {/* Email */}

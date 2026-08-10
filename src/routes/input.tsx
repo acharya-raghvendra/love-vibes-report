@@ -346,7 +346,7 @@ function InputPage() {
               type="email"
               inputMode="email"
               autoComplete="email"
-              required
+              ref={emailRef}
               maxLength={254}
               aria-invalid={emailError ? true : undefined}
               aria-describedby={emailError ? "email-error" : undefined}
@@ -355,6 +355,7 @@ function InputPage() {
                 setEmail(e.target.value);
                 if (emailError) setEmailError(null);
               }}
+              onBlur={(e) => validateEmail(e.target.value)}
               placeholder="name@example.com"
               className={`font-body-lg w-full rounded-lg border bg-surface-container px-4 py-3 text-on-surface outline-none placeholder:text-on-surface-variant/40 focus:ring-1 ${
                 emailError
@@ -362,11 +363,8 @@ function InputPage() {
                   : "border-outline-variant/30 focus:border-primary focus:ring-primary"
               }`}
             />
-            {emailError && (
-              <p id="email-error" role="alert" className="mt-2 font-label-md text-label-sm text-error">
-                {emailError}
-              </p>
-            )}
+            <FieldError id="email-error" message={emailError} />
+
           </div>
 
 

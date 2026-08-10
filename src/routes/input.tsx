@@ -148,6 +148,15 @@ function PartnerCard({
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
 
+// Latin letters (incl. accents) plus space, hyphen, apostrophe.
+// Must start and end with a letter; at least 2 chars.
+const LATIN_NAME_RE = /^[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F' -]*[A-Za-z\u00C0-\u024F]$/;
+const NAME_ERROR = "Please enter the name in English.";
+
+function isLatinName(v: string): boolean {
+  return LATIN_NAME_RE.test(v.trim());
+}
+
 function normaliseEmail(v: string): string {
   return v.trim().toLowerCase().slice(0, 254);
 }
@@ -155,17 +164,28 @@ function normaliseEmail(v: string): string {
 function InputPage() {
   const navigate = useNavigate();
   const [p1Name, setP1Name] = useState("");
+  const [p1NameError, setP1NameError] = useState<string | null>(null);
   const [p1Dob, setP1Dob] = useState("");
   const [p1Gender, setP1Gender] = useState<Gender>("MALE");
   const [p2Name, setP2Name] = useState("");
+  const [p2NameError, setP2NameError] = useState<string | null>(null);
   const [p2Dob, setP2Dob] = useState("");
   const [p2Gender, setP2Gender] = useState<Gender>("FEMALE");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
 
+  function validateName(value: string, setError: (v: string | null) => void): boolean {
+    const valid = isLatinName(value);
+    setError(valid ? null : NAME_ERROR);
+    return valid;
+  }
+
   function onSubmit(e: FormEvent) {
     e.preventDefault();
+
+    const p1Ok = validateName(p1Name, setP1NameError);
+    const p2Ok = validateName(p2Name, setP2NameError);
 
     const cleanEmail = normaliseEmail(email);
     if (!cleanEmail) {
@@ -178,7 +198,9 @@ function InputPage() {
     }
     setEmailError(null);
 
-    if (!p1Name.trim() || !p1Dob || !p2Name.trim() || !p2Dob || phone.replace(/\D/g, "").length < 10) return;
+    if (!p1Ok || !p2Ok) return;
+    if (!p1Dob || !p2Dob || phone.replace(/\D/g, "").length < 10) return;
+
 
     const splitName = (n: string) => {
       const parts = n.trim().split(/\s+/);

@@ -203,10 +203,11 @@ function buildReportEmailHtml(firstName: string, emailPdfUrl: string): string {
 export async function deliverEmail(args: {
   to: string | null;
   firstName: string;
-  pdfUrl: string;
+  /** Signed URL minted with the { download } option — forces attachment download. */
+  emailPdfUrl: string;
   orderId: string;
 }): Promise<{ sent: boolean; detail: string | null }> {
-  const { to, firstName, pdfUrl, orderId } = args;
+  const { to, firstName, emailPdfUrl, orderId } = args;
   const resendKey = Deno.env.get("RESEND_API_KEY");
   if (!resendKey) return { sent: false, detail: "type=email_error stage=email resend_key_missing" };
   if (!to) return { sent: false, detail: "type=email_error stage=email no_recipient_email" };

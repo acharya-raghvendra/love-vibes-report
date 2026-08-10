@@ -225,7 +225,7 @@ export async function deliverEmail(args: {
           from: "TalkToGuruji <alerts@update.talktoguruji.com>",
           to: [to],
           subject: "Your Love Match Report is ready — TalkToGuruji",
-          html: buildReportEmailHtml(firstName, pdfUrl),
+          html: buildReportEmailHtml(firstName, emailPdfUrl),
         }),
       });
     } catch (err) {

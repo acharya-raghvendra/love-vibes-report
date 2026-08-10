@@ -19,6 +19,7 @@ export const Route = createFileRoute("/preview")({
 type InputPayload = {
   person_a: { first: string; last: string; dob: string; phone: string; email?: string };
   person_b: { first: string; last: string; dob: string };
+  language?: "en" | "hi";
 };
 
 type PreviewData = {

@@ -257,7 +257,7 @@ function PreviewPage() {
             last: payload.person_b.last,
             dob: payload.person_b.dob,
           },
-          language: "en",
+          language: payload.language ?? "hi",
         },
       });
       if (error || !data?.data) throw new Error("preview_failed");

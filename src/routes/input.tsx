@@ -334,8 +334,12 @@ function InputPage() {
               setName={setP1Name}
               nameError={p1NameError}
               onValidateName={(v) => validateName(v, setP1NameError)}
+              nameRef={p1NameRef}
               dob={p1Dob}
               setDob={setP1Dob}
+              dobError={p1DobError}
+              onValidateDob={(v) => validateDob(v, setP1DobError)}
+              dobRef={p1DobRef}
               gender={p1Gender}
               setGender={setP1Gender}
             />
@@ -364,8 +368,12 @@ function InputPage() {
               setName={setP2Name}
               nameError={p2NameError}
               onValidateName={(v) => validateName(v, setP2NameError)}
+              nameRef={p2NameRef}
               dob={p2Dob}
               setDob={setP2Dob}
+              dobError={p2DobError}
+              onValidateDob={(v) => validateDob(v, setP2DobError)}
+              dobRef={p2DobRef}
               gender={p2Gender}
               setGender={setP2Gender}
             />

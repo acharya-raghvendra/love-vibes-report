@@ -1,0 +1,2 @@
+ALTER TABLE public.love_match_orders ADD COLUMN IF NOT EXISTS error_detail text;
+COMMENT ON COLUMN public.love_match_orders.error_detail IS 'Admin-only technical failure detail (stage, provider status, offending tokens). Never exposed publicly.';

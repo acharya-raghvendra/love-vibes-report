@@ -102,7 +102,7 @@ function MySalesPage() {
             {filtered.map((o) => (
               <tr key={o.order_id} className="hover:bg-surface-container/50">
                 <td className="px-4 py-3">{new Date(o.created_at).toLocaleDateString()}</td>
-                <td className="px-4 py-3">{o.person_a?.first ?? "—"}</td>
+                <td className="px-4 py-3"><code className="font-mono text-on-surface-variant">{o.order_id.slice(0, 8)}</code></td>
                 <td className="px-4 py-3"><code className="font-mono">{o.coupon_code ?? "—"}</code></td>
                 <td className="px-4 py-3 text-green-500">-₹{(o.discount_applied ?? 0).toLocaleString("en-IN")}</td>
                 <td className="px-4 py-3 font-semibold">₹{(o.final_price ?? 0).toLocaleString("en-IN")}</td>

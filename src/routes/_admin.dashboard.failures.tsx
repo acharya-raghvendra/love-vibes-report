@@ -108,7 +108,7 @@ function FailuresPage() {
                 </tr>
               ))}
               {(data ?? []).length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-on-surface-variant">No failures 🎉</td></tr>
+                <tr><td colSpan={9} className="px-4 py-8 text-center text-on-surface-variant">No failures 🎉</td></tr>
               )}
             </tbody>
           </table>

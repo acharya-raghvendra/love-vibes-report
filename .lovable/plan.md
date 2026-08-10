@@ -2,9 +2,10 @@
 
 Today the pipeline already tries to email the PDF via Resend using `person_a.email`, but nothing on the site ever collects an email, so `toEmail` is always null and no email is ever sent. This plan first closes an affiliate data-exposure gap, then collects the email, validates it, stores it, and makes email a first-class delivery stage with its own retry and failure reporting.
 
-## 0. Affiliate exposure — must be fixed BEFORE the email column exists
+## 0. Affiliate exposure — ALREADY DONE, SKIPPED
 
-Verified against the live database. The affiliate read path is row-level only, with no column restriction, so affiliates can already read customer contact data — and would automatically inherit the new email column.
+This section is complete and verified. The affiliate view, its migration, and the portal pages are not touched again. Kept below for reference only; no work remains here.
+
 
 Before:
 

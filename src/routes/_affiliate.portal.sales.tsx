@@ -92,7 +92,7 @@ function MySalesPage() {
           <thead className="bg-surface-container text-left text-label-sm text-on-surface-variant">
             <tr>
               <th className="px-4 py-3">Date</th>
-              <th className="px-4 py-3">Customer</th>
+              <th className="px-4 py-3">Order ref</th>
               <th className="px-4 py-3">Coupon</th>
               <th className="px-4 py-3">Discount</th>
               <th className="px-4 py-3">Final</th>

@@ -79,7 +79,13 @@ Deno.serve(async (req) => {
 
 
 
-    const language = body.language === "hi" ? "hi" : "en";
+    // Report language is required to be exactly "en" or "hi"; anything else
+    // is a client bug, so reject rather than silently guessing.
+    const rawLanguage = body.language ?? "hi";
+    if (rawLanguage !== "en" && rawLanguage !== "hi") {
+      return new Response(JSON.stringify({ error: "language must be 'en' or 'hi'" }), { status: 422, headers: J });
+    }
+    const language: "en" | "hi" = rawLanguage;
     const couponCode = typeof body.couponCode === "string" ? body.couponCode.toUpperCase() : null;
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);

@@ -19,6 +19,7 @@ export const Route = createFileRoute("/preview")({
 type InputPayload = {
   person_a: { first: string; last: string; dob: string; phone: string; email?: string };
   person_b: { first: string; last: string; dob: string };
+  language?: "en" | "hi";
 };
 
 type PreviewData = {
@@ -256,7 +257,7 @@ function PreviewPage() {
             last: payload.person_b.last,
             dob: payload.person_b.dob,
           },
-          language: "en",
+          language: payload.language ?? "hi",
         },
       });
       if (error || !data?.data) throw new Error("preview_failed");
@@ -296,7 +297,7 @@ function PreviewPage() {
             last: input.person_b.last,
             dob: input.person_b.dob,
           },
-          language: "en",
+          language: input.language ?? "hi",
           // No amount is ever sent; the server is authoritative on price.
           couponCode: couponCode ?? undefined,
         },

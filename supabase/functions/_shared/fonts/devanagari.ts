@@ -125,7 +125,7 @@ export default async function ({ page, context }) {
       const clusterWidth = measure(FAM, cfg.cluster);
       const partsWidth = cfg.parts.reduce((sum, p) => sum + measure(FAM, p), 0);
 
-      // Hard gates. `fallbackWidth` is diagnostic only: on a host that also
+      // Hard gates. fallbackWidth is diagnostic only: on a host that also
       // ships Noto Sans Devanagari the widths legitimately match, and that is
       // still a correct Hindi render — so it must not fail the report.
       let reason;

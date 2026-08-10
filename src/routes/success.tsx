@@ -214,7 +214,7 @@ function SuccessPage() {
   const isGenerating = status === "generating" || status === "paid" || status === "created" || status === "loading";
 
   const genState: StepState = isFailed ? "failed" : isReady ? "done" : "active";
-  const deliverState: StepState = order?.delivered ? "done" : isReady ? "active" : isFailed ? "pending" : "pending";
+  const deliverState: StepState = order?.delivered || isReady ? "done" : "pending";
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background text-on-background">

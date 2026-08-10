@@ -52,6 +52,20 @@ function GenderToggle({
   );
 }
 
+function FieldError({ id, message }: { id: string; message: string | null }) {
+  if (!message) return null;
+  return (
+    <p
+      id={id}
+      role="alert"
+      className="mt-2 flex items-center gap-1.5 font-label-md text-label-md font-medium text-error"
+    >
+      <span className="material-symbols-outlined text-base leading-none">error</span>
+      {message}
+    </p>
+  );
+}
+
 function PartnerCard({
   index,
   label,
@@ -60,8 +74,12 @@ function PartnerCard({
   setName,
   nameError,
   onValidateName,
+  nameRef,
   dob,
   setDob,
+  dobError,
+  onValidateDob,
+  dobRef,
   gender,
   setGender,
 }: {
@@ -72,12 +90,18 @@ function PartnerCard({
   setName: (v: string) => void;
   nameError: string | null;
   onValidateName: (v: string) => void;
+  nameRef: RefObject<HTMLInputElement | null>;
   dob: string;
   setDob: (v: string) => void;
+  dobError: string | null;
+  onValidateDob: (v: string) => void;
+  dobRef: RefObject<HTMLInputElement | null>;
   gender: Gender;
   setGender: (v: Gender) => void;
 }) {
   const errorId = `p${index}-name-error`;
+  const dobErrorId = `p${index}-dob-error`;
+
   return (
     <div className="glass-card relative rounded-2xl border border-outline-variant/25 p-6 shadow-2xl lg:p-8">
       <span className="ornate-corner top-left" aria-hidden="true" />

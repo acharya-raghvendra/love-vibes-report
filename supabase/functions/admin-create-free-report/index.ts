@@ -227,7 +227,18 @@ Deno.serve(async (req) => {
           names: { a: aFirst, b: bFirst },
           chemistry,
         };
-        const html = buildReportHtml(pdfFacts, sections);
+        // Devanagari face inlined as base64 — no network fetch for Hindi
+        // glyphs at print time; a failed read fails the stage.
+        let fontFaceCss: string;
+        try {
+          fontFaceCss = await loadDevanagariFontFaceCss(supabase);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error(`[free-report] font_unavailable ${msg}`);
+          await markFail("pdf_font_missing", `type=pdf_error stage=font ${msg.slice(0, 300)}`);
+          return;
+        }
+        const html = buildReportHtml(pdfFacts, sections, { fontFaceCss });
 
         const pdfRes = await fetch(
           `https://production-sfo.browserless.io/pdf?token=${browserlessKey}&timeout=60000`,

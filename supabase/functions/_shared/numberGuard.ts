@@ -144,7 +144,17 @@ interface Found {
   snippet: string;
 }
 
-function findClaims(text: string, claims: CoreClaims): Found[] {
+/**
+ * Map Devanagari digits (०-९) to Latin 0-9. Hindi prose may state core numbers
+ * in Devanagari; each mapped code point is exactly one char wide, so string
+ * indexes stay valid against the ORIGINAL text (needed by correctCoreNumbers).
+ */
+function toLatinDigits(s: string): string {
+  return s.replace(/[\u0966-\u096F]/g, (d) => String(d.charCodeAt(0) - 0x0966));
+}
+
+function findClaims(original: string, claims: CoreClaims): Found[] {
+  const text = toLatinDigits(original);
   const labels = labelAlternation();
   // "Life Path 7", "Life Path is 7", "Life Path number 7" and the reverse
   // "7 Life Path". Only 1-2 digit numbers are considered core-number claims.

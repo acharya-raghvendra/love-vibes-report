@@ -211,6 +211,7 @@ function InputPage() {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [language, setLanguage] = useState<ReportLanguage>("hi");
 
   const p1NameRef = useRef<HTMLInputElement>(null);
   const p1DobRef = useRef<HTMLInputElement>(null);

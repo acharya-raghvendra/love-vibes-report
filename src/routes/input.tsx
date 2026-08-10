@@ -21,6 +21,7 @@ export const Route = createFileRoute("/input")({
 });
 
 type Gender = "MALE" | "FEMALE";
+type ReportLanguage = "en" | "hi";
 
 function GenderToggle({
   value,

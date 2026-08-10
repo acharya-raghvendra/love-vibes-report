@@ -376,7 +376,7 @@ p.body b{color:var(--ink);}
 .pair .pdot{width:8px;height:8px;border-radius:50%;}
 .pair small{color:var(--muted);}
 .listcol{margin-bottom:16px;}
-.listcol h4{font-family:'Fraunces',serif;font-size:17px;font-weight:500;margin-bottom:10px;color:var(--ink);}
+.listcol h4{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:17px;font-weight:500;margin-bottom:10px;color:var(--ink);}
 .li{display:flex;gap:10px;padding:8px 0;border-bottom:1px dotted var(--line);}
 .li .b{font-size:13px;line-height:1.4;}
 .li.good .b{color:var(--gold);}.li.watch .b{color:var(--coral);}

@@ -295,6 +295,7 @@ function InputPage() {
         email: cleanEmail,
       },
       person_b: { ...b, dob: p2Dob, gender: p2Gender },
+      language,
     };
     try {
       sessionStorage.setItem("loveMatch:input", JSON.stringify(payload));

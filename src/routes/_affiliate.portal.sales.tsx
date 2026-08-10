@@ -10,7 +10,6 @@ export const Route = createFileRoute("/_affiliate/portal/sales")({
 
 type Order = {
   order_id: string;
-  person_a: { first?: string } | null;
   coupon_code: string | null;
   final_price: number | null;
   discount_applied: number;
@@ -27,17 +26,11 @@ function MySalesPage() {
     enabled: !!user,
     queryKey: ["affiliate-sales", user?.id],
     queryFn: async () => {
-      const { data: coupons } = await supabase
-        .from("coupon_codes")
-        .select("code")
-        .eq("affiliate_user_id", user!.id);
-      const codes = (coupons ?? []).map((c: { code: string }) => c.code);
-      if (codes.length === 0) return [];
       const { data, error } = await supabase
-        .from("love_match_orders")
-        .select("order_id, person_a, coupon_code, final_price, discount_applied, created_at, status")
-        .in("coupon_code", codes)
+        .from("affiliate_order_sales")
+        .select("order_id, coupon_code, final_price, discount_applied, created_at, status")
         .eq("status", "delivered")
+
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Order[];

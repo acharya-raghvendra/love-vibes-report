@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent, type RefObject } from "react";
 
 export const Route = createFileRoute("/input")({
   head: () => ({
@@ -152,6 +152,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
 // Must start and end with a letter; at least 2 chars.
 const LATIN_NAME_RE = /^[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F'\u2019 -]*[A-Za-z\u00C0-\u024F]$/;
 const NAME_ERROR = "Please enter the name in English.";
+const DOB_ERROR = "Please select a date of birth.";
+const PHONE_ERROR = "Enter a 10-digit WhatsApp number.";
 
 function isLatinName(v: string): boolean {
   return LATIN_NAME_RE.test(v.trim());

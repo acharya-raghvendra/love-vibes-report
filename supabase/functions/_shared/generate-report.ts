@@ -34,6 +34,8 @@ const JSON_HEADERS = { "Content-Type": "application/json" };
 const HUMAN_ERRORS: Record<string, string> = {
   generation_failed: "We couldn't compose your report text. Please retry.",
   gemini_truncated: "The report text came back incomplete. Please retry.",
+  gemini_overloaded: "Our report writer is busy right now. Please retry in a minute.",
+  gemini_config: "Report text service is not configured. Our team has been notified.",
   pdf_config: "Report PDF service is not configured. Our team has been notified.",
   pdf_failed: "We couldn't render your report PDF. Please retry.",
   pdf_too_small: "The generated PDF looked invalid. Please retry.",
@@ -42,6 +44,7 @@ const HUMAN_ERRORS: Record<string, string> = {
   generation_timeout: "Report generation took too long and was stopped. Please retry.",
   internal: "Something went wrong while generating your report. Please retry.",
 };
+
 
 export function humanError(reason: string): string {
   return HUMAN_ERRORS[reason] ?? HUMAN_ERRORS.internal;
@@ -313,7 +316,7 @@ export async function runGeneration(
 
     // Browserless PDF from server-rendered HTML.
     const browserlessKey = Deno.env.get("BROWSERLESS_API_KEY");
-    if (!browserlessKey) return await fail("pdf_config");
+    if (!browserlessKey) return await fail("pdf_config", "type=pdf_error stage=pdf missing BROWSERLESS_API_KEY");
     const pdfFacts = {
       language,
       score: result.score, band: result.band, shared: result.shared,
@@ -332,29 +335,47 @@ export async function runGeneration(
       },
     );
     if (!pdfRes.ok) {
+      const body = (await pdfRes.text().catch(() => "")).slice(0, 300);
       console.error(`[generate] order=${orderId} browserless status=${pdfRes.status}`);
-      return await fail("pdf_failed");
+      return await fail(
+        "pdf_failed",
+        `type=pdf_error stage=pdf status=${pdfRes.status} body=${body}`,
+      );
     }
     const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
-    if (pdfBytes.length < 10240) return await fail("pdf_too_small");
+    if (pdfBytes.length < 10240) {
+      return await fail("pdf_too_small", `type=pdf_error stage=pdf bytes=${pdfBytes.length}`);
+    }
 
     const path = `love-match/${orderId}.pdf`;
     const { error: upErr } = await supabase.storage.from("love-match-pdfs")
       .upload(path, pdfBytes, { contentType: "application/pdf", upsert: true });
     if (upErr) {
       console.error(`[generate] order=${orderId} storage err=${upErr.message}`);
-      return await fail("storage_failed");
+      return await fail(
+        "storage_failed",
+        `type=storage_error stage=storage ${upErr.message.slice(0, 300)}`,
+      );
     }
     const { data: signed } = await supabase.storage
       .from("love-match-pdfs").createSignedUrl(path, 60 * 60 * 24 * 30); // 30 days
     const pdfUrl = signed?.signedUrl ?? null;
-    if (!pdfUrl) return await fail("storage_failed");
+    if (!pdfUrl) return await fail("storage_failed", "type=storage_error stage=storage sign_url_failed");
 
     // ready: report exists and is viewable even if email delivery fails.
     const nowIso = new Date().toISOString();
     await supabase.from("love_match_orders")
-      .update({ status: "ready", pdf_url: pdfUrl, ready_at: nowIso, error_message: null, failure_reason: null })
+      .update({
+        status: "ready",
+        pdf_url: pdfUrl,
+        ready_at: nowIso,
+        error_message: null,
+        failure_reason: null,
+        // keep the guard incident (admin-only) even on a successful report
+        error_detail: guardNote,
+      })
       .eq("order_id", orderId);
+
 
     // Resend email delivery (best-effort).
     let delivered = false;

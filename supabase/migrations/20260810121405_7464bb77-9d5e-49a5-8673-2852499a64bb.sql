@@ -1,0 +1,1 @@
+ALTER TABLE public.love_match_orders ALTER COLUMN language SET DEFAULT 'hi';

@@ -282,7 +282,7 @@ Deno.serve(async (req) => {
                   from: "TalkToGuruji <alerts@update.talktoguruji.com>",
                   to: [email],
                   subject: "Your Love Match Report is ready — TalkToGuruji",
-                  html: buildReportEmailHtml(aFirst, pdfUrl),
+                  html: buildReportEmailHtml(aFirst, emailPdfUrl ?? pdfUrl),
                 }),
               });
               delivered = rres.ok;

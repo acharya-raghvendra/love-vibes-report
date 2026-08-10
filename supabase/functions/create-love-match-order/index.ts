@@ -18,7 +18,15 @@ function cleanName(v: unknown): string {
 function cleanPhone(v: unknown): string {
   return typeof v === "string" ? v.replace(/[^\d]/g, "").slice(0, 15) : "";
 }
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
+// trim + lowercase + 254-char cap + format check; "" means invalid/missing.
+function cleanEmail(v: unknown): string {
+  if (typeof v !== "string") return "";
+  const e = v.trim().toLowerCase().slice(0, 254);
+  return EMAIL_RE.test(e) ? e : "";
+}
 function validDob(raw: unknown): string | null {
+
   if (typeof raw !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
   const [y, m, d] = raw.split("-").map((n) => parseInt(n, 10));
   if (y < 1900 || y > new Date().getUTCFullYear()) return null;

@@ -41,7 +41,7 @@ function OrdersPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("love_match_orders")
-        .select("order_id, person_a, person_b, status, final_price, discount_applied, coupon_code, whatsapp_sent, pdf_url, created_at")
+        .select("order_id, person_a, person_b, status, final_price, discount_applied, coupon_code, whatsapp_sent, email, email_sent, pdf_url, created_at")
         .order("created_at", { ascending: false })
         .limit(500);
       if (error) throw error;

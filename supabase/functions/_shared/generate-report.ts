@@ -423,9 +423,11 @@ export async function runGeneration(
       delivered,
     };
   } catch (err) {
-    console.error(`[generate] order=${orderId} unexpected err=${err instanceof Error ? err.message : err}`);
-    return await fail("internal");
+    const msg = err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err);
+    console.error(`[generate] order=${orderId} unexpected err=${msg.slice(0, 500)}`);
+    return await fail("internal", `type=internal ${msg.slice(0, 600)}`);
   }
+
 }
 
 /** Claim + run in one call. Safe to invoke concurrently. */

@@ -259,6 +259,105 @@ export async function deliverEmail(args: {
   return { sent: false, detail: lastDetail };
 }
 
+/**
+ * Normalise an Indian mobile number to the AiSensy destination format:
+ * 12 digits, country code first, no `+` and no separators (91XXXXXXXXXX).
+ * Returns null when the input cannot be a valid Indian mobile.
+ */
+export function normalizeWhatsAppNumber(raw: unknown): string | null {
+  if (typeof raw !== "string" && typeof raw !== "number") return null;
+  let digits = String(raw).replace(/\D+/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
+  if (digits.length === 10) digits = `91${digits}`;
+  return /^91[6-9]\d{9}$/.test(digits) ? digits : null;
+}
+
+/**
+ * AiSensy WhatsApp delivery — campaign `love_match_report_pdf_api`.
+ * The approved template carries a DOCUMENT header, so `media` is always
+ * populated with the download-flagged signed PDF URL; the recipient receives
+ * the report as a real PDF attachment, not a text-only message.
+ *
+ * Retry policy mirrors deliverEmail: 4 attempts, retry 429/5xx/network,
+ * never retry other 4xx. Never throws.
+ */
+export async function deliverWhatsApp(args: {
+  phone: unknown;
+  firstName: string;
+  /** Signed URL minted with the { download } option. */
+  pdfUrl: string;
+  orderId: string;
+}): Promise<{ sent: boolean; detail: string | null }> {
+  const { phone, firstName, pdfUrl, orderId } = args;
+  const apiKey = Deno.env.get("AISENSY_API_KEY");
+  if (!apiKey) {
+    return { sent: false, detail: "type=whatsapp_error stage=whatsapp aisensy_key_missing" };
+  }
+  const destination = normalizeWhatsAppNumber(phone);
+  if (!destination) {
+    return { sent: false, detail: "type=whatsapp_error stage=whatsapp invalid_phone" };
+  }
+
+  const payload = {
+    apiKey,
+    campaignName: "love_match_report_pdf_api",
+    destination,
+    userName: "love.talktoguruji.com",
+    templateParams: [firstName || "Friend"],
+    media: { url: pdfUrl, filename: "Love-Report.pdf" },
+  };
+
+  const MAX_ATTEMPTS = 4;
+  let lastDetail = "type=whatsapp_error stage=whatsapp unknown";
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    let res: Response;
+    try {
+      res = await fetch("https://backend.aisensy.com/campaign/t1/api/v2", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      lastDetail = `type=whatsapp_error stage=whatsapp network attempt=${attempt} ${
+        err instanceof Error ? err.message.slice(0, 200) : "fetch_failed"
+      }`;
+      console.error(`[generate] order=${orderId} aisensy ${lastDetail}`);
+      if (attempt === MAX_ATTEMPTS) break;
+      await sleepBackoff(attempt, null);
+      continue;
+    }
+
+    const bodyText = (await res.text().catch(() => "")).slice(0, 300);
+
+    if (res.ok) {
+      // AiSensy sometimes returns 200 with an error envelope.
+      const looksFailed = /"?(errorCode|error)"?\s*[:=]/i.test(bodyText) &&
+        !/success/i.test(bodyText);
+      if (!looksFailed) {
+        console.log(`[generate] order=${orderId} aisensy sent to=${destination} ${bodyText}`);
+        return { sent: true, detail: null };
+      }
+      lastDetail = `type=whatsapp_error stage=whatsapp status=200 body_error ${bodyText}`;
+      console.error(`[generate] order=${orderId} aisensy ${lastDetail}`);
+      return { sent: false, detail: lastDetail };
+    }
+
+    const transient = res.status === 429 || res.status >= 500;
+    lastDetail = `type=whatsapp_error stage=whatsapp status=${res.status} attempt=${attempt} ${bodyText}`;
+    console.error(`[generate] order=${orderId} aisensy ${lastDetail}`);
+
+    if (!transient) return { sent: false, detail: lastDetail };
+    if (attempt === MAX_ATTEMPTS) break;
+    await sleepBackoff(attempt, res.headers.get("Retry-After"));
+  }
+
+  return { sent: false, detail: lastDetail };
+}
+
+
+
 async function sleepBackoff(attempt: number, retryAfter: string | null): Promise<void> {
   let waitMs: number;
   const parsed = retryAfter ? Number(retryAfter) : NaN;

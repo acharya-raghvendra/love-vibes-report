@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useRef, useState, type FormEvent, type RefObject } from "react";
+import { useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
+import { couponSearch, resolveCoupon, validateCouponSearch } from "@/lib/coupon-link";
 
 export const Route = createFileRoute("/input")({
+  validateSearch: validateCouponSearch,
   head: () => ({
     meta: [
       { title: "Enter Your Details — Love Match Compatibility" },
@@ -23,13 +25,7 @@ export const Route = createFileRoute("/input")({
 type Gender = "MALE" | "FEMALE";
 type ReportLanguage = "en" | "hi";
 
-function GenderToggle({
-  value,
-  onChange,
-}: {
-  value: Gender;
-  onChange: (v: Gender) => void;
-}) {
+function GenderToggle({ value, onChange }: { value: Gender; onChange: (v: Gender) => void }) {
   return (
     <div className="flex rounded-full border border-outline-variant/30 bg-surface-container/60 p-1">
       {(["MALE", "FEMALE"] as const).map((g) => {
@@ -136,12 +132,13 @@ function PartnerCard({
             onBlur={(e) => onValidateName(e.target.value)}
             placeholder="Enter full name in English"
             className={`w-full border-0 border-b bg-transparent px-0 py-2 font-headline-sm text-headline-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/40 ${
-              nameError ? "border-error focus:border-error" : "border-outline-variant focus:border-primary"
+              nameError
+                ? "border-error focus:border-error"
+                : "border-outline-variant focus:border-primary"
             }`}
           />
           <FieldError id={errorId} message={nameError} />
         </div>
-
 
         <div className="grid gap-6 md:grid-cols-2">
           <div className="group relative">
@@ -161,7 +158,9 @@ function PartnerCard({
               onBlur={(e) => onValidateDob(e.target.value)}
               style={{ colorScheme: "dark" }}
               className={`w-full border-0 border-b bg-transparent px-0 py-2 font-body-lg text-body-lg text-on-surface outline-none transition-colors ${
-                dobError ? "border-error focus:border-error" : "border-outline-variant focus:border-primary"
+                dobError
+                  ? "border-error focus:border-error"
+                  : "border-outline-variant focus:border-primary"
               }`}
             />
             <FieldError id={dobErrorId} message={dobError} />
@@ -198,6 +197,12 @@ function normaliseEmail(v: string): string {
 
 function InputPage() {
   const navigate = useNavigate();
+  const { coupon: urlCoupon } = Route.useSearch();
+  const [coupon, setCoupon] = useState<string | null>(null);
+  // URL coupon wins; the stored mirror covers a lost query param / refresh.
+  useEffect(() => {
+    setCoupon(resolveCoupon(urlCoupon));
+  }, [urlCoupon]);
   const [p1Name, setP1Name] = useState("");
   const [p1NameError, setP1NameError] = useState<string | null>(null);
   const [p1Dob, setP1Dob] = useState("");
@@ -302,10 +307,8 @@ function InputPage() {
     } catch {
       /* ignore */
     }
-    navigate({ to: "/preview" });
+    navigate({ to: "/preview", search: couponSearch(coupon) });
   }
-
-
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background text-on-background">
@@ -347,7 +350,6 @@ function InputPage() {
               setGender={setP1Gender}
             />
 
-
             {/* Heart divider — mobile only (between stacked cards) */}
             <div className="flex items-center justify-center py-1 lg:hidden">
               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
@@ -380,7 +382,6 @@ function InputPage() {
               gender={p2Gender}
               setGender={setP2Gender}
             />
-
           </div>
 
           {/* WhatsApp */}
@@ -388,7 +389,9 @@ function InputPage() {
             <label className="mb-2 flex items-center gap-2 font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant">
               <span className="material-symbols-outlined text-base">chat</span>
               WhatsApp Number <span className="text-primary">*</span>
-              <span className="ml-1 normal-case tracking-normal text-on-surface-variant/70">(required to deliver your report)</span>
+              <span className="ml-1 normal-case tracking-normal text-on-surface-variant/70">
+                (required to deliver your report)
+              </span>
             </label>
             <div className="flex items-center gap-3">
               <div className="rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-3 font-label-md text-on-surface-variant">
@@ -415,7 +418,6 @@ function InputPage() {
               />
             </div>
             <FieldError id="phone-error" message={phoneError} />
-
           </div>
 
           {/* Email */}
@@ -426,7 +428,9 @@ function InputPage() {
             >
               <span className="material-symbols-outlined text-base">mail</span>
               Email Address <span className="text-primary">*</span>
-              <span className="ml-1 normal-case tracking-normal text-on-surface-variant/70">(your report is emailed here)</span>
+              <span className="ml-1 normal-case tracking-normal text-on-surface-variant/70">
+                (your report is emailed here)
+              </span>
             </label>
             <input
               id="email"
@@ -452,7 +456,6 @@ function InputPage() {
               }`}
             />
             <FieldError id="email-error" message={emailError} />
-
           </div>
 
           {/* Report language */}
@@ -472,10 +475,12 @@ function InputPage() {
               aria-labelledby="language-label"
               className="flex rounded-full border border-outline-variant/30 bg-surface-container/60 p-1"
             >
-              {([
-                { value: "hi", label: "हिंदी (Hindi)" },
-                { value: "en", label: "English" },
-              ] as const).map((opt) => {
+              {(
+                [
+                  { value: "hi", label: "हिंदी (Hindi)" },
+                  { value: "en", label: "English" },
+                ] as const
+              ).map((opt) => {
                 const active = language === opt.value;
                 return (
                   <button
@@ -496,9 +501,6 @@ function InputPage() {
               })}
             </div>
           </div>
-
-
-
 
           {/* CTA */}
           <div className="pt-4">

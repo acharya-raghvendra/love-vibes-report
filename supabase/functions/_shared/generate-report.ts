@@ -301,7 +301,7 @@ export async function deliverWhatsApp(args: {
 
   const payload = {
     apiKey,
-    campaignName: "love_match_report_pdf_api",
+    campaignName: "v2_love_match_report_pdf_api",
     destination,
     userName: "love.talktoguruji.com",
     templateParams: [firstName || "Friend"],

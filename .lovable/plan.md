@@ -31,6 +31,36 @@ The coupon lives in the URL and is re-appended on every navigation: landing CTAs
 
 5. **Server stays authoritative.** No change to `create-love-match-order` or `validate-coupon`. The function ignores any client amount, loads pricing from `love_match_pricing`, re-validates the coupon (active, not expired, under `max_uses`), computes `finalAmount = BASE_PRICE - discount`, and sends `finalAmount * 100` as the Razorpay order amount. After the change we re-read the displayed price from the server's `finalPrice` before opening the gateway, so displayed and charged amounts cannot diverge.
 
+## Expiry and active-status enforcement (current server code)
+
+Both checks already exist in both places, and both run on the server clock. The edge functions call `new Date()` inside the Deno runtime — no client-supplied timestamp is read anywhere in either function.
+
+**Checkout box — `validate-coupon` (lines 45-60):**
+
+```
+.eq("code", code).eq("is_active", true).maybeSingle()
+if (!coupon)                                          -> valid:false "Invalid coupon code"
+if (coupon.expires_at && new Date(coupon.expires_at) < new Date())
+                                                      -> valid:false "Coupon has expired"
+if (coupon.max_uses !== null && coupon.usage_count >= coupon.max_uses)
+                                                      -> valid:false "Coupon usage limit reached"
+```
+
+**Order creation — `create-love-match-order` (lines 113-128):**
+
+```
+.eq("code", couponCode).eq("is_active", true).maybeSingle()
+const expired = coupon.expires_at && new Date(coupon.expires_at) < new Date();
+const maxed   = coupon.max_uses !== null && coupon.usage_count >= coupon.max_uses;
+if (!expired && !maxed) { ...apply discount... }
+```
+
+So the inactive filter is in the query itself (`is_active = true`), and expiry is a server-time comparison. If the coupon is missing, inactive, expired, or exhausted, `discountApplied` stays `0` and `finalAmount` stays `BASE_PRICE`, and that base amount is what goes into the Razorpay order (`finalAmount * 100`) and the stored `final_price`. The code is still recorded on the row as `coupon_code`, which is why the DB check below reads `discount_applied`/`final_price`, not just the code.
+
+This holds regardless of how the code arrives — URL param, sessionStorage, hand-typed box, or a raw request body — because order creation never trusts a client amount (it logs and discards `body.amount`) and re-fetches the coupon itself. The URL persistence added by this fix therefore cannot widen the surface: it only changes which string is proposed, never whether it is honoured.
+
+One asymmetry worth stating: `validate-coupon` returns an explicit error message, while order creation silently ignores a bad coupon and charges full price. That is fail-safe (never under-charges), and this plan does not change it.
+
 ## Scope
 
 - `src/routes/index.tsx`, `src/routes/input.tsx`, `src/routes/preview.tsx` only.
@@ -38,4 +68,12 @@ The coupon lives in the URL and is re-appended on every navigation: landing CTAs
 
 ## Verification
 
-Drive the live preview end to end with `/?coupon=TEST`: confirm the code survives the form and the "Check Compatibility" navigation, that checkout shows it auto-applied with the discounted price, and then paste back (a) the resolved coupon source, (b) the `create-love-match-order` request body showing `couponCode: "TEST"`, and (c) the order row plus the Razorpay order amount in paise proving the discounted price is what hits the gateway.
+**Coupon persistence.** Drive the live preview end to end with `/?coupon=TEST`: confirm the code survives the form and the "Check Compatibility" navigation, that checkout shows it auto-applied with the discounted price, and then paste back (a) the resolved coupon source, (b) the `create-love-match-order` request body showing `couponCode: "TEST"`, and (c) the order row plus the Razorpay order amount in paise proving the discounted price is what hits the gateway.
+
+**Expiry and inactive, live.** Right now the coupon table holds only three rows (`TEST`, `OFF100`, `LOVE100`) and all three are active with no expiry, so no negative case can be tested against existing data. Build step: insert two temporary coupons — `EXPIRED_TEST` (active, `expires_at` = yesterday) and `INACTIVE_TEST` (`is_active = false`, no expiry) — then for each run both paths and paste the raw results:
+
+1. `validate-coupon` with the code -> expect `valid:false` with "Coupon has expired" / "Invalid coupon code".
+2. `create-love-match-order` called directly with `couponCode` set to that code in the body (bypassing the UI entirely) -> expect the response `discountApplied: 0` and `finalPrice` equal to the base offer price, and the Razorpay `amount` in paise equal to that base price.
+3. The resulting `love_match_orders` row showing `discount_applied = 0` and `final_price` = base price.
+
+Then delete both temporary coupons and the throwaway order rows. Already verified read-only: `validate-coupon` with a non-existent code returns `{"valid":false,"error":"Invalid coupon code"}`.

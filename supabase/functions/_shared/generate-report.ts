@@ -606,30 +606,43 @@ export async function runGeneration(
       .eq("order_id", orderId);
 
 
-    // Email delivery stage (own retry policy; never fails the order).
-    const emailResult = await deliverEmail({
-      to: (typeof a?.email === "string" ? a.email : null) ?? order.email ?? null,
-      firstName: a?.first ?? "",
-      emailPdfUrl,
-      orderId,
-    });
+    // Delivery stages: email + WhatsApp fire on every order, in parallel.
+    // Each has its own retry policy, neither blocks the other, and neither
+    // can fail the order — the report is already viewable.
+    const [emailResult, waResult] = await Promise.all([
+      deliverEmail({
+        to: (typeof a?.email === "string" ? a.email : null) ?? order.email ?? null,
+        firstName: a?.first ?? "",
+        emailPdfUrl,
+        orderId,
+      }),
+      deliverWhatsApp({
+        phone: a?.phone,
+        firstName: a?.first ?? "",
+        pdfUrl: emailPdfUrl,
+        orderId,
+      }),
+    ]);
 
-    if (emailResult.sent) {
-      await supabase.from("love_match_orders")
-        .update({
-          status: "delivered",
-          email_sent: true,
-          delivered_at: new Date().toISOString(),
-        })
-        .eq("order_id", orderId);
-    } else if (emailResult.detail) {
-      const merged = [guardNote, emailResult.detail].filter(Boolean).join(" | ");
-      await supabase.from("love_match_orders")
-        .update({ email_sent: false, error_detail: merged.slice(0, 2000) })
-        .eq("order_id", orderId);
+    // delivered = email OR whatsapp (either channel counts).
+    const delivered = emailResult.sent || waResult.sent || order.whatsapp_sent === true ||
+      order.email_sent === true;
+
+    const detailParts = [guardNote, emailResult.detail, waResult.detail].filter(Boolean) as string[];
+    const deliveryUpdate: Record<string, unknown> = {
+      // never regress a flag set by an earlier attempt
+      email_sent: emailResult.sent || order.email_sent === true,
+      whatsapp_sent: waResult.sent || order.whatsapp_sent === true,
+      error_detail: detailParts.length ? detailParts.join(" | ").slice(0, 2000) : guardNote,
+    };
+    if (delivered) {
+      deliveryUpdate["status"] = "delivered";
+      deliveryUpdate["delivered_at"] = new Date().toISOString();
     }
+    await supabase.from("love_match_orders")
+      .update(deliveryUpdate)
+      .eq("order_id", orderId);
 
-    const delivered = emailResult.sent || order.whatsapp_sent === true;
 
     // Coupon usage bump (non-fatal). Claim guard makes this run once per order.
     if (order.coupon_code) {

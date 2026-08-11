@@ -1,12 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  couponSearch,
-  resolveCoupon,
-  storeCoupon,
-  validateCouponSearch,
-} from "@/lib/coupon-link";
+import { couponSearch, resolveCoupon, storeCoupon, validateCouponSearch } from "@/lib/coupon-link";
 
 export const Route = createFileRoute("/preview")({
   validateSearch: validateCouponSearch,
@@ -15,7 +10,8 @@ export const Route = createFileRoute("/preview")({
       { title: "Your Compatibility Preview — Love Match" },
       {
         name: "description",
-        content: "Preview your cosmic compatibility score and unlock the full 12-page numerology report.",
+        content:
+          "Preview your cosmic compatibility score and unlock the full 12-page numerology report.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -70,7 +66,6 @@ type GatewayOrder = {
   couponCode: string | null;
 };
 
-
 const LOCKED_SECTIONS = [
   { icon: "favorite", label: "Full Chemistry Breakdown" },
   { icon: "psychology", label: "Destiny Number Compatibility" },
@@ -95,7 +90,6 @@ const CHEMISTRY_TEASERS: Record<string, string> = {
     "The tension between your charts creates the classic opposites-attract pattern — full of friction, growth, and unexpected fireworks.",
 };
 
-
 function loadRazorpay(): Promise<boolean> {
   return new Promise((resolve) => {
     if (typeof window === "undefined") return resolve(false);
@@ -112,7 +106,20 @@ function loadRazorpay(): Promise<boolean> {
 function formatDob(iso: string): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
   const [y, m, d] = iso.split("-");
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   return `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1]} ${y}`;
 }
 
@@ -140,7 +147,10 @@ function ScoreDial({ score }: { score: number }) {
   const dashOffset = circumference - (display / 100) * circumference;
 
   return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+    <div
+      className="relative flex items-center justify-center"
+      style={{ width: size, height: size }}
+    >
       <svg width={size} height={size} className="-rotate-90">
         <defs>
           <linearGradient id="scoreGold" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -220,9 +230,7 @@ function PreviewPage() {
   }, [urlCoupon]);
   const [input, setInput] = useState<InputPayload | null>(null);
   const [state, setState] = useState<
-    | { kind: "loading" }
-    | { kind: "error" }
-    | { kind: "ready"; data: PreviewData }
+    { kind: "loading" } | { kind: "error" } | { kind: "ready"; data: PreviewData }
   >({ kind: "loading" });
   const [paying, setPaying] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -289,8 +297,7 @@ function PreviewPage() {
   const chemistryText = useMemo(() => {
     if (state.kind !== "ready") return "";
     return (
-      CHEMISTRY_TEASERS[state.data.data.chemistry_teaser.level] ??
-      CHEMISTRY_TEASERS.warm_spark
+      CHEMISTRY_TEASERS[state.data.data.chemistry_teaser.level] ?? CHEMISTRY_TEASERS.warm_spark
     );
   }, [state]);
 
@@ -305,7 +312,6 @@ function PreviewPage() {
             dob: input.person_a.dob,
             phone: input.person_a.phone,
             email: input.person_a.email,
-
           },
           person_b: {
             first: input.person_b.first,
@@ -354,7 +360,9 @@ function PreviewPage() {
       const code = rawCode.trim().toUpperCase();
       if (!code) return;
       setApplyingCoupon(true);
-      const { data, error } = await supabase.functions.invoke("validate-coupon", { body: { code } });
+      const { data, error } = await supabase.functions.invoke("validate-coupon", {
+        body: { code },
+      });
       setApplyingCoupon(false);
       if (error || !data) {
         if (!opts.silent) showToast("Couldn't apply coupon. Try again.");
@@ -402,9 +410,7 @@ function PreviewPage() {
     setCouponInput("");
     setOrder(null);
     setPricing((prev) =>
-      prev
-        ? { ...prev, discountApplied: 0, finalAmount: prev.originalPrice }
-        : prev,
+      prev ? { ...prev, discountApplied: 0, finalAmount: prev.originalPrice } : prev,
     );
     // Clear the mirror and the URL param so it cannot silently come back.
     autoAppliedRef.current = true;
@@ -470,7 +476,10 @@ function PreviewPage() {
         },
         theme: { color: "#f2ca50" },
         handler: () => {
-          navigate({ to: "/success", search: { order_id: gatewayOrder.internalOrderId, phone: input.person_a.phone } });
+          navigate({
+            to: "/success",
+            search: { order_id: gatewayOrder.internalOrderId, phone: input.person_a.phone },
+          });
         },
         modal: {
           ondismiss: () => {
@@ -489,7 +498,6 @@ function PreviewPage() {
       setPaying(false);
     }
   }
-
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background text-on-background">
@@ -586,16 +594,13 @@ function PreviewPage() {
                 </p>
                 <div className="relative mt-4">
                   <p className="font-body-lg text-body-lg text-on-surface-variant blur-[6px] select-none">
-                    Beyond this, the numbers describe how your daily rhythms
-                    align, where friction is most likely to arise, and which
-                    years will bring your deepest bonding — a full narrative
-                    of what your shared path looks like across decades.
+                    Beyond this, the numbers describe how your daily rhythms align, where friction
+                    is most likely to arise, and which years will bring your deepest bonding — a
+                    full narrative of what your shared path looks like across decades.
                   </p>
                   <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                     <div className="flex items-center gap-2 rounded-full border border-primary/30 bg-background/70 px-4 py-2 backdrop-blur-md">
-                      <span className="material-symbols-outlined text-primary text-base">
-                        lock
-                      </span>
+                      <span className="material-symbols-outlined text-primary text-base">lock</span>
                       <span className="text-label-sm uppercase tracking-widest text-primary">
                         Unlock to read more
                       </span>
@@ -612,14 +617,9 @@ function PreviewPage() {
               </h3>
               <ul className="glass-card divide-y divide-outline-variant/15 rounded-2xl border border-outline-variant/25 overflow-hidden">
                 {LOCKED_SECTIONS.map((s) => (
-                  <li
-                    key={s.label}
-                    className="flex items-center justify-between px-5 py-4"
-                  >
+                  <li key={s.label} className="flex items-center justify-between px-5 py-4">
                     <span className="flex items-center gap-3">
-                      <span className="material-symbols-outlined text-primary/80">
-                        {s.icon}
-                      </span>
+                      <span className="material-symbols-outlined text-primary/80">{s.icon}</span>
                       <span className="font-body-md text-on-surface">{s.label}</span>
                     </span>
                     <span className="material-symbols-outlined text-on-surface-variant/60">
@@ -634,14 +634,20 @@ function PreviewPage() {
             <section className="hidden lg:block">
               <div className="glass-card rounded-2xl border border-primary/25 p-8 text-center shadow-2xl">
                 <div className="mb-2 text-label-sm uppercase tracking-widest text-primary">
-                  {pricing && pricing.discountApplied > 0 ? "Coupon applied" : "Limited introductory price"}
+                  {pricing && pricing.discountApplied > 0
+                    ? "Coupon applied"
+                    : "Limited introductory price"}
                 </div>
                 <div className="mb-1 flex items-baseline justify-center gap-3">
                   {pricing ? (
                     <>
                       <span
                         className="text-gold-gradient"
-                        style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "3rem" }}
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontWeight: 600,
+                          fontSize: "3rem",
+                        }}
                       >
                         ₹{pricing.finalAmount}
                       </span>
@@ -661,7 +667,8 @@ function PreviewPage() {
                   </div>
                 )}
                 <p className="mx-auto mb-6 max-w-md font-body-md text-on-surface-variant">
-                  One-time payment. Instant access to your full 12-page numerology compatibility report.
+                  One-time payment. Instant access to your full 12-page numerology compatibility
+                  report.
                 </p>
 
                 {/* Coupon input */}
@@ -755,7 +762,11 @@ function PreviewPage() {
                     <>
                       <span
                         className="text-gold-gradient"
-                        style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "1.5rem" }}
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontWeight: 600,
+                          fontSize: "1.5rem",
+                        }}
                       >
                         ₹{pricing.finalAmount}
                       </span>
@@ -770,7 +781,9 @@ function PreviewPage() {
                   )}
                 </span>
                 <span className="text-[10px] uppercase tracking-widest text-primary">
-                  {pricing && pricing.discountApplied > 0 ? `Saved ₹${pricing.discountApplied}` : "Full Report"}
+                  {pricing && pricing.discountApplied > 0
+                    ? `Saved ₹${pricing.discountApplied}`
+                    : "Full Report"}
                 </span>
               </div>
               <button
@@ -791,7 +804,6 @@ function PreviewPage() {
           </div>
         </div>
       )}
-
 
       {toast && <Toast msg={toast} />}
 

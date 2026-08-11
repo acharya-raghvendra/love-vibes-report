@@ -52,7 +52,15 @@ const FAQS = [
   },
 ];
 
-function Icon({ name, filled = false, className = "" }: { name: string; filled?: boolean; className?: string }) {
+function Icon({
+  name,
+  filled = false,
+  className = "",
+}: {
+  name: string;
+  filled?: boolean;
+  className?: string;
+}) {
   return (
     <span
       className={`material-symbols-outlined ${className}`}
@@ -165,16 +173,31 @@ function Index() {
           </section>
 
           {/* Path to Clarity */}
-          <section id="how-it-works" className="px-margin-mobile mb-24 lg:px-0 lg:mb-28 scroll-mt-24">
+          <section
+            id="how-it-works"
+            className="px-margin-mobile mb-24 lg:px-0 lg:mb-28 scroll-mt-24"
+          >
             <h2 className="font-headline-sm text-headline-sm mb-12 text-center text-on-surface lg:text-headline-md">
               The Path to Clarity
             </h2>
             <div className="relative space-y-12 lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0">
               <div className="absolute top-6 bottom-6 left-6 w-px bg-gradient-to-b from-primary/40 via-primary/10 to-transparent lg:hidden" />
               {[
-                { icon: "edit_calendar", title: "1. Enter Details", body: "Share your birth dates and names for precise cosmic calculation." },
-                { icon: "analytics", title: "2. Get Score", body: "See your instant affinity score based on ancient numerology." },
-                { icon: "lock_open", title: "3. Unlock Full Report", body: "Deep dive into destiny numbers, soul urges, and future paths." },
+                {
+                  icon: "edit_calendar",
+                  title: "1. Enter Details",
+                  body: "Share your birth dates and names for precise cosmic calculation.",
+                },
+                {
+                  icon: "analytics",
+                  title: "2. Get Score",
+                  body: "See your instant affinity score based on ancient numerology.",
+                },
+                {
+                  icon: "lock_open",
+                  title: "3. Unlock Full Report",
+                  body: "Deep dive into destiny numbers, soul urges, and future paths.",
+                },
               ].map((step) => (
                 <div
                   key={step.title}
@@ -235,15 +258,13 @@ function Index() {
               <div className="absolute inset-0 flex items-center justify-center bg-background/20 p-6 backdrop-blur-[2px]">
                 <div className="text-center">
                   <Icon name="auto_fix_high" className="mb-4 text-display-lg text-primary" />
-                  <h3 className="font-headline-sm text-headline-sm mb-4">
-                    Your Destiny Awaits
-                  </h3>
+                  <h3 className="font-headline-sm text-headline-sm mb-4">Your Destiny Awaits</h3>
                   <p className="font-body-md text-on-surface-variant mb-6">
                     Unlock your personalized 12-page compatibility report today.
                   </p>
                   <Link
                     to="/input"
-                search={ctaSearch}
+                    search={ctaSearch}
                     className="inline-flex rounded-xl bg-primary px-8 py-3 font-label-md text-label-md text-on-primary-fixed"
                   >
                     Unlock Now
@@ -315,7 +336,7 @@ function Index() {
           <div className="mx-auto max-w-container-max">
             <Link
               to="/input"
-                search={ctaSearch}
+              search={ctaSearch}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md text-on-primary-fixed shadow-lg transition-transform active:scale-95"
             >
               <Icon name="favorite" filled />

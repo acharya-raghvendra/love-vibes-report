@@ -274,7 +274,7 @@ export function normalizeWhatsAppNumber(raw: unknown): string | null {
 }
 
 /**
- * AiSensy WhatsApp delivery — campaign `love_match_report_pdf_api`.
+ * AiSensy WhatsApp delivery — campaign `v2_love_match_report_pdf_api`.
  * The approved template carries a DOCUMENT header, so `media` is always
  * populated with the download-flagged signed PDF URL; the recipient receives
  * the report as a real PDF attachment, not a text-only message.

@@ -1,8 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  couponSearch,
+  resolveCoupon,
+  storeCoupon,
+  validateCouponSearch,
+} from "@/lib/coupon-link";
 
 export const Route = createFileRoute("/preview")({
+  validateSearch: validateCouponSearch,
   head: () => ({
     meta: [
       { title: "Your Compatibility Preview — Love Match" },
@@ -204,6 +211,13 @@ function Toast({ msg }: { msg: string }) {
 
 function PreviewPage() {
   const navigate = useNavigate();
+  const { coupon: urlCoupon } = Route.useSearch();
+  // Coupon carried from the affiliate link / earlier funnel step.
+  const [carriedCoupon, setCarriedCoupon] = useState<string | null>(null);
+  const autoAppliedRef = useRef(false);
+  useEffect(() => {
+    setCarriedCoupon(resolveCoupon(urlCoupon));
+  }, [urlCoupon]);
   const [input, setInput] = useState<InputPayload | null>(null);
   const [state, setState] = useState<
     | { kind: "loading" }
@@ -228,19 +242,20 @@ function PreviewPage() {
     toastTimer.current = setTimeout(() => setToast(null), 3200);
   }, []);
 
-  // Read input from session storage; bounce to /input if missing.
+  // Read input from session storage; bounce to /input if missing (keeping the coupon).
   useEffect(() => {
+    const back = () => navigate({ to: "/input", search: couponSearch(resolveCoupon(urlCoupon)) });
     try {
       const raw = sessionStorage.getItem("loveMatch:input");
       if (!raw) {
-        navigate({ to: "/input" });
+        back();
         return;
       }
       setInput(JSON.parse(raw) as InputPayload);
     } catch {
-      navigate({ to: "/input" });
+      back();
     }
-  }, [navigate]);
+  }, [navigate, urlCoupon]);
 
   const fetchPreview = useCallback(async (payload: InputPayload) => {
     setState({ kind: "loading" });
@@ -333,30 +348,52 @@ function PreviewPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.kind, input]);
 
+  // Single apply path for the box and for an auto-applied carried coupon.
+  const applyCoupon = useCallback(
+    async (rawCode: string, opts: { silent?: boolean } = {}) => {
+      const code = rawCode.trim().toUpperCase();
+      if (!code) return;
+      setApplyingCoupon(true);
+      const { data, error } = await supabase.functions.invoke("validate-coupon", { body: { code } });
+      setApplyingCoupon(false);
+      if (error || !data) {
+        if (!opts.silent) showToast("Couldn't apply coupon. Try again.");
+        return;
+      }
+      if (!data.valid) {
+        // Server rejected it (unknown / inactive / expired / exhausted) —
+        // pricing stays at the base price and the code is not marked applied.
+        showToast(data.error ?? "Invalid coupon code");
+        return;
+      }
+      priceGenRef.current += 1; // invalidate any in-flight base-price response
+      setPricing({
+        listPrice: data.listPrice,
+        originalPrice: data.originalPrice,
+        discountApplied: data.calculatedDiscount,
+        finalAmount: data.originalPrice - data.calculatedDiscount,
+      });
+      setOrder(null); // existing gateway order is stale; a fresh one is created on unlock
+      setAppliedCoupon(code);
+      setCouponInput(code);
+      storeCoupon(code);
+      showToast(`Coupon applied — you saved ₹${data.calculatedDiscount}`);
+    },
+    [showToast],
+  );
+
+  // Auto-apply a coupon carried from the affiliate link / earlier step, once.
+  useEffect(() => {
+    if (!carriedCoupon || autoAppliedRef.current || appliedCoupon || paying) return;
+    if (state.kind !== "ready") return;
+    autoAppliedRef.current = true;
+    setCouponInput(carriedCoupon);
+    void applyCoupon(carriedCoupon, { silent: true });
+  }, [carriedCoupon, appliedCoupon, paying, state.kind, applyCoupon]);
+
   async function onApplyCoupon() {
-    const code = couponInput.trim().toUpperCase();
-    if (!code || applyingCoupon || paying) return;
-    setApplyingCoupon(true);
-    const { data, error } = await supabase.functions.invoke("validate-coupon", { body: { code } });
-    setApplyingCoupon(false);
-    if (error || !data) {
-      showToast("Couldn't apply coupon. Try again.");
-      return;
-    }
-    if (!data.valid) {
-      showToast(data.error ?? "Invalid coupon code");
-      return; // pricing untouched
-    }
-    priceGenRef.current += 1; // invalidate any in-flight base-price response
-    setPricing({
-      listPrice: data.listPrice,
-      originalPrice: data.originalPrice,
-      discountApplied: data.calculatedDiscount,
-      finalAmount: data.originalPrice - data.calculatedDiscount,
-    });
-    setOrder(null); // existing gateway order is stale; a fresh one is created on unlock
-    setAppliedCoupon(code);
-    showToast(`Coupon applied — you saved ₹${data.calculatedDiscount}`);
+    if (applyingCoupon || paying) return;
+    await applyCoupon(couponInput);
   }
 
   function onRemoveCoupon() {
@@ -369,6 +406,11 @@ function PreviewPage() {
         ? { ...prev, discountApplied: 0, finalAmount: prev.originalPrice }
         : prev,
     );
+    // Clear the mirror and the URL param so it cannot silently come back.
+    autoAppliedRef.current = true;
+    setCarriedCoupon(null);
+    storeCoupon(null);
+    if (urlCoupon) navigate({ to: "/preview", search: {}, replace: true });
   }
 
   async function onUnlock() {
@@ -381,10 +423,14 @@ function PreviewPage() {
         setPaying(false);
         return;
       }
-      let o = order && order.couponCode === appliedCoupon ? order : null;
+      // Applied code wins; otherwise fall back to the code carried in the
+      // URL/session so a discount can never be lost at the last step. The
+      // server re-validates it and recomputes the price either way.
+      const effectiveCoupon = appliedCoupon ?? carriedCoupon;
+      let o = order && order.couponCode === effectiveCoupon ? order : null;
       if (!o) {
         const gen = priceGenRef.current;
-        const q = await createOrder(appliedCoupon);
+        const q = await createOrder(effectiveCoupon);
         if (!q) {
           showToast("Payment could not start. Try again.");
           setPaying(false);
@@ -396,7 +442,7 @@ function PreviewPage() {
           amount: q.amount,
           currency: q.currency,
           keyId: q.keyId,
-          couponCode: appliedCoupon,
+          couponCode: effectiveCoupon,
         };
         if (gen === priceGenRef.current) {
           // Reconcile the displayed amount with the authoritative server price.

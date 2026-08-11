@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { couponSearch, resolveCoupon, validateCouponSearch } from "@/lib/coupon-link";
 
 export const Route = createFileRoute("/")({
+  validateSearch: validateCouponSearch,
   component: Index,
 });
 
@@ -61,6 +64,16 @@ function Icon({ name, filled = false, className = "" }: { name: string; filled?:
 }
 
 function Index() {
+  const { coupon: urlCoupon } = Route.useSearch();
+  const [coupon, setCoupon] = useState<string | null>(null);
+
+  // Entry point: a URL coupon is stored; no URL coupon clears a stale one.
+  useEffect(() => {
+    setCoupon(resolveCoupon(urlCoupon, { clearWhenAbsent: true }));
+  }, [urlCoupon]);
+
+  const ctaSearch = couponSearch(coupon);
+
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background text-on-background font-body-md selection:bg-primary-container selection:text-on-primary-container">
       {/* Global nebula background */}
@@ -89,6 +102,7 @@ function Index() {
               </p>
               <Link
                 to="/input"
+                search={ctaSearch}
                 className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-5 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-transform hover:scale-[0.98] active:scale-95 lg:w-auto lg:px-10"
               >
                 Check Your Compatibility
@@ -229,6 +243,7 @@ function Index() {
                   </p>
                   <Link
                     to="/input"
+                search={ctaSearch}
                     className="inline-flex rounded-xl bg-primary px-8 py-3 font-label-md text-label-md text-on-primary-fixed"
                   >
                     Unlock Now
@@ -300,6 +315,7 @@ function Index() {
           <div className="mx-auto max-w-container-max">
             <Link
               to="/input"
+                search={ctaSearch}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md text-on-primary-fixed shadow-lg transition-transform active:scale-95"
             >
               <Icon name="favorite" filled />

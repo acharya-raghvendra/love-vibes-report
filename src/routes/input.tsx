@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useRef, useState, type FormEvent, type RefObject } from "react";
+import { useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
+import { couponSearch, resolveCoupon, validateCouponSearch } from "@/lib/coupon-link";
 
 export const Route = createFileRoute("/input")({
+  validateSearch: validateCouponSearch,
   head: () => ({
     meta: [
       { title: "Enter Your Details — Love Match Compatibility" },
@@ -198,6 +200,12 @@ function normaliseEmail(v: string): string {
 
 function InputPage() {
   const navigate = useNavigate();
+  const { coupon: urlCoupon } = Route.useSearch();
+  const [coupon, setCoupon] = useState<string | null>(null);
+  // URL coupon wins; the stored mirror covers a lost query param / refresh.
+  useEffect(() => {
+    setCoupon(resolveCoupon(urlCoupon));
+  }, [urlCoupon]);
   const [p1Name, setP1Name] = useState("");
   const [p1NameError, setP1NameError] = useState<string | null>(null);
   const [p1Dob, setP1Dob] = useState("");
@@ -302,7 +310,7 @@ function InputPage() {
     } catch {
       /* ignore */
     }
-    navigate({ to: "/preview" });
+    navigate({ to: "/preview", search: couponSearch(coupon) });
   }
 
 

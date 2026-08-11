@@ -1,0 +1,1 @@
+UPDATE public.love_match_orders SET status = 'failed', whatsapp_sent = false, email_sent = false, error_detail = null WHERE order_id = '5488b260-dca6-4668-94b4-cb1a048ed976';

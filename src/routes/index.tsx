@@ -74,11 +74,29 @@ function Icon({
 function Index() {
   const { coupon: urlCoupon } = Route.useSearch();
   const [coupon, setCoupon] = useState<string | null>(null);
+  const [showStickyCta, setShowStickyCta] = useState(false);
+  const heroCtaRef = useRef<HTMLAnchorElement>(null);
 
   // Entry point: a URL coupon is stored; no URL coupon clears a stale one.
   useEffect(() => {
     setCoupon(resolveCoupon(urlCoupon, { clearWhenAbsent: true }));
   }, [urlCoupon]);
+
+  // Show the sticky mobile CTA only once the hero CTA has scrolled out of view.
+  useEffect(() => {
+    const target = heroCtaRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowStickyCta(!entry.isIntersecting);
+      },
+      { threshold: 0, rootMargin: "0px" }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
 
   const ctaSearch = couponSearch(coupon);
 

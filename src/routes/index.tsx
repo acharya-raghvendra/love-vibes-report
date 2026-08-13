@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { couponSearch, resolveCoupon, validateCouponSearch } from "@/lib/coupon-link";
 
 export const Route = createFileRoute("/")({
@@ -74,11 +74,29 @@ function Icon({
 function Index() {
   const { coupon: urlCoupon } = Route.useSearch();
   const [coupon, setCoupon] = useState<string | null>(null);
+  const [showStickyCta, setShowStickyCta] = useState(false);
+  const heroCtaRef = useRef<HTMLAnchorElement>(null);
 
   // Entry point: a URL coupon is stored; no URL coupon clears a stale one.
   useEffect(() => {
     setCoupon(resolveCoupon(urlCoupon, { clearWhenAbsent: true }));
   }, [urlCoupon]);
+
+  // Show the sticky mobile CTA only once the hero CTA has scrolled out of view.
+  useEffect(() => {
+    const target = heroCtaRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowStickyCta(!entry.isIntersecting);
+      },
+      { threshold: 0, rootMargin: "0px" }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
 
   const ctaSearch = couponSearch(coupon);
 
@@ -109,6 +127,7 @@ function Index() {
                 Enter your destinies to reveal the cosmic connection between you.
               </p>
               <Link
+                ref={heroCtaRef}
                 to="/input"
                 search={ctaSearch}
                 className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-5 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-transform hover:scale-[0.98] active:scale-95 lg:w-auto lg:px-10"
@@ -332,7 +351,12 @@ function Index() {
         </main>
 
         {/* Sticky CTA — mobile only */}
-        <div className="lg:hidden fixed right-0 bottom-0 left-0 z-[60] border-t border-primary/20 bg-background/80 p-4 backdrop-blur-2xl">
+        <div
+          className={`lg:hidden fixed right-0 bottom-0 left-0 z-[60] border-t border-primary/20 bg-background/80 p-4 backdrop-blur-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.15)] transition-opacity duration-300 ease-out ${
+            showStickyCta ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          }`}
+          aria-hidden={!showStickyCta}
+        >
           <div className="mx-auto max-w-container-max">
             <Link
               to="/input"
@@ -340,7 +364,7 @@ function Index() {
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md text-on-primary-fixed shadow-lg transition-transform active:scale-95"
             >
               <Icon name="favorite" filled />
-              CHECK YOUR COMPATIBILITY
+              Check Compatibility
             </Link>
           </div>
         </div>

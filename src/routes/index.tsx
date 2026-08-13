@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { couponSearch, resolveCoupon, validateCouponSearch } from "@/lib/coupon-link";
 
 export const Route = createFileRoute("/")({

@@ -74,7 +74,7 @@ async function cacheKey(a: Person, b: Person, refYear: number, lang: string): Pr
   const norm = (p: Person) => `${p.first.toLowerCase()}|${p.last.toLowerCase()}|${p.dob}`;
   // Order-independent: same couple regardless of who is A/B.
   const parts = [norm(a), norm(b)].sort();
-  return await sha256(`lovematch:v2:${lang}:${refYear}:${parts.join("::")}`);
+  return await sha256(`lovematch:v3:${lang}:${refYear}:${parts.join("::")}`);
 }
 
 Deno.serve(async (req: Request) => {

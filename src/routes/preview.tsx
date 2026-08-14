@@ -147,6 +147,58 @@ function formatDob(iso: string): string {
   return `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1]} ${y}`;
 }
 
+// Display-only: "raghav kumar" → "Raghav Kumar". Never used for anything sent
+// to the server; the stored order keeps whatever the user typed.
+function titleCase(s: string): string {
+  return s.replace(/(^|[\s'’-])([a-z])/g, (_m, sep: string, ch: string) => sep + ch.toUpperCase());
+}
+
+// Purely decorative blurred bars standing in for locked prose. No report text
+// is rendered here — the strings below are non-existent; only empty divs.
+function LockTease() {
+  const widths = ["96%", "88%", "93%", "62%"];
+  return (
+    <div aria-hidden="true" className="lock-tease mt-4 space-y-2.5">
+      {widths.map((w, i) => (
+        <div key={i} className="lock-tease-bar" style={{ width: w }} />
+      ))}
+    </div>
+  );
+}
+
+// Abstract mock of the delivered PDF — generic lines and a heart, no content.
+function ReportMock({ title, line }: { title?: string; line?: string }) {
+  return (
+    <div className="mb-6 flex items-center justify-center gap-4">
+      <div aria-hidden="true" className="relative h-28 w-22 shrink-0">
+        <div className="absolute inset-0 translate-x-2 translate-y-1 rotate-6 rounded-lg border border-outline-variant/30 bg-surface-container/70" />
+        <div className="absolute inset-0 -rotate-3 rounded-lg border border-primary/30 bg-background/80 p-2.5">
+          <div className="mx-auto mb-2 flex h-5 w-5 items-center justify-center">
+            <span
+              className="material-symbols-outlined text-primary"
+              style={{ fontVariationSettings: "'FILL' 1", fontSize: "1rem" }}
+            >
+              favorite
+            </span>
+          </div>
+          <div className="space-y-1.5">
+            <div className="h-1 w-full rounded-full bg-primary/40" />
+            <div className="h-1 w-4/5 rounded-full bg-on-surface/15" />
+            <div className="h-1 w-full rounded-full bg-on-surface/15" />
+            <div className="h-1 w-3/5 rounded-full bg-on-surface/15" />
+            <div className="h-1 w-11/12 rounded-full bg-on-surface/15" />
+            <div className="h-1 w-2/3 rounded-full bg-on-surface/15" />
+          </div>
+        </div>
+      </div>
+      <div className="text-left">
+        <div className="font-label-md text-label-md text-on-surface">{title}</div>
+        <div className="mt-1 text-label-sm text-on-surface-variant">{line}</div>
+      </div>
+    </div>
+  );
+}
+
 function ScoreDial({ score, label }: { score: number; label: string }) {
   const [display, setDisplay] = useState(0);
   const size = 240;
@@ -273,6 +325,34 @@ function PreviewPage() {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(null), 3200);
   }, []);
+
+  // Floating CTA: shown only after the score section leaves the viewport, and
+  // hidden again whenever the price card itself is on screen.
+  const scoreRef = useRef<HTMLElement | null>(null);
+  const priceRef = useRef<HTMLElement | null>(null);
+  const [scoreVisible, setScoreVisible] = useState(true);
+  const [priceVisible, setPriceVisible] = useState(false);
+
+  useEffect(() => {
+    if (state.kind !== "ready") return;
+    const observers: IntersectionObserver[] = [];
+    const watch = (el: Element | null, set: (v: boolean) => void) => {
+      if (!el) return;
+      const io = new IntersectionObserver(([e]) => set(e.isIntersecting), { threshold: 0.05 });
+      io.observe(el);
+      observers.push(io);
+    };
+    watch(scoreRef.current, setScoreVisible);
+    watch(priceRef.current, setPriceVisible);
+    return () => observers.forEach((o) => o.disconnect());
+  }, [state.kind]);
+
+  const showFloatingCta = state.kind === "ready" && !scoreVisible && !priceVisible;
+
+  const scrollToPrice = useCallback(() => {
+    priceRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
+
 
   // Read input from session storage; bounce to /input if missing (keeping the coupon).
   useEffect(() => {
@@ -533,7 +613,10 @@ function PreviewPage() {
         />
       </div>
 
-      <main className="relative mx-auto max-w-[720px] px-margin-mobile pt-28 pb-32 lg:pt-32 lg:pb-24 lg:px-6">
+      <main
+        lang={lang}
+        className="relative mx-auto max-w-[720px] px-margin-mobile pt-28 pb-32 lg:pt-32 lg:pb-24 lg:px-6"
+      >
         {state.kind === "loading" && (
           <div className="glass-card rounded-3xl border border-outline-variant/25 p-8 lg:p-12">
             <Skeleton />
@@ -565,7 +648,7 @@ function PreviewPage() {
               <div className="flex items-center justify-center gap-4 sm:gap-8">
                 <div className="min-w-0 flex-1 text-right">
                   <div className="font-headline-sm text-headline-sm truncate text-on-surface">
-                    {state.data.data.names.a}
+                    {titleCase(state.data.data.names.a)}
                   </div>
                   <div className="mt-1 text-label-sm uppercase tracking-widest text-on-surface-variant">
                     {formatDob(input.person_a.dob)}
@@ -582,7 +665,7 @@ function PreviewPage() {
                 </div>
                 <div className="min-w-0 flex-1 text-left">
                   <div className="font-headline-sm text-headline-sm truncate text-on-surface">
-                    {state.data.data.names.b}
+                    {titleCase(state.data.data.names.b)}
                   </div>
                   <div className="mt-1 text-label-sm uppercase tracking-widest text-on-surface-variant">
                     {formatDob(input.person_b.dob)}
@@ -592,7 +675,7 @@ function PreviewPage() {
             </section>
 
             {/* Score dial + server-derived framing */}
-            <section className="mb-10 flex flex-col items-center">
+            <section ref={scoreRef} className="mb-10 flex flex-col items-center">
               <ScoreDial score={state.data.data.score} label={t.compatibility ?? "Compatibility"} />
               <div className="mt-6 rounded-full border border-primary/30 bg-primary-container/20 px-5 py-2 text-center font-label-md text-label-md text-primary-fixed">
                 {state.data.data.band_label}
@@ -612,8 +695,12 @@ function PreviewPage() {
                   <li key={d.key} className="flex items-center justify-between px-5 py-3.5">
                     <span className="font-body-md text-on-surface">{d.name}</span>
                     {d.locked ? (
-                      <span className="material-symbols-outlined text-on-surface-variant/60 text-base">
-                        lock
+                      <span className="flex items-center gap-2">
+                        {/* decorative only — no verdict text is sent for the locked row */}
+                        <span aria-hidden="true" className="lock-tease-stub" />
+                        <span className="material-symbols-outlined text-on-surface-variant/60 text-base">
+                          lock
+                        </span>
                       </span>
                     ) : (
                       <span
@@ -621,17 +708,24 @@ function PreviewPage() {
                           d.verdict === "strong"
                             ? "text-primary"
                             : d.verdict === "friction"
-                              ? "text-tertiary"
-                              : "text-on-surface-variant"
+                              ? "text-error"
+                              : "text-tertiary"
                         }`}
                       >
                         {d.verdictLabel}
-                        <span className="material-symbols-outlined text-base">
+                        <span
+                          className="material-symbols-outlined text-base"
+                          style={
+                            d.verdict === "strong"
+                              ? { fontVariationSettings: "'FILL' 1" }
+                              : undefined
+                          }
+                        >
                           {d.verdict === "strong"
                             ? "check_circle"
                             : d.verdict === "friction"
                               ? "warning"
-                              : "adjust"}
+                              : "circle"}
                         </span>
                       </span>
                     )}
@@ -651,7 +745,9 @@ function PreviewPage() {
                     key={`${lp.name}-${lp.number}`}
                     className="glass-card rounded-2xl border border-outline-variant/25 p-5"
                   >
-                    <div className="mb-2 font-label-md text-label-md text-primary">{lp.heading}</div>
+                    <div className="mb-2 font-label-md text-label-md text-primary">
+                      {titleCase(lp.heading)}
+                    </div>
                     <p className="font-body-md text-body-md text-on-surface-variant">
                       {lp.reading}
                     </p>
@@ -669,6 +765,8 @@ function PreviewPage() {
                 <p className="font-body-lg text-body-lg text-on-surface">
                   {state.data.data.chemistry.visible}
                 </p>
+                {/* Decorative blurred stand-in for the locked continuation */}
+                <LockTease />
                 <div className="mt-5 flex items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary-container/10 px-4 py-3">
                   <span className="material-symbols-outlined text-primary text-base">lock</span>
                   <span className="text-label-sm uppercase tracking-widest text-primary">
@@ -707,9 +805,10 @@ function PreviewPage() {
             </section>
 
 
-            {/* Desktop inline CTA */}
-            <section className="hidden lg:block">
-              <div className="glass-card rounded-2xl border border-primary/25 p-8 text-center shadow-2xl">
+            {/* Price card — the single purchase surface on every breakpoint */}
+            <section ref={priceRef}>
+              <div className="glass-card rounded-2xl border border-primary/25 p-6 text-center shadow-2xl lg:p-8">
+                <ReportMock title={t.reportMockTitle} line={t.reportMockLine} />
                 <p className="mb-3 font-body-md text-label-sm text-on-surface-variant">
                   {state.data.data.specs_line}
                 </p>
@@ -805,76 +904,44 @@ function PreviewPage() {
         )}
       </main>
 
-      {/* Mobile sticky CTA */}
+      {/* Floating CTA — appears past the score section, hides near the price card.
+          Mobile: bottom bar. Desktop: bottom-right pill. Scrolls to the price card. */}
       {state.kind === "ready" && (
-        <div className="lg:hidden fixed inset-x-0 bottom-0 z-[60] border-t border-primary/20 bg-background/85 p-4 backdrop-blur-2xl">
-          <div className="mx-auto flex max-w-container-max flex-col gap-3">
-            {/* Coupon input row */}
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={couponInput}
-                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                placeholder={t.couponPlaceholder}
-                disabled={applyingCoupon || paying || !!appliedCoupon}
-                className="flex-1 rounded-full border border-outline-variant/30 bg-background/60 px-4 py-2 text-label-md text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary/60 focus:outline-none disabled:opacity-60"
-              />
-              {appliedCoupon ? (
-                <button
-                  type="button"
-                  onClick={onRemoveCoupon}
-                  className="rounded-full border border-outline-variant/40 px-3 py-2 text-label-sm text-on-surface-variant"
-                >
-                  {t.remove}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onApplyCoupon}
-                  disabled={applyingCoupon || paying || !couponInput.trim()}
-                  className="rounded-full border border-primary/40 bg-primary-container/20 px-3 py-2 text-label-sm text-primary disabled:opacity-50"
-                >
-                  {applyingCoupon ? "…" : t.apply}
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col leading-tight">
-                <span className="flex items-baseline gap-2">
-                  {pricing ? (
-                    <>
-                      <span
-                        className="text-gold-gradient"
-                        style={{
-                          fontFamily: "var(--font-display)",
-                          fontWeight: 600,
-                          fontSize: "1.5rem",
-                        }}
-                      >
-                        ₹{pricing.finalAmount}
+        <div
+          aria-hidden={!showFloatingCta}
+          className={`fixed z-[60] transition-opacity duration-300 inset-x-0 bottom-0 lg:inset-x-auto lg:right-6 lg:bottom-6 ${
+            showFloatingCta ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
+        >
+          <div className="border-t border-primary/20 bg-background/90 p-3 shadow-[0_-8px_24px_rgba(0,0,0,0.35)] backdrop-blur-2xl lg:rounded-full lg:border lg:p-2 lg:pl-5 lg:shadow-2xl">
+            <div className="mx-auto flex max-w-container-max items-center gap-3">
+              <span className="flex items-baseline gap-2">
+                {pricing ? (
+                  <>
+                    <span
+                      className="text-gold-gradient"
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontWeight: 600,
+                        fontSize: "1.5rem",
+                      }}
+                    >
+                      ₹{pricing.finalAmount}
+                    </span>
+                    {pricing.listPrice > pricing.finalAmount && (
+                      <span className="text-label-sm text-on-surface-variant line-through">
+                        ₹{pricing.listPrice}
                       </span>
-                      {pricing.listPrice > pricing.finalAmount && (
-                        <span className="text-label-sm text-on-surface-variant line-through">
-                          ₹{pricing.listPrice}
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <span className="h-6 w-16 animate-pulse rounded-full bg-surface-container" />
-                  )}
-                </span>
-                <span className="text-[10px] uppercase tracking-widest text-primary">
-                  {pricing && savingsFrom(pricing).amount > 0
-                    ? `${t.save} ₹${savingsFrom(pricing).amount} (${savingsFrom(pricing).percent}% ${t.off})`
-                    : t.fullReport}
-                </span>
-              </div>
+                    )}
+                  </>
+                ) : (
+                  <span className="h-6 w-16 animate-pulse rounded-full bg-surface-container" />
+                )}
+              </span>
               <button
                 type="button"
-                onClick={onUnlock}
-                disabled={paying}
-                className="shimmer flex flex-1 items-center justify-center gap-2 rounded-full py-3.5 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-lg disabled:opacity-70"
+                onClick={scrollToPrice}
+                className="shimmer flex flex-1 items-center justify-center gap-2 rounded-full px-5 py-3 font-label-md text-label-md text-on-primary-fixed shadow-lg lg:flex-none"
               >
                 <span
                   className="material-symbols-outlined text-base"
@@ -882,7 +949,7 @@ function PreviewPage() {
                 >
                   lock_open
                 </span>
-                {paying ? "…" : t.unlockShort}
+                {t.unlock}
               </button>
             </div>
           </div>

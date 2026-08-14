@@ -326,6 +326,34 @@ function PreviewPage() {
     toastTimer.current = setTimeout(() => setToast(null), 3200);
   }, []);
 
+  // Floating CTA: shown only after the score section leaves the viewport, and
+  // hidden again whenever the price card itself is on screen.
+  const scoreRef = useRef<HTMLElement | null>(null);
+  const priceRef = useRef<HTMLElement | null>(null);
+  const [scoreVisible, setScoreVisible] = useState(true);
+  const [priceVisible, setPriceVisible] = useState(false);
+
+  useEffect(() => {
+    if (state.kind !== "ready") return;
+    const observers: IntersectionObserver[] = [];
+    const watch = (el: Element | null, set: (v: boolean) => void) => {
+      if (!el) return;
+      const io = new IntersectionObserver(([e]) => set(e.isIntersecting), { threshold: 0.05 });
+      io.observe(el);
+      observers.push(io);
+    };
+    watch(scoreRef.current, setScoreVisible);
+    watch(priceRef.current, setPriceVisible);
+    return () => observers.forEach((o) => o.disconnect());
+  }, [state.kind]);
+
+  const showFloatingCta = state.kind === "ready" && !scoreVisible && !priceVisible;
+
+  const scrollToPrice = useCallback(() => {
+    priceRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
+
+
   // Read input from session storage; bounce to /input if missing (keeping the coupon).
   useEffect(() => {
     const back = () => navigate({ to: "/input", search: couponSearch(resolveCoupon(urlCoupon)) });

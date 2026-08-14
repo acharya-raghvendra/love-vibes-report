@@ -147,6 +147,58 @@ function formatDob(iso: string): string {
   return `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1]} ${y}`;
 }
 
+// Display-only: "raghav kumar" → "Raghav Kumar". Never used for anything sent
+// to the server; the stored order keeps whatever the user typed.
+function titleCase(s: string): string {
+  return s.replace(/(^|[\s'’-])([a-z])/g, (_m, sep: string, ch: string) => sep + ch.toUpperCase());
+}
+
+// Purely decorative blurred bars standing in for locked prose. No report text
+// is rendered here — the strings below are non-existent; only empty divs.
+function LockTease() {
+  const widths = ["96%", "88%", "93%", "62%"];
+  return (
+    <div aria-hidden="true" className="lock-tease mt-4 space-y-2.5">
+      {widths.map((w, i) => (
+        <div key={i} className="lock-tease-bar" style={{ width: w }} />
+      ))}
+    </div>
+  );
+}
+
+// Abstract mock of the delivered PDF — generic lines and a heart, no content.
+function ReportMock({ title, line }: { title?: string; line?: string }) {
+  return (
+    <div className="mb-6 flex items-center justify-center gap-4">
+      <div aria-hidden="true" className="relative h-28 w-22 shrink-0">
+        <div className="absolute inset-0 translate-x-2 translate-y-1 rotate-6 rounded-lg border border-outline-variant/30 bg-surface-container/70" />
+        <div className="absolute inset-0 -rotate-3 rounded-lg border border-primary/30 bg-background/80 p-2.5">
+          <div className="mx-auto mb-2 flex h-5 w-5 items-center justify-center">
+            <span
+              className="material-symbols-outlined text-primary"
+              style={{ fontVariationSettings: "'FILL' 1", fontSize: "1rem" }}
+            >
+              favorite
+            </span>
+          </div>
+          <div className="space-y-1.5">
+            <div className="h-1 w-full rounded-full bg-primary/40" />
+            <div className="h-1 w-4/5 rounded-full bg-on-surface/15" />
+            <div className="h-1 w-full rounded-full bg-on-surface/15" />
+            <div className="h-1 w-3/5 rounded-full bg-on-surface/15" />
+            <div className="h-1 w-11/12 rounded-full bg-on-surface/15" />
+            <div className="h-1 w-2/3 rounded-full bg-on-surface/15" />
+          </div>
+        </div>
+      </div>
+      <div className="text-left">
+        <div className="font-label-md text-label-md text-on-surface">{title}</div>
+        <div className="mt-1 text-label-sm text-on-surface-variant">{line}</div>
+      </div>
+    </div>
+  );
+}
+
 function ScoreDial({ score, label }: { score: number; label: string }) {
   const [display, setDisplay] = useState(0);
   const size = 240;

@@ -99,6 +99,18 @@ Deno.serve(async (req: Request) => {
       .eq("order_id", orderId)
       .maybeSingle();
 
+    // The order id came from the event notes but we hold no row for it. For
+    // another product's order that's expected; for ours it would mean a lost
+    // or mis-written order row, so log it loudly and skip without alerting.
+    if (!ourOrder) {
+      console.error(
+        `[finalize] unmatched event=${eventName} notes_order=${notesOrderId ?? "none"} rzp_order=${razorpayOrderId ?? "none"}`,
+      );
+      return ok({ ignored: true, reason: "no_order" }, 200);
+    }
+
+
+
     const alertAndStop = async (subject: string, note: string, detail: string) => {
       console.error(`[finalize] order=${orderId} ${detail}`);
       await supabase.from("love_match_orders")

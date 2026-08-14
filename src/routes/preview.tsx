@@ -805,9 +805,10 @@ function PreviewPage() {
             </section>
 
 
-            {/* Desktop inline CTA */}
-            <section className="hidden lg:block">
-              <div className="glass-card rounded-2xl border border-primary/25 p-8 text-center shadow-2xl">
+            {/* Price card — the single purchase surface on every breakpoint */}
+            <section ref={priceRef}>
+              <div className="glass-card rounded-2xl border border-primary/25 p-6 text-center shadow-2xl lg:p-8">
+                <ReportMock title={t.reportMockTitle} line={t.reportMockLine} />
                 <p className="mb-3 font-body-md text-label-sm text-on-surface-variant">
                   {state.data.data.specs_line}
                 </p>

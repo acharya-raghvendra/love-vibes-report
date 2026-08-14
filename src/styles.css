@@ -12,8 +12,10 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
 
-  --font-display: "Cormorant Garamond", ui-serif, Georgia, serif;
-  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Cormorant Garamond", "Noto Serif Devanagari", ui-serif, Georgia, serif;
+  --font-body: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  --font-devanagari: "Noto Sans Devanagari", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-devanagari-display: "Noto Serif Devanagari", "Cormorant Garamond", ui-serif, Georgia, serif;
   --default-font-family: var(--font-body);
 
   --color-background: var(--background);

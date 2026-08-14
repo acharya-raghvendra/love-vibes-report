@@ -665,7 +665,7 @@ function PreviewPage() {
                 </div>
                 <div className="min-w-0 flex-1 text-left">
                   <div className="font-headline-sm text-headline-sm truncate text-on-surface">
-                    {state.data.data.names.b}
+                    {titleCase(state.data.data.names.b)}
                   </div>
                   <div className="mt-1 text-label-sm uppercase tracking-widest text-on-surface-variant">
                     {formatDob(input.person_b.dob)}
@@ -675,7 +675,7 @@ function PreviewPage() {
             </section>
 
             {/* Score dial + server-derived framing */}
-            <section className="mb-10 flex flex-col items-center">
+            <section ref={scoreRef} className="mb-10 flex flex-col items-center">
               <ScoreDial score={state.data.data.score} label={t.compatibility ?? "Compatibility"} />
               <div className="mt-6 rounded-full border border-primary/30 bg-primary-container/20 px-5 py-2 text-center font-label-md text-label-md text-primary-fixed">
                 {state.data.data.band_label}
@@ -695,8 +695,12 @@ function PreviewPage() {
                   <li key={d.key} className="flex items-center justify-between px-5 py-3.5">
                     <span className="font-body-md text-on-surface">{d.name}</span>
                     {d.locked ? (
-                      <span className="material-symbols-outlined text-on-surface-variant/60 text-base">
-                        lock
+                      <span className="flex items-center gap-2">
+                        {/* decorative only — no verdict text is sent for the locked row */}
+                        <span aria-hidden="true" className="lock-tease-stub" />
+                        <span className="material-symbols-outlined text-on-surface-variant/60 text-base">
+                          lock
+                        </span>
                       </span>
                     ) : (
                       <span
@@ -704,17 +708,24 @@ function PreviewPage() {
                           d.verdict === "strong"
                             ? "text-primary"
                             : d.verdict === "friction"
-                              ? "text-tertiary"
-                              : "text-on-surface-variant"
+                              ? "text-error"
+                              : "text-tertiary"
                         }`}
                       >
                         {d.verdictLabel}
-                        <span className="material-symbols-outlined text-base">
+                        <span
+                          className="material-symbols-outlined text-base"
+                          style={
+                            d.verdict === "strong"
+                              ? { fontVariationSettings: "'FILL' 1" }
+                              : undefined
+                          }
+                        >
                           {d.verdict === "strong"
                             ? "check_circle"
                             : d.verdict === "friction"
                               ? "warning"
-                              : "adjust"}
+                              : "circle"}
                         </span>
                       </span>
                     )}

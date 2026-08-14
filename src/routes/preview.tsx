@@ -698,10 +698,11 @@ function PreviewPage() {
             {/* Desktop inline CTA */}
             <section className="hidden lg:block">
               <div className="glass-card rounded-2xl border border-primary/25 p-8 text-center shadow-2xl">
+                <p className="mb-3 font-body-md text-label-sm text-on-surface-variant">
+                  {state.data.data.specs_line}
+                </p>
                 <div className="mb-2 text-label-sm uppercase tracking-widest text-primary">
-                  {pricing && pricing.discountApplied > 0
-                    ? "Coupon applied"
-                    : "Limited introductory price"}
+                  {pricing && pricing.discountApplied > 0 ? t.couponApplied : t.introPrice}
                 </div>
                 <div className="mb-1 flex items-baseline justify-center gap-3">
                   {pricing ? (

@@ -745,7 +745,9 @@ function PreviewPage() {
                     key={`${lp.name}-${lp.number}`}
                     className="glass-card rounded-2xl border border-outline-variant/25 p-5"
                   >
-                    <div className="mb-2 font-label-md text-label-md text-primary">{lp.heading}</div>
+                    <div className="mb-2 font-label-md text-label-md text-primary">
+                      {titleCase(lp.heading)}
+                    </div>
                     <p className="font-body-md text-body-md text-on-surface-variant">
                       {lp.reading}
                     </p>
@@ -763,6 +765,8 @@ function PreviewPage() {
                 <p className="font-body-lg text-body-lg text-on-surface">
                   {state.data.data.chemistry.visible}
                 </p>
+                {/* Decorative blurred stand-in for the locked continuation */}
+                <LockTease />
                 <div className="mt-5 flex items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary-container/10 px-4 py-3">
                   <span className="material-symbols-outlined text-primary text-base">lock</span>
                   <span className="text-label-sm uppercase tracking-widest text-primary">

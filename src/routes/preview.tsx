@@ -613,7 +613,10 @@ function PreviewPage() {
         />
       </div>
 
-      <main className="relative mx-auto max-w-[720px] px-margin-mobile pt-28 pb-32 lg:pt-32 lg:pb-24 lg:px-6">
+      <main
+        lang={lang}
+        className="relative mx-auto max-w-[720px] px-margin-mobile pt-28 pb-32 lg:pt-32 lg:pb-24 lg:px-6"
+      >
         {state.kind === "loading" && (
           <div className="glass-card rounded-3xl border border-outline-variant/25 p-8 lg:p-12">
             <Skeleton />

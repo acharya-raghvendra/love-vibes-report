@@ -97,6 +97,20 @@ type GatewayOrder = {
 
 // Locked-section titles/lines and the readable chemistry paragraph now come
 // from the server response; nothing about report content lives in this bundle.
+// The only local strings are the pre-payload loading/error states, which by
+// definition cannot use server copy.
+const ERROR_COPY = {
+  en: {
+    title: "We couldn't read the stars just now",
+    body: "Please try again in a moment.",
+    retry: "Try again",
+  },
+  hi: {
+    title: "Abhi sitare padhe nahi ja sake",
+    body: "Kuch pal baad dobara koshish karein.",
+    retry: "Dobara koshish karein",
+  },
+} as const;
 
 
 

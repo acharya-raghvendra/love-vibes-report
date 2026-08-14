@@ -648,7 +648,7 @@ function PreviewPage() {
               <div className="flex items-center justify-center gap-4 sm:gap-8">
                 <div className="min-w-0 flex-1 text-right">
                   <div className="font-headline-sm text-headline-sm truncate text-on-surface">
-                    {state.data.data.names.a}
+                    {titleCase(state.data.data.names.a)}
                   </div>
                   <div className="mt-1 text-label-sm uppercase tracking-widest text-on-surface-variant">
                     {formatDob(input.person_a.dob)}

@@ -61,8 +61,24 @@ Deno.serve(async (req: Request) => {
     const rzpOrder = event?.payload?.order?.entity;
 
     // Match our order: notes first, then the gateway order id we stored.
-    let orderId: string | undefined = payment?.notes?.order_id ?? rzpOrder?.notes?.order_id;
+    const notesOrderId: string | undefined = payment?.notes?.order_id ?? rzpOrder?.notes?.order_id;
+    const notesProduct: string | undefined = payment?.notes?.product ?? rzpOrder?.notes?.product;
+    let orderId: string | undefined = notesOrderId;
     const razorpayOrderId: string | undefined = payment?.order_id ?? rzpOrder?.id;
+
+    // Our own orders always carry this product tag (see create-love-match-order).
+    // A different tag means the event belongs to another product sharing the
+    // Razorpay account: expected, so skip quietly at info level.
+    const notOurs = (reason: string) => {
+      console.log(
+        `[finalize] not_ours reason=${reason} event=${eventName} rzp_order=${razorpayOrderId ?? "none"}`,
+      );
+      return ok({ ignored: true, reason: "no_order" }, 200);
+    };
+
+    if (notesProduct && notesProduct !== "Love Match Report") {
+      return notOurs(`foreign_product=${notesProduct}`);
+    }
 
     if (!orderId && razorpayOrderId) {
       const { data: byGateway } = await supabase
@@ -74,10 +90,8 @@ Deno.serve(async (req: Request) => {
     }
 
     // Always 200 on unmatched events so Razorpay stops retrying forever.
-    if (!orderId) {
-      console.error(`[finalize] unmatched event=${eventName} rzp_order=${razorpayOrderId ?? "none"}`);
-      return ok({ ignored: true, reason: "no_order" }, 200);
-    }
+    // No order_id in notes and no gateway match — another product's event.
+    if (!orderId) return notOurs("no_notes_no_gateway_match");
 
     // 3. Amount check — never deliver on a payment that isn't what we charged.
     // Captured amount comes from the event in paise; our row stores rupees.
@@ -93,6 +107,19 @@ Deno.serve(async (req: Request) => {
       .select("final_price, status")
       .eq("order_id", orderId)
       .maybeSingle();
+
+    // The notes claimed our product (or carried no tag) but we hold no row for
+    // this order id — a lost or mis-written order row on our side. Keep loud,
+    // but skip without alerting: there is no order to block or annotate.
+    if (!ourOrder) {
+      console.error(
+        `[finalize] unmatched event=${eventName} notes_order=${notesOrderId ?? "none"} rzp_order=${razorpayOrderId ?? "none"}`,
+      );
+      return ok({ ignored: true, reason: "no_order" }, 200);
+    }
+
+
+
 
     const alertAndStop = async (subject: string, note: string, detail: string) => {
       console.error(`[finalize] order=${orderId} ${detail}`);

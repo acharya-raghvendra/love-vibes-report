@@ -789,8 +789,8 @@ function PreviewPage() {
                   )}
                 </span>
                 <span className="text-[10px] uppercase tracking-widest text-primary">
-                  {pricing && pricing.discountApplied > 0
-                    ? `Saved ₹${pricing.discountApplied}`
+                  {pricing && savingsFrom(pricing).amount > 0
+                    ? `Save ₹${savingsFrom(pricing).amount} (${savingsFrom(pricing).percent}% off)`
                     : "Full Report"}
                 </span>
               </div>

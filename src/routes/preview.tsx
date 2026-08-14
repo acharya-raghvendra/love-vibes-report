@@ -25,6 +25,16 @@ type InputPayload = {
   language?: "en" | "hi";
 };
 
+type PreviewDimension = {
+  key: string;
+  name: string;
+  locked: boolean;
+  verdict?: "strong" | "workable" | "friction";
+  verdictLabel?: string;
+};
+
+// Everything below is produced server-side by love-match-generate. Nothing on
+// this page computes report content, and no locked prose is ever received.
 type PreviewData = {
   order_id: string;
   data: {
@@ -33,6 +43,17 @@ type PreviewData = {
     names: { a: string; b: string };
     shared?: string[];
     chemistry_teaser: { level: string };
+    band_label: string;
+    score_line: string;
+    dimensions: PreviewDimension[];
+    life_paths: { name: string; number: number; heading: string; reading: string }[];
+    chemistry: { visible: string };
+    friction_line: string;
+    locked_sections: { icon: string; title: string; line: string }[];
+    specs_line: string;
+    refund_line: string;
+    refund_link_label: string;
+    headings: Record<string, string>;
   };
 };
 
@@ -74,29 +95,10 @@ type GatewayOrder = {
   couponCode: string | null;
 };
 
-const LOCKED_SECTIONS = [
-  { icon: "favorite", label: "Full Chemistry Breakdown" },
-  { icon: "psychology", label: "Destiny Number Compatibility" },
-  { icon: "self_improvement", label: "Soul Urge Alignment" },
-  { icon: "auto_stories", label: "Personality Number Blend" },
-  { icon: "route", label: "Life Path Journey Together" },
-  { icon: "cake", label: "Birthday Number Insights" },
-  { icon: "insights", label: "Personal Year Forecast" },
-  { icon: "handshake", label: "Communication Style Guide" },
-  { icon: "shield", label: "Conflict Resolution Map" },
-  { icon: "diamond", label: "Long-term Cosmic Outlook" },
-];
+// Locked-section titles/lines and the readable chemistry paragraph now come
+// from the server response; nothing about report content lives in this bundle.
 
-const CHEMISTRY_TEASERS: Record<string, string> = {
-  strong_pull:
-    "There's a magnetic pull between your numbers — an undeniable gravitational force that draws your souls together almost effortlessly.",
-  warm_spark:
-    "A warm, quietly humming spark lives between you — the kind of chemistry that grows richer with every shared season.",
-  slow_burn:
-    "Yours is a slow-burn resonance — the numbers whisper of a bond that reveals its depth over time rather than in a single moment.",
-  opposites_tension:
-    "The tension between your charts creates the classic opposites-attract pattern — full of friction, growth, and unexpected fireworks.",
-};
+
 
 function loadRazorpay(): Promise<boolean> {
   return new Promise((resolve) => {
@@ -302,12 +304,12 @@ function PreviewPage() {
     if (input) fetchPreview(input);
   }, [input, fetchPreview]);
 
-  const chemistryText = useMemo(() => {
-    if (state.kind !== "ready") return "";
-    return (
-      CHEMISTRY_TEASERS[state.data.data.chemistry_teaser.level] ?? CHEMISTRY_TEASERS.warm_spark
-    );
-  }, [state]);
+  // Server-sent copy dictionary for the static UI strings (EN/HI).
+  const t = useMemo<Record<string, string>>(
+    () => (state.kind === "ready" ? (state.data.data.headings ?? {}) : {}),
+    [state],
+  );
+  const lang: "en" | "hi" = input?.language === "en" ? "en" : "hi";
 
   const createOrder = useCallback(
     async (couponCode: string | null): Promise<OrderQuote | null> => {

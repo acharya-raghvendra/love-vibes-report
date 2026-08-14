@@ -734,7 +734,7 @@ function PreviewPage() {
                   </div>
                 )}
                 <p className="mx-auto mb-6 max-w-md font-body-md text-on-surface-variant">
-                  {t.oneTimePayment}
+                  {t.oneTime}
                 </p>
 
                 {/* Coupon input */}
@@ -779,7 +779,7 @@ function PreviewPage() {
                   >
                     auto_awesome
                   </span>
-                  {paying ? t.openingCheckout : t.unlockCta}
+                  {paying ? t.opening : t.unlock}
                 </button>
                 <p className="mt-4 font-body-md text-label-sm text-on-surface-variant">
                   {state.data.data.refund_line}{" "}

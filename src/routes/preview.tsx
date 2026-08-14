@@ -147,7 +147,7 @@ function formatDob(iso: string): string {
   return `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1]} ${y}`;
 }
 
-function ScoreDial({ score }: { score: number }) {
+function ScoreDial({ score, label }: { score: number; label: string }) {
   const [display, setDisplay] = useState(0);
   const size = 240;
   const stroke = 14;
@@ -213,7 +213,7 @@ function ScoreDial({ score }: { score: number }) {
           <span style={{ fontSize: "1.75rem", verticalAlign: "top", marginLeft: "0.15em" }}>%</span>
         </span>
         <span className="mt-2 text-[10px] uppercase tracking-[0.3em] text-primary">
-          Compatibility
+          {label}
         </span>
       </div>
     </div>
@@ -593,7 +593,7 @@ function PreviewPage() {
 
             {/* Score dial + server-derived framing */}
             <section className="mb-10 flex flex-col items-center">
-              <ScoreDial score={state.data.data.score} />
+              <ScoreDial score={state.data.data.score} label={t.compatibility ?? "Compatibility"} />
               <div className="mt-6 rounded-full border border-primary/30 bg-primary-container/20 px-5 py-2 text-center font-label-md text-label-md text-primary-fixed">
                 {state.data.data.band_label}
               </div>

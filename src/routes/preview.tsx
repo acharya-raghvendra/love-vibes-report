@@ -669,9 +669,9 @@ function PreviewPage() {
                     <span className="h-[3rem] w-32 animate-pulse rounded-full bg-surface-container" />
                   )}
                 </div>
-                {pricing && pricing.discountApplied > 0 && (
+                {pricing && savingsFrom(pricing).amount > 0 && (
                   <div className="mb-2 text-label-sm text-primary">
-                    You save ₹{pricing.discountApplied}
+                    You save ₹{savingsFrom(pricing).amount} ({savingsFrom(pricing).percent}% off)
                   </div>
                 )}
                 <p className="mx-auto mb-6 max-w-md font-body-md text-on-surface-variant">

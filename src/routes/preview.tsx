@@ -579,66 +579,121 @@ function PreviewPage() {
               </div>
             </section>
 
-            {/* Score dial */}
+            {/* Score dial + server-derived framing */}
             <section className="mb-10 flex flex-col items-center">
               <ScoreDial score={state.data.data.score} />
-              <div className="mt-6 rounded-full border border-primary/30 bg-primary-container/20 px-5 py-2 font-label-md text-label-md uppercase tracking-widest text-primary-fixed">
-                {state.data.data.band}
+              <div className="mt-6 rounded-full border border-primary/30 bg-primary-container/20 px-5 py-2 text-center font-label-md text-label-md text-primary-fixed">
+                {state.data.data.band_label}
               </div>
+              <p className="mt-4 max-w-lg px-2 text-center font-body-md text-body-md text-on-surface">
+                {state.data.data.score_line}
+              </p>
               {state.data.data.shared && state.data.data.shared.length > 0 && (
-                <p className="mt-4 max-w-md px-4 text-center font-body-md text-body-md text-on-surface-variant">
-                  You share: {state.data.data.shared.join(" · ")}
+                <p className="mt-3 max-w-md px-4 text-center font-body-md text-body-md text-on-surface-variant">
+                  {t.youShare}: {state.data.data.shared.join(" · ")}
                 </p>
               )}
+
+              {/* 3-dimension mini breakdown (locked one carries no text) */}
+              <ul className="glass-card mt-6 w-full divide-y divide-outline-variant/15 overflow-hidden rounded-2xl border border-outline-variant/25">
+                {state.data.data.dimensions.map((d) => (
+                  <li key={d.key} className="flex items-center justify-between px-5 py-3.5">
+                    <span className="font-body-md text-on-surface">{d.name}</span>
+                    {d.locked ? (
+                      <span className="material-symbols-outlined text-on-surface-variant/60 text-base">
+                        lock
+                      </span>
+                    ) : (
+                      <span
+                        className={`flex items-center gap-1.5 text-label-sm ${
+                          d.verdict === "strong"
+                            ? "text-primary"
+                            : d.verdict === "friction"
+                              ? "text-tertiary"
+                              : "text-on-surface-variant"
+                        }`}
+                      >
+                        {d.verdictLabel}
+                        <span className="material-symbols-outlined text-base">
+                          {d.verdict === "strong"
+                            ? "check_circle"
+                            : d.verdict === "friction"
+                              ? "warning"
+                              : "adjust"}
+                        </span>
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </section>
 
-            {/* Chemistry teaser */}
+            {/* Individual numbers — fully readable sample chapter */}
             <section className="mb-10">
               <h2 className="mb-4 text-center font-headline-sm text-headline-sm text-on-surface">
-                Your Chemistry
+                {t.individualNumbers}
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {state.data.data.life_paths.map((lp) => (
+                  <div
+                    key={`${lp.name}-${lp.number}`}
+                    className="glass-card rounded-2xl border border-outline-variant/25 p-5"
+                  >
+                    <div className="mb-2 font-label-md text-label-md text-primary">{lp.heading}</div>
+                    <p className="font-body-md text-body-md text-on-surface-variant">
+                      {lp.reading}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Chemistry — first full paragraph free, rest not sent to the browser */}
+            <section className="mb-10">
+              <h2 className="mb-4 text-center font-headline-sm text-headline-sm text-on-surface">
+                {t.chemistry}
               </h2>
               <div className="glass-card relative overflow-hidden rounded-2xl border border-outline-variant/25 p-6 lg:p-8">
                 <p className="font-body-lg text-body-lg text-on-surface">
-                  {chemistryText.split(". ").slice(0, 2).join(". ")}
-                  {chemistryText.split(". ").length > 2 ? "." : ""}
+                  {state.data.data.chemistry.visible}
                 </p>
-                <div className="relative mt-4">
-                  <p className="font-body-lg text-body-lg text-on-surface-variant blur-[6px] select-none">
-                    Beyond this, the numbers describe how your daily rhythms align, where friction
-                    is most likely to arise, and which years will bring your deepest bonding — a
-                    full narrative of what your shared path looks like across decades.
-                  </p>
-                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <div className="flex items-center gap-2 rounded-full border border-primary/30 bg-background/70 px-4 py-2 backdrop-blur-md">
-                      <span className="material-symbols-outlined text-primary text-base">lock</span>
-                      <span className="text-label-sm uppercase tracking-widest text-primary">
-                        Unlock to read more
-                      </span>
-                    </div>
-                  </div>
+                <div className="mt-5 flex items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary-container/10 px-4 py-3">
+                  <span className="material-symbols-outlined text-primary text-base">lock</span>
+                  <span className="text-label-sm uppercase tracking-widest text-primary">
+                    {t.unlockMore}
+                  </span>
                 </div>
               </div>
+              <p className="mt-4 rounded-xl border border-tertiary/30 bg-tertiary/10 px-4 py-3 text-center font-body-md text-body-md text-on-surface">
+                {state.data.data.friction_line}
+              </p>
             </section>
 
             {/* Locked sections */}
             <section className="mb-10">
               <h3 className="mb-4 text-center font-label-md text-label-md uppercase tracking-widest text-primary">
-                In Your Full Report
+                {t.inFullReport}
               </h3>
               <ul className="glass-card divide-y divide-outline-variant/15 rounded-2xl border border-outline-variant/25 overflow-hidden">
-                {LOCKED_SECTIONS.map((s) => (
-                  <li key={s.label} className="flex items-center justify-between px-5 py-4">
-                    <span className="flex items-center gap-3">
+                {state.data.data.locked_sections.map((s) => (
+                  <li key={s.title} className="flex items-start justify-between gap-3 px-5 py-4">
+                    <span className="flex min-w-0 items-start gap-3">
                       <span className="material-symbols-outlined text-primary/80">{s.icon}</span>
-                      <span className="font-body-md text-on-surface">{s.label}</span>
+                      <span className="min-w-0">
+                        <span className="block font-body-md text-on-surface">{s.title}</span>
+                        <span className="mt-0.5 block text-label-sm text-on-surface-variant">
+                          {s.line}
+                        </span>
+                      </span>
                     </span>
-                    <span className="material-symbols-outlined text-on-surface-variant/60">
+                    <span className="material-symbols-outlined shrink-0 text-on-surface-variant/60">
                       lock
                     </span>
                   </li>
                 ))}
               </ul>
             </section>
+
 
             {/* Desktop inline CTA */}
             <section className="hidden lg:block">

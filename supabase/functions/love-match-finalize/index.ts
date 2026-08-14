@@ -75,22 +75,13 @@ Deno.serve(async (req: Request) => {
     }
 
     // Always 200 on unmatched events so Razorpay stops retrying forever.
+    // No order_id in notes and no gateway match: this webhook belongs to
+    // another product sharing the Razorpay account. Expected, info only.
     if (!orderId) {
-      if (notesOrderId) {
-        // Notes named an order id, but we have no row for it — unexpected for
-        // our own product (lost / mis-written order row), so keep it loud.
-        console.error(
-          `[finalize] unmatched event=${eventName} notes_order=${notesOrderId} rzp_order=${razorpayOrderId ?? "none"}`,
-        );
-      } else {
-        // No order_id in notes and no gateway match: this webhook belongs to
-        // another product sharing the Razorpay account. Expected, info only.
-        console.log(
-          `[finalize] not_ours event=${eventName} rzp_order=${razorpayOrderId ?? "none"}`,
-        );
-      }
+      console.log(`[finalize] not_ours event=${eventName} rzp_order=${razorpayOrderId ?? "none"}`);
       return ok({ ignored: true, reason: "no_order" }, 200);
     }
+
 
 
     // 3. Amount check — never deliver on a payment that isn't what we charged.

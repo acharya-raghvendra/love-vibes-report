@@ -729,12 +729,12 @@ function PreviewPage() {
                 </div>
                 {pricing && savingsFrom(pricing).amount > 0 && (
                   <div className="mb-2 text-label-sm text-primary">
-                    You save ₹{savingsFrom(pricing).amount} ({savingsFrom(pricing).percent}% off)
+                    {t.youSave} ₹{savingsFrom(pricing).amount} ({savingsFrom(pricing).percent}%{" "}
+                    {t.off})
                   </div>
                 )}
                 <p className="mx-auto mb-6 max-w-md font-body-md text-on-surface-variant">
-                  One-time payment. Instant access to your full 12-page numerology compatibility
-                  report.
+                  {t.oneTimePayment}
                 </p>
 
                 {/* Coupon input */}

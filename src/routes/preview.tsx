@@ -539,7 +539,7 @@ function PreviewPage() {
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-label-md text-label-md text-on-primary-fixed"
             >
               <span className="material-symbols-outlined text-base">refresh</span>
-              Try again
+              {ERROR_COPY[lang].retry}
             </button>
           </div>
         )}

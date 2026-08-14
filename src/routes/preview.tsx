@@ -56,6 +56,14 @@ type Pricing = {
   finalAmount: number;
 };
 
+// Saving shown on the card is always strikethrough − final price (whole rupees),
+// never just the coupon cut, so it matches the two numbers on screen.
+function savingsFrom(p: Pricing): { amount: number; percent: number } {
+  const amount = Math.round(p.listPrice - p.finalAmount);
+  const percent = p.listPrice > 0 ? Math.round((amount / p.listPrice) * 100) : 0;
+  return { amount, percent };
+}
+
 // Gateway handoff data only — never read for display.
 type GatewayOrder = {
   orderId: string;

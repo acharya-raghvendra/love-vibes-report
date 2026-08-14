@@ -54,15 +54,15 @@ const DIM_NAME: Record<Lang, Record<PreviewDimension["key"], string>> = {
     stability: "Long-term stability",
   },
   hi: {
-    emotional: "Emotional bond",
-    communication: "Communication",
-    stability: "Long-term stability",
+    emotional: "भावनात्मक बंधन",
+    communication: "बातचीत",
+    stability: "लंबे समय का साथ",
   },
 };
 
 const VERDICT_LABEL: Record<Lang, Record<Verdict, string>> = {
   en: { strong: "Strong", workable: "Workable", friction: "Friction" },
-  hi: { strong: "Majboot", workable: "Kaam chahiye", friction: "Friction" },
+  hi: { strong: "मज़बूत", workable: "थोड़ा काम चाहिए", friction: "टकराव" },
 };
 
 function verdictOf(points: number): Verdict {
@@ -129,40 +129,40 @@ export function bandLabel(score: number, lowestVerdict: Verdict, lang: Lang): st
   if (score >= 75) {
     if (lowestVerdict === "strong") {
       return lang === "hi"
-        ? "Strong match — par ek pehlu aur gehra ho sakta hai"
+        ? "बहुत अच्छा मेल — और एक पहलू तो अभी और गहरा हो सकता है"
         : "Strong match — and one side can go even deeper";
     }
     return lang === "hi"
-      ? "Strong match — par ek kamzori hai"
+      ? "बहुत अच्छा मेल — पर एक कमज़ोर कड़ी है"
       : "Strong match — but there's one weak spot";
   }
   if (score >= 55) {
     return lang === "hi"
-      ? "Strong base, kuch friction zones"
+      ? "नींव मज़बूत है, कुछ जगह टकराव है"
       : "Strong base, a few friction zones";
   }
   if (score >= 40) {
     return lang === "hi"
-      ? "Kaafi kuch samajhna zaroori hai"
+      ? "यहाँ काफ़ी कुछ समझने लायक है"
       : "There's a lot here worth understanding";
   }
   return lang === "hi"
-    ? "Challenges hain — aur unke upay bhi"
+    ? "चुनौतियाँ हैं — और उनके उपाय भी"
     : "There are challenges — and remedies for them";
 }
 
 export function scoreLine(score: number, lang: Lang): string {
   if (lang === "hi") {
     if (score >= 75) {
-      return `${score}% ka matlab hai bahut kuch aapke paksh me hai — par kaunsa ek pehlu aapko sambhalna hai, wo aapki 12-page report me hai.`;
+      return `${score}% का मतलब है बहुत कुछ आपके पक्ष में है — पर कौन सा एक पहलू आपको सँभालना है, वो आपकी 12-पेज रिपोर्ट में है।`;
     }
     if (score >= 55) {
-      return `Kuch cheezein aapke paksh me hain, kuch par kaam chahiye — dono ka poora sach aapki 12-page report me.`;
+      return `कुछ बातें आपके पक्ष में हैं और कुछ पर काम चाहिए — दोनों का पूरा सच आपकी 12-पेज रिपोर्ट में है।`;
     }
     if (score >= 40) {
-      return `${score}% ek shuruaat hai, faisla nahi — kaunsi cheez rishte ko rok rahi hai aur kaise theek hoti hai, ye report me hai.`;
+      return `${score}% एक शुरुआत है, फ़ैसला नहीं — कौन सी बात रिश्ते को रोक रही है और वो कैसे ठीक होती है, ये रिपोर्ट में है।`;
     }
-    return `${score}% batata hai ki mehnat lagegi — kahan lagegi aur kaunse upay chalenge, ye aapki 12-page report me diya gaya hai.`;
+    return `${score}% बताता है कि मेहनत लगेगी — कहाँ लगेगी और कौन से उपाय चलेंगे, ये आपकी 12-पेज रिपोर्ट में दिया है।`;
   }
   if (score >= 75) {
     return `${score}% means a lot is working in your favour — the one side you still need to handle is in your 12-page report.`;
@@ -184,9 +184,9 @@ export function frictionLine(
   lang: Lang,
 ): string {
   const areaHi: Record<PreviewDimension["key"], string> = {
-    emotional: "emotional taar",
-    communication: "communication styles",
-    stability: "long-term planning",
+    emotional: "भावनात्मक तार",
+    communication: "बात करने के तरीके",
+    stability: "लंबी योजना",
   };
   const areaEn: Record<PreviewDimension["key"], string> = {
     emotional: "emotional wiring",
@@ -195,12 +195,12 @@ export function frictionLine(
   };
   if (lang === "hi") {
     if (lowestVerdict === "friction") {
-      return `Aap dono ke ${areaHi[lowestKey]} takra sakte hain — full report me iska solution diya gaya hai.`;
+      return `आप दोनों के ${areaHi[lowestKey]} टकरा सकते हैं — पूरी रिपोर्ट में इसका हल दिया गया है।`;
     }
     if (lowestVerdict === "workable") {
-      return `Sabse zyada kaam aapke ${areaHi[lowestKey]} par chahiye — full report me iska solution diya gaya hai.`;
+      return `सबसे ज़्यादा काम आपके ${areaHi[lowestKey]} पर चाहिए — पूरी रिपोर्ट में इसका हल दिया गया है।`;
     }
-    return `Aapka sabse kam strong pehlu (${areaHi[lowestKey]}) bhi accha hai — report batayegi ise aur gehra kaise karein.`;
+    return `आपका सबसे कम मज़बूत पहलू (${areaHi[lowestKey]}) भी अच्छा है — रिपोर्ट बताएगी इसे और गहरा कैसे करें।`;
   }
   if (lowestVerdict === "friction") {
     return `Your ${areaEn[lowestKey]} can clash — the full report gives you the fix.`;
@@ -226,13 +226,13 @@ const CHEMISTRY: Record<Lang, Record<string, string>> = {
   },
   hi: {
     strong_pull:
-      "Aap dono ke numbers ke beech ek magnetic pull hai — attraction shuru karne ke liye mehnat nahi karni padti. Ek doosre ka mood aap jaldi pakad lete hain, aur saath ka waqt natural lagta hai. Yahi intensity wajah hai ki chhoti baatein bhi aap dono ke beech thodi zyada lagti hain.",
+      "आप दोनों के अंकों के बीच एक चुंबक जैसा खिंचाव है — शुरुआत करने के लिए मेहनत नहीं करनी पड़ती। एक दूसरे का मूड आप जल्दी पकड़ लेते हैं, और साथ बिताया वक़्त सहज लगता है, निभाया हुआ नहीं। यही तीव्रता वजह है कि छोटी-छोटी बातें भी आप दोनों के बीच ज़्यादा गहरी चुभती हैं।",
     warm_spark:
-      "Aap dono ke beech ek warm, steady spark hai — aisi jo ghar ko garam rakhti hai, jalati nahi. Ek doosre ke saath aap dikhawa nahi karte, aur rishta har mausam ke saath aur gehra hota jaata hai. Ise dhamake nahi, dhyaan chahiye.",
+      "आप दोनों के बीच एक गर्म, ठहरी हुई चिंगारी है — ऐसी जो घर को गरम रखती है, जलाती नहीं। एक दूसरे के साथ आप दिखावा नहीं करते, और रिश्ता हर मौसम के साथ और भरा-पूरा होता जाता है। इसे धमाके नहीं, ध्यान चाहिए।",
     slow_burn:
-      "Aapka bandhan slow-burn hai. Numbers kehte hain ki iski gehrai waqt ke saath khulti hai, ek pal me nahi — isliye shuruaat thodi shaant lag sakti hai. Ek baar bharosa ban gaya to ye bahut mazbooti se tikta hai, par shuruaati daur me dono ko sabr chahiye.",
+      "आपका जुड़ाव धीमी आँच वाला है। अंक कहते हैं कि इसकी गहराई वक़्त के साथ खुलती है, एक पल में नहीं — इसलिए शुरुआत आपकी उम्मीद से ज़्यादा शांत लग सकती है। एक बार भरोसा बन गया तो ये बहुत मज़बूती से टिकता है, पर शुरुआती दौर में दोनों को सब्र चाहिए।",
     opposites_tension:
-      "Aapke charts aamne-saamne hain — classic opposites-attract pattern. Kheech bhi asli hai, friction bhi. Jo ek karta hai, doosra usse bachta hai. Sahi sambhala jaaye to yahi balance ban jaata hai; warna wahi ek jhagda baar-baar lautta hai.",
+      "आप दोनों के अंक आमने-सामने बैठे हैं, और यही वो जाना-पहचाना खिंचाव बनाता है — असली कशिश, असली टकराव, और असली बढ़ोतरी। जो एक सहज करता है, दूसरा उससे बचता है। ठीक सँभाला जाए तो यही संतुलन बन जाता है; वरना वही एक झगड़ा बार-बार लौटता है।",
   },
 };
 
@@ -258,18 +258,18 @@ const LIFE_PATH: Record<Lang, Record<number, string>> = {
     33: "You give at a scale most people find hard to accept. Care, teaching and healing come naturally, and you are usually the one holding the room. That makes you deeply safe to love. The danger is disappearing into someone else's needs until yours have no language left.",
   },
   hi: {
-    1: "Aap instinct se lead karte hain aur control kiya jaana pasand nahi karte. Faisle jaldi lete hain, aur ek baar raasta chun liya to akele chal lenge par dheere nahi chalenge. Rishte me ye protective aur decisive lagta hai, par partner ko lagta hai use baad me bataya gaya. Aapki growth steering share karne me hai.",
-    2: "Aap logon ko situation se pehle padh lete hain. Jeetne se zyada shaanti chahiye, isliye aap jaldi jhuk jaate hain — aur andar hisaab rakhte jaate hain. Rishte me emotional dhaaga aap hi pakadte hain. Aapka kaam hai mushkil baat resentment banne se pehle keh dena.",
-    3: "Aap express karte hain, halka kar dete hain. Shabd aapke paas aasani se aate hain aur jahan log chup hote hain wahan aap hansi le aate hain. Isse rishta zinda rehta hai, par bhaari baat tal bhi jaati hai. Jab aap serious hote hain, log aap par poora bharosa karte hain.",
-    4: "Aap dheere banate hain aur vaada nibhate hain. Routine aapke liye boring nahi, suraksha hai — pyaar aap bharose se dikhate hain, baaton se nahi. Partner ko hamesha pata hota hai aap kahan khade hain. Chunauti hai lachak: plan badalna galat hona nahi hota.",
-    5: "Aapko movement, variety aur saans lene ki jagah chahiye. Bandhan aapko khatra lagta hai, isliye aap har pinjre se bachte hain — chahe wo pyaar ka ho. Aap rishte me nayi energy laate hain. Aapka kaam hai dikhana ki azaadi aur commitment ek ghar me reh sakte hain.",
-    6: "Jinse pyaar karte hain unki zimmedari aap bina kahe utha lete hain. Ghar, seva aur farz aapke andar gehre hain. Isi se aap rishte ka emotional centre bante hain. Khatra ye hai ki aap dete-dete khud ko andekha mehsoos karne lagte hain.",
-    7: "Aap cheezon ko samajhne ke liye andar jaate hain. Jaise logon ko sangat chahiye, aapko ekaant chahiye — feeling dikhane se zyada use samajhna pasand hai. Isse aapke pyaar me ek gehrai aati hai. Par partner aapki chuppi ko doori samajh sakta hai.",
-    8: "Aap control, result aur material security ke liye bane hain. Aap wahi ginte hain jo actually hua, aur doosron ka bojh bhi utha lete hain. Rishte me aap provider aur strategist hain. Seekh ye hai ki rishta project ki tarah manage nahi hota — use mehsoos karna padta hai.",
-    9: "Aap chaudai me mehsoos karte hain aur jaldi maaf kar dete hain, kabhi zaroorat se bhi jaldi. Dena, sudharna aur badi tasveer dekhna aapki aadat hai — apne kharche par bhi. Rishte me aap udaarta laate hain. Growth hai khud ko chunna, bina use swarth kahe.",
-    11: "Aap utna mehsoos karte hain jitna samjha nahi paate. Intuition sabooton se pehle aa jaata hai, aur partner ka badlav aap unke bolne se pehle pakad lete hain. Ye tohfa bhi hai aur bojh bhi. Aapka kaam hai grounded hona, band ho jaana nahi.",
-    22: "Aap structure aur lambi soch me chalte hain. Jahan log sapna dekhte hain, aap chupchaap uska naksha bana lete hain, aur bahut bojh bina shikayat utha lete hain. Rishte me aap sthir aur future-facing hain. Khatra hai rishte ko bhi ek aur project maan lena.",
-    33: "Aap us paimane par dete hain jo logon ko sweekaarna mushkil lagta hai. Care, sikhana aur healing sahaj hai, aur aksar poora kamra aap hi sambhalte hain. Isse aap bahut surakshit lagte hain. Khatra hai doosron ki zarooraton me apni zaroorat kho dena.",
+    1: "आप मन की सुनकर आगे चलते हैं और किसी का नियंत्रण पसंद नहीं करते। फ़ैसले जल्दी लेते हैं, और एक बार रास्ता चुन लिया तो अकेले चल लेंगे पर धीरे नहीं चलेंगे। रिश्ते में यह हिफ़ाज़त करने वाला और साफ़ लगता है, पर साथी को लगता है उसे बाद में बताया गया। आपकी बढ़ोतरी है स्टीयरिंग साझा करने में।",
+    2: "आप हालात से पहले लोगों को पढ़ लेते हैं। जीतने से ज़्यादा आपको शांति चाहिए, इसलिए आप जल्दी झुक जाते हैं — और अंदर हिसाब रखते जाते हैं। रिश्ते में भावनात्मक धागा आप ही पकड़ते हैं। आपका काम है असहज बात को नाराज़गी बनने से पहले कह देना।",
+    3: "आप कह देते हैं, हँसा देते हैं, माहौल हल्का कर देते हैं। शब्द आपके पास आसानी से आते हैं और जहाँ लोग चुप होते हैं, वहाँ आप हँसी ले आते हैं। इससे रिश्ता ज़िंदा रहता है, पर भारी बात टल भी जाती है। जब आप गंभीर होते हैं, लोग आप पर पूरा भरोसा करते हैं।",
+    4: "आप धीरे बनाते हैं और वादा निभाते हैं। रोज़ का ढर्रा आपके लिए ऊब नहीं, सुरक्षा है — प्यार आप भरोसे से दिखाते हैं, बातों से नहीं। साथी को हमेशा पता होता है आप कहाँ खड़े हैं। चुनौती है लचीलापन: योजना बदलना गड़बड़ होना नहीं है।",
+    5: "आपको हलचल, बदलाव और साँस लेने की जगह चाहिए। बंधन आपको ख़तरा लगता है, इसलिए आप हर पिंजरे से बचते हैं — चाहे वो प्यार का ही हो। आप रिश्ते में नई ऊर्जा लाते हैं। आपका काम है यह दिखाना कि आज़ादी और वादा एक ही घर में रह सकते हैं।",
+    6: "जिनसे प्यार करते हैं उनकी ज़िम्मेदारी आप बिना कहे उठा लेते हैं। घर, सेवा और फ़र्ज़ आपके अंदर गहरे हैं, और सबकी ज़रूरत आप पहले देख लेते हैं। इसी से आप रिश्ते का भावनात्मक केंद्र बनते हैं। ख़तरा है देते-देते ख़ुद को अनदेखा महसूस करने लगना।",
+    7: "आप बात को समझने के लिए अंदर की तरफ़ जाते हैं। जैसे लोगों को साथ चाहिए, आपको एकांत चाहिए — भावना को दिखाने से ज़्यादा आप उसे समझना चाहते हैं। इससे आपके प्यार में एक दुर्लभ गहराई आती है। पर साथी आपकी चुप्पी को दूरी समझ सकता है, जबकि वो सोच होती है।",
+    8: "आप नियंत्रण, नतीजे और आर्थिक सुरक्षा के लिए बने हैं। आप वही गिनते हैं जो असल में हुआ, और दूसरों का बोझ भी उठा लेते हैं। रिश्ते में आप सँभालने वाले और रणनीति बनाने वाले हैं। सीख यह है कि रिश्ता किसी प्रोजेक्ट की तरह चलाया नहीं जाता — उसे महसूस करना पड़ता है।",
+    9: "आप चौड़ाई में महसूस करते हैं और जल्दी माफ़ कर देते हैं, कभी ज़रूरत से भी जल्दी। देना, सुधारना और बड़ी तस्वीर देखना आपकी आदत है — अपने ख़र्चे पर भी। रिश्ते में आप उदारता लाते हैं। बढ़ोतरी है ख़ुद को चुनना, बिना उसे स्वार्थ कहे।",
+    11: "आप उतना महसूस करते हैं जितना समझा नहीं पाते। सूझ सबूत से पहले आ जाती है, और साथी का बदलाव आप उसके बोलने से पहले पकड़ लेते हैं। यह तोहफ़ा भी है और बोझ भी — वही एंटीना बेकार शोर भी पकड़ लेता है। आपका काम है ज़मीन पर टिकना, बंद हो जाना नहीं।",
+    22: "आप ढाँचे और लंबी सोच में चलते हैं। जहाँ लोग सपना देखते हैं, आप चुपचाप उसका नक़्शा बना लेते हैं, और बहुत बोझ बिना शिकायत उठा लेते हैं। रिश्ते में आप ठहरे हुए और आगे देखने वाले हैं। ख़तरा है रिश्ते को भी एक और प्रोजेक्ट मान लेना।",
+    33: "आप उस पैमाने पर देते हैं जो लोगों को स्वीकारना मुश्किल लगता है। देखभाल, सिखाना और भरना आपके लिए सहज है, और अक्सर पूरा माहौल आप ही सँभालते हैं। इससे आपके साथ रहना बहुत सुरक्षित लगता है। ख़तरा है दूसरों की ज़रूरतों में अपनी ज़रूरत की भाषा खो देना।",
   },
 };
 
@@ -281,7 +281,7 @@ export function lifePathReadings(
   const one = (name: string, n: number): LifePathReading => ({
     name,
     number: n,
-    heading: `${name} — Life Path ${n}`,
+    heading: lang === "hi" ? `${name} — लाइफ़ पाथ ${n}` : `${name} — Life Path ${n}`,
     reading: LIFE_PATH[lang][n] ?? LIFE_PATH[lang][reduceForCopy(n)],
   });
   return [one(names.a, r.a.lifePath.display), one(names.b, r.b.lifePath.display)];
@@ -309,16 +309,16 @@ const LOCKED: Record<Lang, LockedSection[]> = {
     { icon: "diamond", title: "Long-term Cosmic Outlook", line: "Where this bond stands five and ten years from now." },
   ],
   hi: [
-    { icon: "favorite", title: "Poora Chemistry Breakdown", line: "Aap ek doosre ki taraf kyon khinchte hain — aur wahi kheech kab garmi ban jaati hai." },
-    { icon: "psychology", title: "Destiny Number Compatibility", line: "Aap dono ke life goals ek disha me hain ya chupchaap ladte hain." },
-    { icon: "self_improvement", title: "Soul Urge Alignment", line: "Pyaar mehsoos karne ke liye har ek ko andar se kya chahiye, saaf shabdon me." },
-    { icon: "auto_stories", title: "Personality Number Blend", line: "Duniya aapko couple ke roop me kaise dekhti hai, aur asli me aap kya hain." },
-    { icon: "route", title: "Life Path Journey Together", line: "Wo raasta jispar aap dono chal rahe hain, aur uske mod." },
-    { icon: "cake", title: "Birthday Number Insights", line: "Har janm-tithi is rishte me kya khaas jodti hai." },
-    { icon: "insights", title: "Personal Year Forecast", line: "Ye saal aap dono se kya maang raha hai, mahine dar mahine." },
-    { icon: "handshake", title: "Communication Style Guide", line: "Mushkil baat kaise kahein taaki doosra sun sake." },
-    { icon: "shield", title: "Conflict Resolution Map", line: "Jhagde kis baat par honge aur unhe kaise suljhaya jaye." },
-    { icon: "diamond", title: "Long-term Cosmic Outlook", line: "Paanch aur das saal baad ye rishta kahan khada hoga." },
+    { icon: "favorite", title: "पूरा केमिस्ट्री विश्लेषण", line: "आप एक दूसरे की तरफ़ क्यों खिंचते हैं — और वही खिंचाव कब गर्मी बन जाता है।" },
+    { icon: "psychology", title: "डेस्टिनी नंबर का मेल", line: "आप दोनों के जीवन-लक्ष्य एक दिशा में हैं या चुपचाप आपस में लड़ते हैं।" },
+    { icon: "self_improvement", title: "सोल अर्ज का तालमेल", line: "प्यार महसूस करने के लिए हर एक को अंदर से क्या चाहिए, साफ़ शब्दों में।" },
+    { icon: "auto_stories", title: "पर्सनैलिटी नंबर का मिश्रण", line: "दुनिया आपको जोड़े के रूप में कैसे देखती है, और असल में आप क्या हैं।" },
+    { icon: "route", title: "साथ की लाइफ़ पाथ यात्रा", line: "वो रास्ता जिस पर आप दोनों चल रहे हैं, और उसके मोड़।" },
+    { icon: "cake", title: "बर्थडे नंबर की बातें", line: "हर जन्म-तिथि इस रिश्ते में क्या ख़ास जोड़ती है।" },
+    { icon: "insights", title: "इस साल का अनुमान", line: "ये साल आप दोनों से क्या माँग रहा है, महीने दर महीने।" },
+    { icon: "handshake", title: "बात करने का तरीक़ा", line: "मुश्किल बात कैसे कहें ताकि दूसरा सुन सके।" },
+    { icon: "shield", title: "झगड़े सुलझाने का नक़्शा", line: "झगड़े किस बात पर होंगे और उन्हें कैसे ख़त्म करें।" },
+    { icon: "diamond", title: "लंबे समय की तस्वीर", line: "पाँच और दस साल बाद ये रिश्ता कहाँ खड़ा होगा।" },
   ],
 };
 
@@ -349,37 +349,41 @@ const HEADINGS: Record<Lang, Record<string, string>> = {
     errorBody: "Please try again in a moment.",
     tryAgain: "Try again",
     lockedLabel: "Locked",
+    reportMockTitle: "Your 12-page report",
+    reportMockLine: "Personalised · PDF · instant delivery",
   },
   hi: {
-    compatibility: "Compatibility",
-    individualNumbers: "Aap Dono Ke Apne Numbers",
-    chemistry: "Aapki Chemistry",
-    unlockMore: "Aage padhne ke liye unlock karein",
-    inFullReport: "Aapki Poori Report Me",
-    couponPlaceholder: "Coupon code",
-    apply: "Lagayein",
-    remove: "Hatayein",
-    couponApplied: "Coupon lag gaya",
-    introPrice: "Seemit introductory price",
-    oneTime: "Ek baar ka payment. Aapki poori 12-page numerology compatibility report turant.",
-    unlock: "Poori Report Unlock Karein",
-    unlockShort: "Unlock",
-    opening: "Checkout khul raha hai…",
-    fullReport: "Poori Report",
-    save: "Bachat",
-    youSave: "Aap bachate hain",
-    off: "off",
-    youShare: "Aap dono me common",
-    errorTitle: "Abhi sitare padh nahi paaye",
-    errorBody: "Kripya thodi der baad phir koshish karein.",
-    tryAgain: "Phir koshish karein",
-    lockedLabel: "Locked",
+    compatibility: "मेल",
+    individualNumbers: "आप दोनों के अपने अंक",
+    chemistry: "आपकी केमिस्ट्री",
+    unlockMore: "आगे पढ़ने के लिए unlock करें",
+    inFullReport: "आपकी पूरी रिपोर्ट में",
+    couponPlaceholder: "कूपन कोड",
+    apply: "लगाएँ",
+    remove: "हटाएँ",
+    couponApplied: "कूपन लग गया",
+    introPrice: "सीमित समय की शुरुआती क़ीमत",
+    oneTime: "एक बार का भुगतान। आपकी पूरी 12-पेज न्यूमेरोलॉजी रिपोर्ट तुरंत।",
+    unlock: "रिपोर्ट unlock करें",
+    unlockShort: "Unlock करें",
+    opening: "चेकआउट खुल रहा है…",
+    fullReport: "पूरी रिपोर्ट",
+    save: "बचत",
+    youSave: "आपकी बचत",
+    off: "छूट",
+    youShare: "आप दोनों में समान",
+    errorTitle: "अभी सितारे पढ़े नहीं जा सके",
+    errorBody: "कुछ पल बाद दोबारा कोशिश करें।",
+    tryAgain: "दोबारा कोशिश करें",
+    lockedLabel: "बंद है",
+    reportMockTitle: "आपकी 12-पेज रिपोर्ट",
+    reportMockLine: "आपके अंकों पर आधारित · PDF · तुरंत डिलीवरी",
   },
 };
 
 const SPECS: Record<Lang, string> = {
   en: "12-page personalized report · Hindi or English · delivered on WhatsApp + email within minutes.",
-  hi: "12-page personalized report · Hindi ya English · WhatsApp + email par delivery within minutes.",
+  hi: "12-पेज की आपके लिए बनी रिपोर्ट · हिंदी या अंग्रेज़ी · कुछ मिनटों में WhatsApp + ईमेल पर।",
 };
 
 const REFUND: Record<Lang, { line: string; label: string }> = {
@@ -388,8 +392,8 @@ const REFUND: Record<Lang, { line: string; label: string }> = {
     label: "Refund Policy",
   },
   hi: {
-    line: "Report digital hai — delivery ke baad refund nahi milta.",
-    label: "Refund Policy",
+    line: "रिपोर्ट डिजिटल है — डिलीवरी के बाद पैसे वापस नहीं होते।",
+    label: "रिफ़ंड नीति",
   },
 };
 

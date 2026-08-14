@@ -25,6 +25,16 @@ type InputPayload = {
   language?: "en" | "hi";
 };
 
+type PreviewDimension = {
+  key: string;
+  name: string;
+  locked: boolean;
+  verdict?: "strong" | "workable" | "friction";
+  verdictLabel?: string;
+};
+
+// Everything below is produced server-side by love-match-generate. Nothing on
+// this page computes report content, and no locked prose is ever received.
 type PreviewData = {
   order_id: string;
   data: {
@@ -33,6 +43,17 @@ type PreviewData = {
     names: { a: string; b: string };
     shared?: string[];
     chemistry_teaser: { level: string };
+    band_label: string;
+    score_line: string;
+    dimensions: PreviewDimension[];
+    life_paths: { name: string; number: number; heading: string; reading: string }[];
+    chemistry: { visible: string };
+    friction_line: string;
+    locked_sections: { icon: string; title: string; line: string }[];
+    specs_line: string;
+    refund_line: string;
+    refund_link_label: string;
+    headings: Record<string, string>;
   };
 };
 
@@ -74,29 +95,24 @@ type GatewayOrder = {
   couponCode: string | null;
 };
 
-const LOCKED_SECTIONS = [
-  { icon: "favorite", label: "Full Chemistry Breakdown" },
-  { icon: "psychology", label: "Destiny Number Compatibility" },
-  { icon: "self_improvement", label: "Soul Urge Alignment" },
-  { icon: "auto_stories", label: "Personality Number Blend" },
-  { icon: "route", label: "Life Path Journey Together" },
-  { icon: "cake", label: "Birthday Number Insights" },
-  { icon: "insights", label: "Personal Year Forecast" },
-  { icon: "handshake", label: "Communication Style Guide" },
-  { icon: "shield", label: "Conflict Resolution Map" },
-  { icon: "diamond", label: "Long-term Cosmic Outlook" },
-];
+// Locked-section titles/lines and the readable chemistry paragraph now come
+// from the server response; nothing about report content lives in this bundle.
+// The only local strings are the pre-payload loading/error states, which by
+// definition cannot use server copy.
+const ERROR_COPY = {
+  en: {
+    title: "We couldn't read the stars just now",
+    body: "Please try again in a moment.",
+    retry: "Try again",
+  },
+  hi: {
+    title: "Abhi sitare padhe nahi ja sake",
+    body: "Kuch pal baad dobara koshish karein.",
+    retry: "Dobara koshish karein",
+  },
+} as const;
 
-const CHEMISTRY_TEASERS: Record<string, string> = {
-  strong_pull:
-    "There's a magnetic pull between your numbers — an undeniable gravitational force that draws your souls together almost effortlessly.",
-  warm_spark:
-    "A warm, quietly humming spark lives between you — the kind of chemistry that grows richer with every shared season.",
-  slow_burn:
-    "Yours is a slow-burn resonance — the numbers whisper of a bond that reveals its depth over time rather than in a single moment.",
-  opposites_tension:
-    "The tension between your charts creates the classic opposites-attract pattern — full of friction, growth, and unexpected fireworks.",
-};
+
 
 function loadRazorpay(): Promise<boolean> {
   return new Promise((resolve) => {
@@ -131,7 +147,7 @@ function formatDob(iso: string): string {
   return `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1]} ${y}`;
 }
 
-function ScoreDial({ score }: { score: number }) {
+function ScoreDial({ score, label }: { score: number; label: string }) {
   const [display, setDisplay] = useState(0);
   const size = 240;
   const stroke = 14;
@@ -197,7 +213,7 @@ function ScoreDial({ score }: { score: number }) {
           <span style={{ fontSize: "1.75rem", verticalAlign: "top", marginLeft: "0.15em" }}>%</span>
         </span>
         <span className="mt-2 text-[10px] uppercase tracking-[0.3em] text-primary">
-          Compatibility
+          {label}
         </span>
       </div>
     </div>
@@ -302,12 +318,12 @@ function PreviewPage() {
     if (input) fetchPreview(input);
   }, [input, fetchPreview]);
 
-  const chemistryText = useMemo(() => {
-    if (state.kind !== "ready") return "";
-    return (
-      CHEMISTRY_TEASERS[state.data.data.chemistry_teaser.level] ?? CHEMISTRY_TEASERS.warm_spark
-    );
-  }, [state]);
+  // Server-sent copy dictionary for the static UI strings (EN/HI).
+  const t = useMemo<Record<string, string>>(
+    () => (state.kind === "ready" ? (state.data.data.headings ?? {}) : {}),
+    [state],
+  );
+  const lang: "en" | "hi" = input?.language === "en" ? "en" : "hi";
 
   const createOrder = useCallback(
     async (couponCode: string | null): Promise<OrderQuote | null> => {
@@ -528,18 +544,16 @@ function PreviewPage() {
           <div className="glass-card rounded-3xl border border-outline-variant/25 p-8 text-center lg:p-12">
             <span className="material-symbols-outlined text-5xl text-primary">error</span>
             <h2 className="mt-4 font-headline-sm text-headline-sm text-on-surface">
-              We couldn't read the stars just now
+              {ERROR_COPY[lang].title}
             </h2>
-            <p className="mt-2 font-body-md text-on-surface-variant">
-              Please try again in a moment.
-            </p>
+            <p className="mt-2 font-body-md text-on-surface-variant">{ERROR_COPY[lang].body}</p>
             <button
               type="button"
               onClick={() => input && fetchPreview(input)}
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-label-md text-label-md text-on-primary-fixed"
             >
               <span className="material-symbols-outlined text-base">refresh</span>
-              Try again
+              {ERROR_COPY[lang].retry}
             </button>
           </div>
         )}
@@ -577,60 +591,114 @@ function PreviewPage() {
               </div>
             </section>
 
-            {/* Score dial */}
+            {/* Score dial + server-derived framing */}
             <section className="mb-10 flex flex-col items-center">
-              <ScoreDial score={state.data.data.score} />
-              <div className="mt-6 rounded-full border border-primary/30 bg-primary-container/20 px-5 py-2 font-label-md text-label-md uppercase tracking-widest text-primary-fixed">
-                {state.data.data.band}
+              <ScoreDial score={state.data.data.score} label={t.compatibility ?? "Compatibility"} />
+              <div className="mt-6 rounded-full border border-primary/30 bg-primary-container/20 px-5 py-2 text-center font-label-md text-label-md text-primary-fixed">
+                {state.data.data.band_label}
               </div>
+              <p className="mt-4 max-w-lg px-2 text-center font-body-md text-body-md text-on-surface">
+                {state.data.data.score_line}
+              </p>
               {state.data.data.shared && state.data.data.shared.length > 0 && (
-                <p className="mt-4 max-w-md px-4 text-center font-body-md text-body-md text-on-surface-variant">
-                  You share: {state.data.data.shared.join(" · ")}
+                <p className="mt-3 max-w-md px-4 text-center font-body-md text-body-md text-on-surface-variant">
+                  {t.youShare}: {state.data.data.shared.join(" · ")}
                 </p>
               )}
+
+              {/* 3-dimension mini breakdown (locked one carries no text) */}
+              <ul className="glass-card mt-6 w-full divide-y divide-outline-variant/15 overflow-hidden rounded-2xl border border-outline-variant/25">
+                {state.data.data.dimensions.map((d) => (
+                  <li key={d.key} className="flex items-center justify-between px-5 py-3.5">
+                    <span className="font-body-md text-on-surface">{d.name}</span>
+                    {d.locked ? (
+                      <span className="material-symbols-outlined text-on-surface-variant/60 text-base">
+                        lock
+                      </span>
+                    ) : (
+                      <span
+                        className={`flex items-center gap-1.5 text-label-sm ${
+                          d.verdict === "strong"
+                            ? "text-primary"
+                            : d.verdict === "friction"
+                              ? "text-tertiary"
+                              : "text-on-surface-variant"
+                        }`}
+                      >
+                        {d.verdictLabel}
+                        <span className="material-symbols-outlined text-base">
+                          {d.verdict === "strong"
+                            ? "check_circle"
+                            : d.verdict === "friction"
+                              ? "warning"
+                              : "adjust"}
+                        </span>
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </section>
 
-            {/* Chemistry teaser */}
+            {/* Individual numbers — fully readable sample chapter */}
             <section className="mb-10">
               <h2 className="mb-4 text-center font-headline-sm text-headline-sm text-on-surface">
-                Your Chemistry
+                {t.individualNumbers}
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {state.data.data.life_paths.map((lp) => (
+                  <div
+                    key={`${lp.name}-${lp.number}`}
+                    className="glass-card rounded-2xl border border-outline-variant/25 p-5"
+                  >
+                    <div className="mb-2 font-label-md text-label-md text-primary">{lp.heading}</div>
+                    <p className="font-body-md text-body-md text-on-surface-variant">
+                      {lp.reading}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Chemistry — first full paragraph free, rest not sent to the browser */}
+            <section className="mb-10">
+              <h2 className="mb-4 text-center font-headline-sm text-headline-sm text-on-surface">
+                {t.chemistry}
               </h2>
               <div className="glass-card relative overflow-hidden rounded-2xl border border-outline-variant/25 p-6 lg:p-8">
                 <p className="font-body-lg text-body-lg text-on-surface">
-                  {chemistryText.split(". ").slice(0, 2).join(". ")}
-                  {chemistryText.split(". ").length > 2 ? "." : ""}
+                  {state.data.data.chemistry.visible}
                 </p>
-                <div className="relative mt-4">
-                  <p className="font-body-lg text-body-lg text-on-surface-variant blur-[6px] select-none">
-                    Beyond this, the numbers describe how your daily rhythms align, where friction
-                    is most likely to arise, and which years will bring your deepest bonding — a
-                    full narrative of what your shared path looks like across decades.
-                  </p>
-                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <div className="flex items-center gap-2 rounded-full border border-primary/30 bg-background/70 px-4 py-2 backdrop-blur-md">
-                      <span className="material-symbols-outlined text-primary text-base">lock</span>
-                      <span className="text-label-sm uppercase tracking-widest text-primary">
-                        Unlock to read more
-                      </span>
-                    </div>
-                  </div>
+                <div className="mt-5 flex items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary-container/10 px-4 py-3">
+                  <span className="material-symbols-outlined text-primary text-base">lock</span>
+                  <span className="text-label-sm uppercase tracking-widest text-primary">
+                    {t.unlockMore}
+                  </span>
                 </div>
               </div>
+              <p className="mt-4 rounded-xl border border-tertiary/30 bg-tertiary/10 px-4 py-3 text-center font-body-md text-body-md text-on-surface">
+                {state.data.data.friction_line}
+              </p>
             </section>
 
             {/* Locked sections */}
             <section className="mb-10">
               <h3 className="mb-4 text-center font-label-md text-label-md uppercase tracking-widest text-primary">
-                In Your Full Report
+                {t.inFullReport}
               </h3>
               <ul className="glass-card divide-y divide-outline-variant/15 rounded-2xl border border-outline-variant/25 overflow-hidden">
-                {LOCKED_SECTIONS.map((s) => (
-                  <li key={s.label} className="flex items-center justify-between px-5 py-4">
-                    <span className="flex items-center gap-3">
+                {state.data.data.locked_sections.map((s) => (
+                  <li key={s.title} className="flex items-start justify-between gap-3 px-5 py-4">
+                    <span className="flex min-w-0 items-start gap-3">
                       <span className="material-symbols-outlined text-primary/80">{s.icon}</span>
-                      <span className="font-body-md text-on-surface">{s.label}</span>
+                      <span className="min-w-0">
+                        <span className="block font-body-md text-on-surface">{s.title}</span>
+                        <span className="mt-0.5 block text-label-sm text-on-surface-variant">
+                          {s.line}
+                        </span>
+                      </span>
                     </span>
-                    <span className="material-symbols-outlined text-on-surface-variant/60">
+                    <span className="material-symbols-outlined shrink-0 text-on-surface-variant/60">
                       lock
                     </span>
                   </li>
@@ -638,13 +706,15 @@ function PreviewPage() {
               </ul>
             </section>
 
+
             {/* Desktop inline CTA */}
             <section className="hidden lg:block">
               <div className="glass-card rounded-2xl border border-primary/25 p-8 text-center shadow-2xl">
+                <p className="mb-3 font-body-md text-label-sm text-on-surface-variant">
+                  {state.data.data.specs_line}
+                </p>
                 <div className="mb-2 text-label-sm uppercase tracking-widest text-primary">
-                  {pricing && pricing.discountApplied > 0
-                    ? "Coupon applied"
-                    : "Limited introductory price"}
+                  {pricing && pricing.discountApplied > 0 ? t.couponApplied : t.introPrice}
                 </div>
                 <div className="mb-1 flex items-baseline justify-center gap-3">
                   {pricing ? (
@@ -671,12 +741,12 @@ function PreviewPage() {
                 </div>
                 {pricing && savingsFrom(pricing).amount > 0 && (
                   <div className="mb-2 text-label-sm text-primary">
-                    You save ₹{savingsFrom(pricing).amount} ({savingsFrom(pricing).percent}% off)
+                    {t.youSave} ₹{savingsFrom(pricing).amount} ({savingsFrom(pricing).percent}%{" "}
+                    {t.off})
                   </div>
                 )}
                 <p className="mx-auto mb-6 max-w-md font-body-md text-on-surface-variant">
-                  One-time payment. Instant access to your full 12-page numerology compatibility
-                  report.
+                  {t.oneTime}
                 </p>
 
                 {/* Coupon input */}
@@ -685,7 +755,7 @@ function PreviewPage() {
                     type="text"
                     value={couponInput}
                     onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                    placeholder="Coupon code"
+                    placeholder={t.couponPlaceholder}
                     disabled={applyingCoupon || paying || !!appliedCoupon}
                     className="flex-1 rounded-full border border-outline-variant/30 bg-background/60 px-4 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary/60 focus:outline-none disabled:opacity-60"
                   />
@@ -695,7 +765,7 @@ function PreviewPage() {
                       onClick={onRemoveCoupon}
                       className="rounded-full border border-outline-variant/40 px-4 py-2.5 font-label-md text-label-md text-on-surface-variant"
                     >
-                      Remove
+                      {t.remove}
                     </button>
                   ) : (
                     <button
@@ -704,7 +774,7 @@ function PreviewPage() {
                       disabled={applyingCoupon || paying || !couponInput.trim()}
                       className="rounded-full border border-primary/40 bg-primary-container/20 px-4 py-2.5 font-label-md text-label-md text-primary disabled:opacity-50"
                     >
-                      {applyingCoupon ? "…" : "Apply"}
+                      {applyingCoupon ? "…" : t.apply}
                     </button>
                   )}
                 </div>
@@ -721,8 +791,14 @@ function PreviewPage() {
                   >
                     auto_awesome
                   </span>
-                  {paying ? "Opening checkout…" : "Unlock Full Report"}
+                  {paying ? t.opening : t.unlock}
                 </button>
+                <p className="mt-4 font-body-md text-label-sm text-on-surface-variant">
+                  {state.data.data.refund_line}{" "}
+                  <Link to="/refund" className="underline hover:text-primary">
+                    {state.data.data.refund_link_label}
+                  </Link>
+                </p>
               </div>
             </section>
           </>
@@ -739,7 +815,7 @@ function PreviewPage() {
                 type="text"
                 value={couponInput}
                 onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                placeholder="Coupon code"
+                placeholder={t.couponPlaceholder}
                 disabled={applyingCoupon || paying || !!appliedCoupon}
                 className="flex-1 rounded-full border border-outline-variant/30 bg-background/60 px-4 py-2 text-label-md text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary/60 focus:outline-none disabled:opacity-60"
               />
@@ -749,7 +825,7 @@ function PreviewPage() {
                   onClick={onRemoveCoupon}
                   className="rounded-full border border-outline-variant/40 px-3 py-2 text-label-sm text-on-surface-variant"
                 >
-                  Remove
+                  {t.remove}
                 </button>
               ) : (
                 <button
@@ -758,7 +834,7 @@ function PreviewPage() {
                   disabled={applyingCoupon || paying || !couponInput.trim()}
                   className="rounded-full border border-primary/40 bg-primary-container/20 px-3 py-2 text-label-sm text-primary disabled:opacity-50"
                 >
-                  {applyingCoupon ? "…" : "Apply"}
+                  {applyingCoupon ? "…" : t.apply}
                 </button>
               )}
             </div>
@@ -790,8 +866,8 @@ function PreviewPage() {
                 </span>
                 <span className="text-[10px] uppercase tracking-widest text-primary">
                   {pricing && savingsFrom(pricing).amount > 0
-                    ? `Save ₹${savingsFrom(pricing).amount} (${savingsFrom(pricing).percent}% off)`
-                    : "Full Report"}
+                    ? `${t.save} ₹${savingsFrom(pricing).amount} (${savingsFrom(pricing).percent}% ${t.off})`
+                    : t.fullReport}
                 </span>
               </div>
               <button
@@ -806,7 +882,7 @@ function PreviewPage() {
                 >
                   lock_open
                 </span>
-                {paying ? "…" : "Unlock"}
+                {paying ? "…" : t.unlockShort}
               </button>
             </div>
           </div>

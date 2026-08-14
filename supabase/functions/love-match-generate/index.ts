@@ -3,6 +3,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { scoreMatch } from "../_shared/engine/scorer.ts";
+import { buildPreviewCopy } from "../_shared/previewCopy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,12 +67,14 @@ async function sha256(s: string): Promise<string> {
 }
 
 // Cache key: normalized so "Rohit" / " rohit " collide. refYear included
-// because Personal Year changes the output each calendar year.
-async function cacheKey(a: Person, b: Person, refYear: number): Promise<string> {
+// because Personal Year changes the output each calendar year. Language is
+// part of the key (payload copy is language-specific), and the v2 prefix
+// retires pre-enrichment payloads so no stale half-empty preview renders.
+async function cacheKey(a: Person, b: Person, refYear: number, lang: string): Promise<string> {
   const norm = (p: Person) => `${p.first.toLowerCase()}|${p.last.toLowerCase()}|${p.dob}`;
   // Order-independent: same couple regardless of who is A/B.
   const parts = [norm(a), norm(b)].sort();
-  return await sha256(`lovematch:v1:${refYear}:${parts.join("::")}`);
+  return await sha256(`lovematch:v2:${lang}:${refYear}:${parts.join("::")}`);
 }
 
 Deno.serve(async (req: Request) => {
@@ -92,7 +95,7 @@ Deno.serve(async (req: Request) => {
     const language = (input.locale as string) || (input.language as string) || "en";
     const refYear = new Date().getUTCFullYear();
 
-    const key = await cacheKey(va.value, vb.value, refYear);
+    const key = await cacheKey(va.value, vb.value, refYear, language === "en" ? "en" : "hi");
 
     // Cache read (best-effort; never blocks on failure).
     const supabase = createClient(
@@ -124,6 +127,11 @@ Deno.serve(async (req: Request) => {
       : chemAvg >= 40 ? "slow_burn"
       : "opposites_tension";
 
+    const names = { a: va.value.first, b: vb.value.first };
+    // All free-preview copy is derived here from the same engine result the
+    // paid report uses. Locked/paid prose is never produced or sent.
+    const copy = buildPreviewCopy(result, names, chemTeaser, language);
+
     const payload = {
       order_id: orderId,
       product_code: "LOVE_MATCH",
@@ -140,7 +148,8 @@ Deno.serve(async (req: Request) => {
           level: chemTeaser,
           planet_pairs: chem.map((p) => ({ key: p.key, a: p.aScore, b: p.bScore })),
         },
-        names: { a: va.value.first, b: vb.value.first },
+        names,
+        ...copy,
       },
     };
 

@@ -904,76 +904,44 @@ function PreviewPage() {
         )}
       </main>
 
-      {/* Mobile sticky CTA */}
+      {/* Floating CTA — appears past the score section, hides near the price card.
+          Mobile: bottom bar. Desktop: bottom-right pill. Scrolls to the price card. */}
       {state.kind === "ready" && (
-        <div className="lg:hidden fixed inset-x-0 bottom-0 z-[60] border-t border-primary/20 bg-background/85 p-4 backdrop-blur-2xl">
-          <div className="mx-auto flex max-w-container-max flex-col gap-3">
-            {/* Coupon input row */}
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={couponInput}
-                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                placeholder={t.couponPlaceholder}
-                disabled={applyingCoupon || paying || !!appliedCoupon}
-                className="flex-1 rounded-full border border-outline-variant/30 bg-background/60 px-4 py-2 text-label-md text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary/60 focus:outline-none disabled:opacity-60"
-              />
-              {appliedCoupon ? (
-                <button
-                  type="button"
-                  onClick={onRemoveCoupon}
-                  className="rounded-full border border-outline-variant/40 px-3 py-2 text-label-sm text-on-surface-variant"
-                >
-                  {t.remove}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onApplyCoupon}
-                  disabled={applyingCoupon || paying || !couponInput.trim()}
-                  className="rounded-full border border-primary/40 bg-primary-container/20 px-3 py-2 text-label-sm text-primary disabled:opacity-50"
-                >
-                  {applyingCoupon ? "…" : t.apply}
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col leading-tight">
-                <span className="flex items-baseline gap-2">
-                  {pricing ? (
-                    <>
-                      <span
-                        className="text-gold-gradient"
-                        style={{
-                          fontFamily: "var(--font-display)",
-                          fontWeight: 600,
-                          fontSize: "1.5rem",
-                        }}
-                      >
-                        ₹{pricing.finalAmount}
+        <div
+          aria-hidden={!showFloatingCta}
+          className={`fixed z-[60] transition-opacity duration-300 inset-x-0 bottom-0 lg:inset-x-auto lg:right-6 lg:bottom-6 ${
+            showFloatingCta ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
+        >
+          <div className="border-t border-primary/20 bg-background/90 p-3 shadow-[0_-8px_24px_rgba(0,0,0,0.35)] backdrop-blur-2xl lg:rounded-full lg:border lg:p-2 lg:pl-5 lg:shadow-2xl">
+            <div className="mx-auto flex max-w-container-max items-center gap-3">
+              <span className="flex items-baseline gap-2">
+                {pricing ? (
+                  <>
+                    <span
+                      className="text-gold-gradient"
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontWeight: 600,
+                        fontSize: "1.5rem",
+                      }}
+                    >
+                      ₹{pricing.finalAmount}
+                    </span>
+                    {pricing.listPrice > pricing.finalAmount && (
+                      <span className="text-label-sm text-on-surface-variant line-through">
+                        ₹{pricing.listPrice}
                       </span>
-                      {pricing.listPrice > pricing.finalAmount && (
-                        <span className="text-label-sm text-on-surface-variant line-through">
-                          ₹{pricing.listPrice}
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <span className="h-6 w-16 animate-pulse rounded-full bg-surface-container" />
-                  )}
-                </span>
-                <span className="text-[10px] uppercase tracking-widest text-primary">
-                  {pricing && savingsFrom(pricing).amount > 0
-                    ? `${t.save} ₹${savingsFrom(pricing).amount} (${savingsFrom(pricing).percent}% ${t.off})`
-                    : t.fullReport}
-                </span>
-              </div>
+                    )}
+                  </>
+                ) : (
+                  <span className="h-6 w-16 animate-pulse rounded-full bg-surface-container" />
+                )}
+              </span>
               <button
                 type="button"
-                onClick={onUnlock}
-                disabled={paying}
-                className="shimmer flex flex-1 items-center justify-center gap-2 rounded-full py-3.5 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-lg disabled:opacity-70"
+                onClick={scrollToPrice}
+                className="shimmer flex flex-1 items-center justify-center gap-2 rounded-full px-5 py-3 font-label-md text-label-md text-on-primary-fixed shadow-lg lg:flex-none"
               >
                 <span
                   className="material-symbols-outlined text-base"
@@ -981,7 +949,7 @@ function PreviewPage() {
                 >
                   lock_open
                 </span>
-                {paying ? "…" : t.unlockShort}
+                {t.unlock}
               </button>
             </div>
           </div>

@@ -284,3 +284,48 @@
 .brand-logo {
   filter: invert(1) hue-rotate(180deg);
 }
+
+/* Devanagari: explicit stacks so Hindi copy never falls back to a system font. */
+[lang="hi"] {
+  font-family: var(--font-devanagari);
+}
+
+[lang="hi"] h1,
+[lang="hi"] h2,
+[lang="hi"] h3 {
+  font-family: var(--font-devanagari-display);
+}
+
+/* Decorative locked-content tease. Purely visual bars — no report text is ever
+   rendered behind the blur, so nothing readable reaches the browser. */
+.lock-tease {
+  position: relative;
+  filter: blur(3px);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent);
+  user-select: none;
+  pointer-events: none;
+}
+
+.lock-tease-bar {
+  height: 0.7rem;
+  border-radius: 9999px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--on-surface) 16%, transparent),
+    color-mix(in oklab, var(--on-surface) 8%, transparent)
+  );
+}
+
+.lock-tease-stub {
+  display: inline-block;
+  width: 3.5rem;
+  height: 0.6rem;
+  border-radius: 9999px;
+  filter: blur(2.5px);
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--on-surface) 20%, transparent),
+    color-mix(in oklab, var(--on-surface) 6%, transparent)
+  );
+}

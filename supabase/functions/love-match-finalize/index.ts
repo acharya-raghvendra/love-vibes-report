@@ -9,6 +9,8 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateReport } from "../_shared/generate-report.ts";
+import { sendOpsAlert } from "../_shared/alerts.ts";
+
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
@@ -77,11 +79,68 @@ Deno.serve(async (req: Request) => {
       return ok({ ignored: true, reason: "no_order" }, 200);
     }
 
+    // 3. Amount check — never deliver on a payment that isn't what we charged.
+    // Captured amount comes from the event in paise; our row stores rupees.
+    const capturedPaise: number | null =
+      typeof payment?.amount === "number"
+        ? payment.amount
+        : typeof rzpOrder?.amount_paid === "number"
+          ? rzpOrder.amount_paid
+          : null;
+
+    const { data: ourOrder } = await supabase
+      .from("love_match_orders")
+      .select("final_price, status")
+      .eq("order_id", orderId)
+      .maybeSingle();
+
+    const alertAndStop = async (subject: string, note: string, detail: string) => {
+      console.error(`[finalize] order=${orderId} ${detail}`);
+      await supabase.from("love_match_orders")
+        .update({ error_detail: detail })
+        .eq("order_id", orderId);
+      await sendOpsAlert({
+        subject,
+        note,
+        lines: [
+          ["Order ID", orderId!],
+          ["Razorpay order", razorpayOrderId ?? "unknown"],
+          ["Event", String(eventName)],
+          ["Expected (INR)", ourOrder?.final_price != null ? String(ourOrder.final_price) : "not recorded"],
+          ["Captured (INR)", capturedPaise != null ? String(capturedPaise / 100) : "unknown"],
+        ],
+      });
+      return ok({ order_id: orderId, blocked: detail }, 200);
+    };
+
+    // final_price is written on every order at creation time. A missing value
+    // is an anomaly, not a cue to guess from current pricing — a price change
+    // between order creation and payment would wrongly block a real payment.
+    if (ourOrder && ourOrder.final_price == null) {
+      return await alertAndStop(
+        "ACTION NEEDED: paid order has no recorded price",
+        "A payment was captured for an order with no final_price recorded, so the amount could not be verified. The customer has been charged and NOTHING has been delivered. Verify manually and retry delivery from the admin dashboard.",
+        "type=amount_anomaly stage=webhook final_price_missing",
+      );
+    }
+
+    if (ourOrder && capturedPaise != null && ourOrder.final_price != null) {
+      const expectedPaise = Math.round(Number(ourOrder.final_price) * 100);
+      if (capturedPaise !== expectedPaise) {
+        return await alertAndStop(
+          "ACTION NEEDED: captured amount mismatch",
+          "The amount captured by Razorpay does not match the amount we charged for this order. Delivery was blocked. Investigate before delivering.",
+          `type=amount_mismatch stage=webhook expected_paise=${expectedPaise} captured_paise=${capturedPaise}`,
+        );
+      }
+    }
+
     // Mark paid before claiming, so a paid-but-not-yet-generated row is visible.
     await supabase.from("love_match_orders")
       .update({ status: "paid" })
       .eq("order_id", orderId)
       .in("status", ["created"]);
+
 
     console.log(`[finalize] order=${orderId} event=${eventName} starting generation`);
     const run = await generateReport(supabase, orderId);

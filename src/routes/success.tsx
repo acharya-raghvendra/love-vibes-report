@@ -26,6 +26,7 @@ type OrderStatus = {
   status: string;
   ready: boolean;
   delivered: boolean;
+  language?: string;
   email_sent?: boolean;
   whatsapp_sent?: boolean;
 
@@ -33,6 +34,13 @@ type OrderStatus = {
   error_message: string | null;
   can_retry: boolean;
 };
+
+// Explicit "you can close this page" reassurance — delivery is server-side.
+const REASSURANCE: Record<"en" | "hi", string> = {
+  en: "Payment received. Your full report is being prepared and will arrive on your WhatsApp and email within a few minutes — you can safely close this page.",
+  hi: "Payment mil gaya. Aapki poori report taiyaar ho rahi hai — kuch hi minute me WhatsApp aur email par aa jayegi. Aap yeh page band kar sakte hain.",
+};
+
 
 function maskPhone(raw: string | undefined): string {
   if (!raw) return "+91 XXXXXXXX21";
@@ -168,7 +176,12 @@ function SuccessPage() {
       // arrived — nudge the reconciler once, then keep polling.
       if (!reconciled && elapsed >= 25_000 && (!data || data.status === "created" || data.status === "paid")) {
         reconciled = true;
-        fetch("/api/public/reconcile-orders", { method: "POST" }).catch(() => {});
+        fetch("/api/public/reconcile-orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order_id: orderId }),
+        }).catch(() => {});
+
       }
 
       const delay = elapsed < 60_000 ? 4_000 : 8_000;
@@ -242,14 +255,15 @@ function SuccessPage() {
             </span>
           </div>
           <h1 className="font-headline-md text-headline-md text-primary">Payment Successful</h1>
-          <p className="mt-2 max-w-[300px] font-body-lg text-body-lg text-on-surface-variant">
+          <p className="mt-2 max-w-[340px] font-body-lg text-body-lg text-on-surface-variant">
             {isReady
               ? "Your full report is ready."
               : isFailed
                 ? "We hit a snag while preparing your report."
-                : "Your full report is being prepared by the stars."}
+                : REASSURANCE[order?.language === "en" ? "en" : "hi"]}
           </p>
         </section>
+
 
         {/* Status card */}
         <div className="glass-card mb-6 w-full rounded-2xl border border-outline-variant/25 p-8 shadow-2xl">

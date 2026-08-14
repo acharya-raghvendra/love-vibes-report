@@ -815,7 +815,7 @@ function PreviewPage() {
                 type="text"
                 value={couponInput}
                 onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                placeholder="Coupon code"
+                placeholder={t.couponPlaceholder}
                 disabled={applyingCoupon || paying || !!appliedCoupon}
                 className="flex-1 rounded-full border border-outline-variant/30 bg-background/60 px-4 py-2 text-label-md text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary/60 focus:outline-none disabled:opacity-60"
               />
@@ -825,7 +825,7 @@ function PreviewPage() {
                   onClick={onRemoveCoupon}
                   className="rounded-full border border-outline-variant/40 px-3 py-2 text-label-sm text-on-surface-variant"
                 >
-                  Remove
+                  {t.remove}
                 </button>
               ) : (
                 <button
@@ -834,7 +834,7 @@ function PreviewPage() {
                   disabled={applyingCoupon || paying || !couponInput.trim()}
                   className="rounded-full border border-primary/40 bg-primary-container/20 px-3 py-2 text-label-sm text-primary disabled:opacity-50"
                 >
-                  {applyingCoupon ? "…" : "Apply"}
+                  {applyingCoupon ? "…" : t.apply}
                 </button>
               )}
             </div>
@@ -866,8 +866,8 @@ function PreviewPage() {
                 </span>
                 <span className="text-[10px] uppercase tracking-widest text-primary">
                   {pricing && savingsFrom(pricing).amount > 0
-                    ? `Save ₹${savingsFrom(pricing).amount} (${savingsFrom(pricing).percent}% off)`
-                    : "Full Report"}
+                    ? `${t.save} ₹${savingsFrom(pricing).amount} (${savingsFrom(pricing).percent}% ${t.off})`
+                    : t.fullReport}
                 </span>
               </div>
               <button
@@ -882,7 +882,7 @@ function PreviewPage() {
                 >
                   lock_open
                 </span>
-                {paying ? "…" : "Unlock"}
+                {paying ? "…" : t.unlockShort}
               </button>
             </div>
           </div>

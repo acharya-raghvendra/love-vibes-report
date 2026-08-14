@@ -56,6 +56,14 @@ type Pricing = {
   finalAmount: number;
 };
 
+// Saving shown on the card is always strikethrough − final price (whole rupees),
+// never just the coupon cut, so it matches the two numbers on screen.
+function savingsFrom(p: Pricing): { amount: number; percent: number } {
+  const amount = Math.round(p.listPrice - p.finalAmount);
+  const percent = p.listPrice > 0 ? Math.round((amount / p.listPrice) * 100) : 0;
+  return { amount, percent };
+}
+
 // Gateway handoff data only — never read for display.
 type GatewayOrder = {
   orderId: string;
@@ -661,9 +669,9 @@ function PreviewPage() {
                     <span className="h-[3rem] w-32 animate-pulse rounded-full bg-surface-container" />
                   )}
                 </div>
-                {pricing && pricing.discountApplied > 0 && (
+                {pricing && savingsFrom(pricing).amount > 0 && (
                   <div className="mb-2 text-label-sm text-primary">
-                    You save ₹{pricing.discountApplied}
+                    You save ₹{savingsFrom(pricing).amount} ({savingsFrom(pricing).percent}% off)
                   </div>
                 )}
                 <p className="mx-auto mb-6 max-w-md font-body-md text-on-surface-variant">
@@ -781,8 +789,8 @@ function PreviewPage() {
                   )}
                 </span>
                 <span className="text-[10px] uppercase tracking-widest text-primary">
-                  {pricing && pricing.discountApplied > 0
-                    ? `Saved ₹${pricing.discountApplied}`
+                  {pricing && savingsFrom(pricing).amount > 0
+                    ? `Save ₹${savingsFrom(pricing).amount} (${savingsFrom(pricing).percent}% off)`
                     : "Full Report"}
                 </span>
               </div>

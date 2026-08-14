@@ -530,11 +530,9 @@ function PreviewPage() {
           <div className="glass-card rounded-3xl border border-outline-variant/25 p-8 text-center lg:p-12">
             <span className="material-symbols-outlined text-5xl text-primary">error</span>
             <h2 className="mt-4 font-headline-sm text-headline-sm text-on-surface">
-              We couldn't read the stars just now
+              {ERROR_COPY[lang].title}
             </h2>
-            <p className="mt-2 font-body-md text-on-surface-variant">
-              Please try again in a moment.
-            </p>
+            <p className="mt-2 font-body-md text-on-surface-variant">{ERROR_COPY[lang].body}</p>
             <button
               type="button"
               onClick={() => input && fetchPreview(input)}

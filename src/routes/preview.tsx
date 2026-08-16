@@ -177,12 +177,7 @@ function ReportMock({ title, line }: { title?: string; line?: string }) {
         <div className="absolute inset-0 translate-x-2 translate-y-1 rotate-6 rounded-lg border border-outline-variant/30 bg-surface-container/70" />
         <div className="absolute inset-0 -rotate-3 rounded-lg border border-primary/30 bg-background/80 p-2.5">
           <div className="mx-auto mb-2 flex h-5 w-5 items-center justify-center">
-            <span
-              className="material-symbols-outlined text-primary"
-              style={{ fontVariationSettings: "'FILL' 1", fontSize: "1rem" }}
-            >
-              favorite
-            </span>
+            <Icon name="favorite" size={16} filled className="text-primary" />
           </div>
           <div className="space-y-1.5">
             <div className="h-1 w-full rounded-full bg-primary/40" />
@@ -648,7 +643,7 @@ function PreviewPage() {
 
         {state.kind === "error" && (
           <div className="glass-card rounded-3xl border border-outline-variant/25 p-8 text-center lg:p-12">
-            <span className="material-symbols-outlined text-5xl text-primary">error</span>
+            <Icon name="error" size={48} className="mx-auto text-primary" />
             <h2 className="mt-4 font-headline-sm text-headline-sm text-on-surface">
               {ERROR_COPY[lang].title}
             </h2>
@@ -658,7 +653,7 @@ function PreviewPage() {
               onClick={() => input && fetchPreview(input)}
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-label-md text-label-md text-on-primary-fixed"
             >
-              <span className="material-symbols-outlined text-base">refresh</span>
+              <Icon name="refresh" size={16} />
               {ERROR_COPY[lang].retry}
             </button>
           </div>
@@ -678,12 +673,7 @@ function PreviewPage() {
                   </div>
                 </div>
                 <div className="relative shrink-0">
-                  <span
-                    className="material-symbols-outlined text-primary"
-                    style={{ fontVariationSettings: "'FILL' 1", fontSize: "2.5rem" }}
-                  >
-                    favorite
-                  </span>
+                  <Icon name="favorite" size={40} filled className="text-primary" />
                   <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-primary/20 blur-md" />
                 </div>
                 <div className="min-w-0 flex-1 text-left">
@@ -721,9 +711,7 @@ function PreviewPage() {
                       <span className="flex items-center gap-2">
                         {/* decorative only — no verdict text is sent for the locked row */}
                         <span aria-hidden="true" className="lock-tease-stub" />
-                        <span className="material-symbols-outlined text-on-surface-variant/60 text-base">
-                          lock
-                        </span>
+                        <Icon name="lock" size={16} className="text-on-surface-variant/60" />
                       </span>
                     ) : (
                       <span
@@ -735,22 +723,20 @@ function PreviewPage() {
                               : "text-tertiary"
                         }`}
                       >
-                        {d.verdictLabel}
-                        <span
-                          className="material-symbols-outlined text-base"
-                          style={
-                            d.verdict === "strong"
-                              ? { fontVariationSettings: "'FILL' 1" }
-                              : undefined
-                          }
-                        >
-                          {d.verdict === "strong"
+                      {d.verdictLabel}
+                      <Icon
+                        name={
+                          d.verdict === "strong"
                             ? "check_circle"
                             : d.verdict === "friction"
                               ? "warning"
-                              : "circle"}
-                        </span>
-                      </span>
+                              : "circle"
+                        }
+                        size={16}
+                        filled={d.verdict === "strong"}
+                        className="text-base"
+                      />
+                    </span>
                     )}
                   </li>
                 ))}
@@ -791,7 +777,7 @@ function PreviewPage() {
                 {/* Decorative blurred stand-in for the locked continuation */}
                 <LockTease />
                 <div className="mt-5 flex items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary-container/10 px-4 py-3">
-                  <span className="material-symbols-outlined text-primary text-base">lock</span>
+                  <Icon name="lock" size={16} className="text-primary" />
                   <span className="text-label-sm uppercase tracking-widest text-primary">
                     {t.unlockMore}
                   </span>
@@ -810,18 +796,16 @@ function PreviewPage() {
               <ul className="glass-card divide-y divide-outline-variant/15 rounded-2xl border border-outline-variant/25 overflow-hidden">
                 {state.data.data.locked_sections.map((s) => (
                   <li key={s.title} className="flex items-start justify-between gap-3 px-5 py-4">
-                    <span className="flex min-w-0 items-start gap-3">
-                      <span className="material-symbols-outlined text-primary/80">{s.icon}</span>
-                      <span className="min-w-0">
-                        <span className="block font-body-md text-on-surface">{s.title}</span>
-                        <span className="mt-0.5 block text-label-sm text-on-surface-variant">
-                          {s.line}
-                        </span>
+                  <span className="flex min-w-0 items-start gap-3">
+                    <Icon name={s.icon} size={20} className="text-primary/80" />
+                    <span className="min-w-0">
+                      <span className="block font-body-md text-on-surface">{s.title}</span>
+                      <span className="mt-0.5 block text-label-sm text-on-surface-variant">
+                        {s.line}
                       </span>
                     </span>
-                    <span className="material-symbols-outlined shrink-0 text-on-surface-variant/60">
-                      lock
-                    </span>
+                  </span>
+                  <Icon name="lock" size={24} className="shrink-0 text-on-surface-variant/60" />
                   </li>
                 ))}
               </ul>

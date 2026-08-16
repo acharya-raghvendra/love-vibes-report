@@ -885,20 +885,15 @@ function PreviewPage() {
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={onUnlock}
-                  disabled={paying}
-                  className="shimmer mx-auto inline-flex items-center justify-center gap-3 rounded-full px-10 py-4 font-bold text-on-primary-fixed shadow-[0_0_20px_rgba(242,202,80,0.3)] transition-transform hover:scale-[1.01] active:scale-[0.98] disabled:opacity-70"
-                >
-                  <span
-                    className="material-symbols-outlined"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    auto_awesome
-                  </span>
-                  {paying ? t.opening : t.unlock}
-                </button>
+          <button
+            type="button"
+            onClick={onUnlock}
+            disabled={paying}
+            className="shimmer mx-auto inline-flex items-center justify-center gap-3 rounded-full px-10 py-4 font-bold text-on-primary-fixed shadow-[0_0_20px_rgba(242,202,80,0.3)] transition-transform hover:scale-[1.01] active:scale-[0.98] disabled:opacity-70"
+          >
+            <Icon name="auto_awesome" size={24} filled />
+            {paying ? t.opening : t.unlock}
+          </button>
                 <p className="mt-4 font-body-md text-label-sm text-on-surface-variant">
                   {state.data.data.refund_line}{" "}
                   <Link to="/refund" className="underline hover:text-primary">
@@ -950,12 +945,7 @@ function PreviewPage() {
                 onClick={scrollToPrice}
                 className="shimmer flex flex-1 items-center justify-center gap-2 rounded-full px-5 py-3 font-label-md text-label-md text-on-primary-fixed shadow-lg lg:flex-none"
               >
-                <span
-                  className="material-symbols-outlined text-base"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  lock_open
-                </span>
+                <Icon name="lock_open" size={16} filled />
                 {t.unlock}
               </button>
             </div>

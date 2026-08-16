@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
+import { Icon } from "@/components/icon";
 import { couponSearch, resolveCoupon, validateCouponSearch } from "@/lib/coupon-link";
 import { initAdvancedMatching, trackOnce } from "@/lib/meta-pixel";
 

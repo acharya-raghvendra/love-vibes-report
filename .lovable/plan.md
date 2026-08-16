@@ -1,50 +1,46 @@
-# Preview page: Devanagari Hindi, lock tease, floating CTA, polish
+# Meta Pixel tracking (shared pixel 933965172294987)
 
-All pricing, coupon, order, payment, webhook and delivery logic stays untouched. Only preview copy (server-generated) and the preview page's presentation change.
+Add Meta Pixel to the Love Match funnel, reusing the existing account-wide pixel ID. No pricing, coupon, order, payment, webhook, delivery or preview content logic changes.
 
-## 1. Hindi copy → Devanagari
+## 1. Single config + base code
 
-Rewrite every Hindi string in the server copy library (`_shared/previewCopy.ts`) from Roman Hinglish into conversational Devanagari:
+- New `src/lib/meta-pixel.ts` holding the only copy of the pixel ID plus small helpers:
+  - `PIXEL_ID = "933965172294987"`
+  - `trackPageView()`, `trackOnce(key, name, params, options?)` (sessionStorage-guarded), `initAdvancedMatching({ email, phone })` with SHA-256 hashing via Web Crypto (email trimmed + lowercased, phone digits-only with `91` country code).
+  - All calls are no-ops when `window.fbq` is missing (SSR-safe).
+- Root document (`src/routes/__root.tsx`): inject the standard async `fbq` bootstrap + `fbq('init', PIXEL_ID)` + one initial `PageView`, plus the `<noscript>` tracking-image fallback, so it loads once for every page.
 
-- Band labels, score lines, friction lines
-- Dimension names: भावनात्मक बंधन / बातचीत / लंबे समय का साथ
-- Verdict labels: मज़बूत / सुधार ज़रूरी / टकराव
-- All 13 Life Path readings (Hindi set)
-- All 4 chemistry paragraphs (Hindi set)
-- 10 locked-section titles + one-liners
-- Specs line, refund line, and the headings dictionary ("आप दोनों के अपने अंक", "आपकी केमिस्ट्री", "आगे पढ़ने के लिए unlock करें", "रिपोर्ट unlock करें", etc.)
+## 2. SPA route tracking
 
-Tone: everyday spoken Hindi, common English words kept in Latin where people actually say them (unlock, report, coupon). Numbers, %, ₹ stay Latin digits. English variant copy unchanged.
+- A small client component mounted once in the root subscribes to router navigation (`router.subscribe("onResolved")`) and fires `PageView` on each route change.
+- The first resolved route is skipped, because `fbq('init')` already sends one PageView. No PageView on refresh duplication.
 
-Cache: bump the preview cache key so old Hinglish payloads aren't served, then redeploy the generate function.
+## 3. Funnel events
 
-## 2. Devanagari typography
+All events carry `content_name: "love_match_report"`.
 
-- Load Noto Sans Devanagari (body) and Noto Serif Devanagari (headings) via the existing Google Fonts `<link>` block in the root route.
-- Add `--font-devanagari` / `--font-devanagari-display` tokens in `src/styles.css` and append them to the existing display/body stacks, so Hindi never falls back to a system font.
-- Apply `lang="hi"` on the preview content wrapper when the report language is Hindi.
+| Event | Trigger | Params | Once-guard key |
+|---|---|---|---|
+| Lead | `/input` form passes validation, just before navigating to `/preview` | `content_name` only (no PII) | per submitted-input hash |
+| ViewContent | `/preview` finishes rendering a real score | `content_name`, `value` = current final price, `currency: "INR"` | per preview payload id |
+| InitiateCheckout | Unlock button opens Razorpay (price card **and** floating CTA share one handler, so one call site) | `content_name`, `value` = final price, `currency: "INR"` | per preview id + price |
+| Purchase | `/success` only, after the status poll confirms the order is paid/generating/ready (never on click) | `content_name`, `value` = amount actually paid, `currency: "INR"`, 4th arg `{ eventID: order_id }` | per `order_id` |
 
-## 3. Visual lock tease (decorative only)
+Guards use `sessionStorage` flags so re-renders, refreshes and back/forward navigation cannot re-fire an event.
 
-- Under the free chemistry paragraph: 3–4 skeleton-style bars (pure CSS, no text nodes) with blur and a bottom gradient fade into the unlock panel. Nothing readable is ever rendered — no real report prose is sent to the client for locked content.
-- Locked dimension row: a short blurred stub bar after the dimension name instead of a verdict label.
+## 4. Advanced matching
 
-## 4. Floating buy CTA
+After a successful `/input` submit, hash the already-normalised email and phone client-side (SHA-256 hex, Web Crypto) and call `fbq('init', PIXEL_ID, { em, ph })`. Raw values never reach `fbq`.
 
-- Compact sticky CTA that appears only after the score section scrolls out of view, and hides again while the price card is in view (IntersectionObserver on both, same pattern as the landing page sticky).
-- Mobile: bottom bar. Desktop: bottom-right pill.
-- Contents: strikethrough + final price from the existing pricing state, and a button labelled "रिपोर्ट unlock करें" / "Unlock Full Report" that smooth-scrolls to the price card.
-- Replaces the current always-on mobile sticky bar so two CTAs are never visible at once.
+## 5. One small backend read change (needed for Purchase value)
 
-## 5. Polish
+`src/routes/api/public/love-match-status.ts` currently returns no amount. It will also return the order's paid amount (a non-PII numeric field) so `/success` can send an accurate `value`. Nothing else in that endpoint changes; no pricing logic is touched.
 
-- Capitalize display names (first letter per word) wherever names render on the page.
-- Score ring: sweep the arc from 0 alongside the existing count-up, ~1.2s ease-out, runs once.
-- Verdict colour coding: strong = gold check, workable = amber dot, friction = muted rose dot, locked = neutral lock icon — using existing semantic tokens.
-- Small stylized "report preview" mock near the price card: a generic multi-page card graphic (CSS/inline SVG, abstract lines and a heart motif, no real content) to make the 12-page product feel tangible.
+## 6. Verification
+
+Drive the funnel in a browser and assert the `fbq` call log: PageView on load and once per route change, Lead once on submit, ViewContent once on preview, InitiateCheckout once per checkout open, Purchase once on `/success` with the right value and `eventID`. Re-check that refresh and back-navigation add no duplicates.
 
 ## Technical notes
 
-- Files touched: `supabase/functions/_shared/previewCopy.ts`, `supabase/functions/love-match-generate/index.ts` (cache key + redeploy only), `src/routes/preview.tsx`, `src/styles.css`, `src/routes/__root.tsx` (font link).
-- No changes to `create-love-match-order`, `love-match-finalize`, `_shared/generate-report.ts`, or `_shared/engine/*`.
-- Verification: fetch the preview payload for a Hindi and an English order and confirm the copy, then render both in a headless browser with screenshots of the score ring, blur tease, floating CTA and price card mock.
+- Web Crypto `crypto.subtle.digest` requires a secure context; localhost and the published HTTPS site both qualify.
+- Purchase fires from the existing status poller's data, so it is naturally tied to server-confirmed payment state.

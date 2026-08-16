@@ -2,9 +2,27 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { couponSearch, resolveCoupon, validateCouponSearch } from "@/lib/coupon-link";
+import { PriceLine } from "@/components/price-line";
+import { CTA_LABEL, LANDING_COPY, META } from "@/lib/site-copy";
+import { useLocalizedMeta, useSiteLanguage } from "@/lib/site-language";
 
 export const Route = createFileRoute("/")({
   validateSearch: validateCouponSearch,
+  // Hindi is the default UI language, so the crawler-visible tags are Hindi.
+  // useLocalizedMeta() swaps them when a visitor picks English.
+  head: () => ({
+    meta: [
+      { title: META.landing.hi.title },
+      { name: "description", content: META.landing.hi.description },
+      { property: "og:title", content: META.landing.hi.title },
+      { property: "og:description", content: META.landing.hi.description },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: META.landing.hi.title },
+      { name: "twitter:description", content: META.landing.hi.description },
+    ],
+    links: [{ rel: "canonical", href: "https://love.talktoguruji.com/" }],
+  }),
   component: Index,
 });
 
@@ -56,6 +74,9 @@ const FAQS = [
 
 function Index() {
   const { coupon: urlCoupon } = Route.useSearch();
+  const [lang] = useSiteLanguage();
+  const copy = LANDING_COPY[lang];
+  useLocalizedMeta(META.landing[lang]);
   const [coupon, setCoupon] = useState<string | null>(null);
   const [showStickyCta, setShowStickyCta] = useState(false);
   const heroCtaRef = useRef<HTMLAnchorElement>(null);
@@ -84,7 +105,7 @@ function Index() {
   const ctaSearch = couponSearch(coupon);
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-background text-on-background font-body-md selection:bg-primary-container selection:text-on-primary-container">
+    <div lang={lang} className="relative min-h-screen overflow-x-hidden bg-background text-on-background font-body-md selection:bg-primary-container selection:text-on-primary-container">
       {/* Global nebula background */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="nebula-glow absolute top-[-10%] right-[-10%] h-[80vw] w-[80vw] rounded-full bg-tertiary" />
@@ -103,20 +124,25 @@ function Index() {
           >
             <div>
               <h1 className="font-display-lg-mobile text-display-lg-mobile text-on-surface mb-6 leading-tight lg:text-display-lg">
-                Discover if Your Souls are Aligned by the{" "}
-                <span className="text-gold-gradient">Numbers</span>
+                {copy.heroTitleLead}
+                <span className="text-gold-gradient">{copy.heroTitleAccent}</span>
               </h1>
               <p className="font-body-lg text-body-lg text-on-surface-variant mx-auto mb-10 max-w-sm lg:mx-0 lg:max-w-md">
-                Enter your destinies to reveal the cosmic connection between you.
+                {copy.heroSub}
               </p>
               <Link
                 ref={heroCtaRef}
                 to="/input"
                 search={ctaSearch}
-                className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-5 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-transform hover:scale-[0.98] active:scale-95 lg:w-auto lg:px-10"
+                className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-5 font-label-md text-label-md text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-transform hover:scale-[0.98] active:scale-95 lg:w-auto lg:px-10"
               >
-                Check Your Compatibility
+                {CTA_LABEL[lang]}
               </Link>
+              <PriceLine
+                lang={lang}
+                format={copy.priceLine}
+                className="mt-4 lg:mx-0"
+              />
             </div>
 
             {/* Desktop-only score dial visual */}
@@ -140,7 +166,7 @@ function Index() {
                     88%
                   </div>
                   <div className="mt-2 text-[11px] uppercase tracking-[0.25em] text-primary">
-                    Compatibility
+                    {copy.compatibility}
                   </div>
                 </div>
               </div>
@@ -169,7 +195,7 @@ function Index() {
                 ))}
               </div>
               <span className="font-label-md text-label-md text-on-surface">
-                Trusted by 50,000+ Seekers
+                {copy.trustLine}
               </span>
             </div>
           </section>
@@ -180,27 +206,11 @@ function Index() {
             className="px-margin-mobile mb-24 lg:px-0 lg:mb-28 scroll-mt-24"
           >
             <h2 className="font-headline-sm text-headline-sm mb-12 text-center text-on-surface lg:text-headline-md">
-              The Path to Clarity
+              {copy.stepsHeading}
             </h2>
             <div className="relative space-y-12 lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0">
               <div className="absolute top-6 bottom-6 left-6 w-px bg-gradient-to-b from-primary/40 via-primary/10 to-transparent lg:hidden" />
-              {[
-                {
-                  icon: "edit_calendar",
-                  title: "1. Enter Details",
-                  body: "Share your birth dates and names for precise cosmic calculation.",
-                },
-                {
-                  icon: "analytics",
-                  title: "2. Get Score",
-                  body: "See your instant affinity score based on ancient numerology.",
-                },
-                {
-                  icon: "lock_open",
-                  title: "3. Unlock Full Report",
-                  body: "Deep dive into destiny numbers, soul urges, and future paths.",
-                },
-              ].map((step) => (
+              {copy.steps.map((step) => (
                 <div
                   key={step.title}
                   className="relative flex gap-6 lg:flex-col lg:gap-4 lg:glass-card lg:rounded-2xl lg:p-8 lg:border lg:border-outline-variant/30"
@@ -223,7 +233,7 @@ function Index() {
           <section className="px-margin-mobile mb-24 lg:px-0 lg:mb-28">
             <div className="glass-card relative overflow-hidden rounded-3xl border border-outline-variant/30 p-8 shadow-2xl lg:mx-auto lg:max-w-[720px] lg:p-12">
               <div className="absolute top-4 right-4 rounded-full border border-primary/20 bg-primary-container/20 px-3 py-1 font-label-md text-label-sm text-primary-fixed backdrop-blur-md">
-                Sample Preview
+                {copy.samplePreview}
               </div>
               <div className="pointer-events-none space-y-6 opacity-60 blur-[4px]">
                 <div className="flex items-end justify-between">
@@ -232,12 +242,12 @@ function Index() {
                       className="mx-auto mb-2 h-16 w-16 rounded-full border border-primary/20 bg-cover bg-center"
                       style={{ backgroundImage: `url('${SEEKER_1}')` }}
                     />
-                    <span className="text-label-sm">Seeker 1</span>
+                    <span className="text-label-sm">{copy.seeker1}</span>
                   </div>
                   <div className="flex-shrink-0 pb-4 text-center">
                     <span className="font-headline-md text-headline-md text-primary">88%</span>
                     <div className="text-[10px] uppercase tracking-widest text-primary">
-                      Compatibility
+                      {copy.compatibility}
                     </div>
                   </div>
                   <div className="flex-1 text-center">
@@ -245,7 +255,7 @@ function Index() {
                       className="mx-auto mb-2 h-16 w-16 rounded-full border border-primary/20 bg-cover bg-center"
                       style={{ backgroundImage: `url('${SEEKER_2}')` }}
                     />
-                    <span className="text-label-sm">Seeker 2</span>
+                    <span className="text-label-sm">{copy.seeker2}</span>
                   </div>
                 </div>
                 <div className="h-4 w-full overflow-hidden rounded-full bg-surface-container">
@@ -260,16 +270,16 @@ function Index() {
               <div className="absolute inset-0 flex items-center justify-center bg-background/20 p-6 backdrop-blur-[2px]">
                 <div className="text-center">
                   <Icon name="auto_fix_high" className="mb-4 text-display-lg text-primary" />
-                  <h3 className="font-headline-sm text-headline-sm mb-4">Your Destiny Awaits</h3>
+                  <h3 className="font-headline-sm text-headline-sm mb-4">{copy.previewTitle}</h3>
                   <p className="font-body-md text-on-surface-variant mb-6">
-                    Unlock your personalized 12-page compatibility report today.
+                    {copy.previewBody}
                   </p>
                   <Link
                     to="/input"
                     search={ctaSearch}
                     className="inline-flex rounded-xl bg-primary px-8 py-3 font-label-md text-label-md text-on-primary-fixed"
                   >
-                    Unlock Now
+                    {copy.previewCta}
                   </Link>
                 </div>
               </div>
@@ -279,10 +289,10 @@ function Index() {
           {/* Testimonials */}
           <section className="px-margin-mobile mb-24 lg:px-0 lg:mb-28">
             <h2 className="font-headline-sm text-headline-sm mb-10 text-center lg:text-headline-md lg:mb-14">
-              Whispers of Truth
+              {copy.testimonialsHeading}
             </h2>
             <div className="space-y-6 lg:grid lg:grid-cols-2 lg:gap-8 lg:space-y-0">
-              {TESTIMONIALS.map((t) => (
+              {TESTIMONIALS.map((t, i) => (
                 <div
                   key={t.name}
                   className="glass-card relative rounded-2xl border border-outline-variant/20 p-6 lg:p-8"
@@ -293,7 +303,7 @@ function Index() {
                     className="absolute -top-2 -left-2 rotate-12 scale-150 text-primary/20"
                   />
                   <p className="font-body-md relative z-10 mb-4 italic text-on-surface">
-                    “{t.quote}”
+                    “{copy.testimonials[i] ?? t.quote}”
                   </p>
                   <div className="flex items-center gap-3">
                     <div
@@ -310,10 +320,10 @@ function Index() {
           {/* FAQ */}
           <section id="faq" className="px-margin-mobile mb-24 lg:px-0 lg:mb-16 scroll-mt-24">
             <h2 className="font-headline-sm text-headline-sm mb-10 text-center lg:text-headline-md lg:mb-14">
-              Common Inquiries
+              {copy.faqHeading}
             </h2>
             <div className="space-y-4 lg:mx-auto lg:max-w-[820px]">
-              {FAQS.map((f) => (
+              {copy.faqs.map((f) => (
                 <details
                   key={f.q}
                   className="group glass-card rounded-xl border border-outline-variant/20 [&_summary::-webkit-details-marker]:hidden"
@@ -346,7 +356,7 @@ function Index() {
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md text-on-primary-fixed shadow-lg transition-transform active:scale-95"
             >
               <Icon name="favorite" filled />
-              Check Compatibility
+              {CTA_LABEL[lang]}
             </Link>
           </div>
         </div>

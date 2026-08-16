@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Icon } from "@/components/icon";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
 
@@ -165,9 +166,7 @@ function PasswordField({
           aria-label={show ? "Hide password" : "Show password"}
           className="absolute inset-y-0 right-2 flex items-center rounded-md px-1.5 text-on-surface-variant hover:text-on-surface"
         >
-          <span className="material-symbols-outlined text-xl">
-            {show ? "visibility_off" : "visibility"}
-          </span>
+          <Icon name={show ? "visibility_off" : "visibility"} size={20} className="text-xl" />
         </button>
       </div>
       {hint && <p className="mt-1 text-label-sm text-on-surface-variant">{hint}</p>}

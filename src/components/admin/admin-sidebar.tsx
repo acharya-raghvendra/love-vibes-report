@@ -45,7 +45,7 @@ export function AdminSidebar() {
                   : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
               }`}
             >
-              <span className="material-symbols-outlined text-xl">{item.icon}</span>
+              <Icon name={item.icon} size={20} className="text-xl" />
               {item.label}
             </Link>
           );
@@ -56,7 +56,7 @@ export function AdminSidebar() {
           onClick={signOut}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-body-md text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
         >
-          <span className="material-symbols-outlined text-xl">logout</span>
+          <Icon name="logout" size={20} className="text-xl" />
           Sign out
         </button>
       </div>

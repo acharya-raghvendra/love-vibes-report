@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { Icon } from "@/components/icon";
 import { LanguageToggle } from "@/components/language-toggle";
-import { CTA_LABEL, HEADER_COPY } from "@/lib/site-copy";
+import { CTA_LABEL, HEADER_COPY, NEW_PAIR_LABEL } from "@/lib/site-copy";
 import { useSiteLanguage } from "@/lib/site-language";
 import logoAsset from "@/assets/talktoguruji-logo.png.asset.json";
+
 
 function Logo() {
   return (
@@ -23,6 +24,12 @@ export function SiteHeader() {
   const [lang] = useSiteLanguage();
   const copy = HEADER_COPY[lang];
   const cta = CTA_LABEL[lang];
+  const newPair = NEW_PAIR_LABEL[lang];
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Robust to /preview, /preview/, /success, /success/ so the gold CTA never
+  // reappears on trailing-slash variants of the report/success pages.
+  const isNoCtaPage = /^\/(preview|success)\/?$/.test(pathname);
+
 
   useEffect(() => {
     if (!open) return;
@@ -65,13 +72,24 @@ export function SiteHeader() {
           <div className="flex items-center gap-2 lg:gap-3">
             <LanguageToggle />
 
-            {/* Desktop CTA */}
-            <Link
-              to="/input"
-              className="hidden lg:inline-flex items-center rounded-xl bg-gradient-to-r from-primary-container to-primary px-5 py-2.5 font-label-md text-label-md text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.25)] hover:scale-[0.98] active:scale-95 transition-transform"
-            >
-              {cta}
-            </Link>
+            {/* Desktop CTA: low-emphasis text link on report/success pages so
+                the single page goal isn't competing with a gold button. */}
+            {isNoCtaPage ? (
+              <Link
+                to="/input"
+                className="hidden lg:inline-flex items-center font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
+              >
+                {newPair}
+              </Link>
+            ) : (
+              <Link
+                to="/input"
+                className="hidden lg:inline-flex items-center rounded-xl bg-gradient-to-r from-primary-container to-primary px-5 py-2.5 font-label-md text-label-md text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.25)] hover:scale-[0.98] active:scale-95 transition-transform"
+              >
+                {cta}
+              </Link>
+            )}
+
 
             {/* Mobile hamburger */}
             <button
@@ -134,14 +152,25 @@ export function SiteHeader() {
             </div>
           </nav>
           <div className="p-5 pb-8">
-            <Link
-              to="/input"
-              onClick={() => setOpen(false)}
-              className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md text-on-primary-fixed shadow-lg"
-            >
-              {cta}
-            </Link>
+            {isNoCtaPage ? (
+              <Link
+                to="/input"
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center justify-center font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
+              >
+                {newPair}
+              </Link>
+            ) : (
+              <Link
+                to="/input"
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md text-on-primary-fixed shadow-lg"
+              >
+                {cta}
+              </Link>
+            )}
           </div>
+
         </aside>
       </div>
     </>

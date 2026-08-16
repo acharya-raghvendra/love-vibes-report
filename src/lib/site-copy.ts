@@ -9,6 +9,12 @@ export const CTA_LABEL: Record<SiteLanguage, string> = {
   en: "Check Compatibility",
 };
 
+export const NEW_PAIR_LABEL: Record<SiteLanguage, string> = {
+  hi: "नई जोड़ी check करें",
+  en: "Check a new pair",
+};
+
+
 export const META: Record<
   "landing" | "input",
   Record<SiteLanguage, { title: string; description: string }>

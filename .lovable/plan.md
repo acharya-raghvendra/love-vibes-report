@@ -1,46 +1,53 @@
-# Meta Pixel tracking (shared pixel 933965172294987)
+# Replace Material Symbols ligatures with lucide-react SVGs
 
-Add Meta Pixel to the Love Match funnel, reusing the existing account-wide pixel ID. No pricing, coupon, order, payment, webhook, delivery or preview content logic changes.
+## Goal
+No icon is a text ligature anymore. Icons never read aloud to screen readers, never appear as raw words when the icon font is slow or blocked, and look identical to today.
 
-## 1. Single config + base code
+## Approach
+Add one shared `Icon` component that maps the icon names already used in the codebase (including names that arrive as data from the backend preview copy) to lucide-react components, then swap every `<span className="material-symbols-outlined">…</span>` for it and delete the font.
 
-- New `src/lib/meta-pixel.ts` holding the only copy of the pixel ID plus small helpers:
-  - `PIXEL_ID = "933965172294987"`
-  - `trackPageView()`, `trackOnce(key, name, params, options?)` (sessionStorage-guarded), `initAdvancedMatching({ email, phone })` with SHA-256 hashing via Web Crypto (email trimmed + lowercased, phone digits-only with `91` country code).
-  - All calls are no-ops when `window.fbq` is missing (SSR-safe).
-- Root document (`src/routes/__root.tsx`): inject the standard async `fbq` bootstrap + `fbq('init', PIXEL_ID)` + one initial `PageView`, plus the `<noscript>` tracking-image fallback, so it loads once for every page.
+### 1. New `src/components/icon.tsx`
+- `Icon({ name, className, size })` looks up a name → lucide component map and renders the SVG with `aria-hidden="true"` and `focusable="false"`.
+- Default size 24 (matches the current font-size), `strokeWidth` tuned to read like the outlined Material set.
+- Unknown name renders nothing (never a word).
+- Map covers every name in use today:
+  person→User, person_2→Users, favorite→Heart, menu→Menu, close→X,
+  expand_more→ChevronDown, format_quote→Quote, edit_calendar→CalendarPlus,
+  analytics→BarChart3, lock_open→LockOpen, lock→Lock, chat→MessageCircle,
+  mail→Mail, send→Send, arrow_back→ArrowLeft, refresh→RefreshCw,
+  error→AlertCircle, translate→Languages, stars→Sparkles, verified→BadgeCheck,
+  history_edu→ScrollText, progress_activity→Loader2, logout→LogOut,
+  dashboard→LayoutDashboard, receipt_long→ReceiptText, sell→Tag, group→Users,
+  card_giftcard→Gift, payments→CreditCard, settings→Settings,
+  trending_up→TrendingUp, currency_rupee→IndianRupee, schedule→Clock,
+  location_on→MapPin, account_balance→Landmark, psychology→BrainCircuit,
+  self_improvement→Flower2, auto_stories→BookOpen, route→Route, cake→Cake,
+  insights→LineChart, handshake→Handshake, shield→Shield, diamond→Gem.
 
-## 2. SPA route tracking
+### 2. Replace usages
+Every file with `material-symbols-outlined`:
+`src/components/site-header.tsx`, `site-footer.tsx`, `admin/admin-sidebar.tsx`,
+`src/routes/index.tsx`, `input.tsx`, `preview.tsx`, `success.tsx`, `contact.tsx`,
+`privacy.tsx`, `terms.tsx`, `refund.tsx`, `_affiliate.tsx`,
+`_affiliate.portal.index.tsx`, `_admin.dashboard.settings.tsx`,
+`_admin.dashboard.free-report.tsx`.
 
-- A small client component mounted once in the root subscribes to router navigation (`router.subscribe("onResolved")`) and fires `PageView` on each route change.
-- The first resolved route is skipped, because `fbq('init')` already sends one PageView. No PageView on refresh duplication.
+- Inline `fontSize` styles become the `size` prop (16/18/20/22 px etc.); Tailwind text-size classes (`text-base`, `text-xl`, `text-5xl`) become the equivalent pixel size so nothing shifts. Color classes stay as-is (`currentColor`).
+- Animation classes (`animate-spin`, `animate-pulse`) move onto the SVG.
+- Data-driven names (`step.icon`, `item.icon`, `s.icon` from the backend preview copy) pass straight through `Icon`, so no backend change is needed.
 
-## 3. Funnel events
+### 3. Accessible names
+- Mobile sticky CTA on the landing page: heart icon becomes decorative, so the accessible name is exactly "Check Compatibility".
+- Icon-only controls get `aria-label`: header hamburger ("Open menu"), drawer close ("Close menu"), and any other icon-only button/link found during the sweep.
 
-All events carry `content_name: "love_match_report"`.
+### 4. Remove the font
+- Drop the Material Symbols `<link>` from `src/routes/__root.tsx` (Devanagari font links stay).
+- Delete the `.material-symbols-outlined` rule from `src/styles.css`.
 
-| Event | Trigger | Params | Once-guard key |
-|---|---|---|---|
-| Lead | `/input` form passes validation, just before navigating to `/preview` | `content_name` only (no PII) | per submitted-input hash |
-| ViewContent | `/preview` finishes rendering a real score | `content_name`, `value` = current final price, `currency: "INR"` | per preview payload id |
-| InitiateCheckout | Unlock button opens Razorpay (price card **and** floating CTA share one handler, so one call site) | `content_name`, `value` = final price, `currency: "INR"` | per preview id + price |
-| Purchase | `/success` only, after the status poll confirms the order is paid/generating/ready (never on click) | `content_name`, `value` = amount actually paid, `currency: "INR"`, 4th arg `{ eventID: order_id }` | per `order_id` |
+## Verification
+- Grep confirms zero `material-symbols` references left in `src/`.
+- Render the landing page, `/input`, `/preview`, `/success`, `/contact` with the icon font unavailable — no raw words anywhere.
+- Confirm the sticky CTA's accessible name is "Check Compatibility" and each icon-only button exposes its label.
 
-Guards use `sessionStorage` flags so re-renders, refreshes and back/forward navigation cannot re-fire an event.
-
-## 4. Advanced matching
-
-After a successful `/input` submit, hash the already-normalised email and phone client-side (SHA-256 hex, Web Crypto) and call `fbq('init', PIXEL_ID, { em, ph })`. Raw values never reach `fbq`.
-
-## 5. One small backend read change (needed for Purchase value)
-
-`src/routes/api/public/love-match-status.ts` currently returns no amount. It will also return the order's paid amount (a non-PII numeric field) so `/success` can send an accurate `value`. Nothing else in that endpoint changes; no pricing logic is touched.
-
-## 6. Verification
-
-Drive the funnel in a browser and assert the `fbq` call log: PageView on load and once per route change, Lead once on submit, ViewContent once on preview, InitiateCheckout once per checkout open, Purchase once on `/success` with the right value and `eventID`. Re-check that refresh and back-navigation add no duplicates.
-
-## Technical notes
-
-- Web Crypto `crypto.subtle.digest` requires a secure context; localhost and the published HTTPS site both qualify.
-- Purchase fires from the existing status poller's data, so it is naturally tied to server-confirmed payment state.
+## Out of scope
+Pricing, coupon, payment, delivery, PDF, and preview content logic. The PDF/report HTML built server-side is untouched.

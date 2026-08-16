@@ -148,13 +148,19 @@ function RootShell({ children }: { children: ReactNode }) {
  */
 function usePixelRouteTracking() {
   const router = useRouter();
-  const firstResolve = useRef(true);
+  const lastTracked = useRef<string | null>(null);
   useEffect(() => {
+    // The base snippet already fired PageView for the URL we mounted on.
+    if (lastTracked.current === null) {
+      lastTracked.current =
+        typeof window !== "undefined"
+          ? window.location.pathname + window.location.search
+          : "";
+    }
     return router.subscribe("onResolved", () => {
-      if (firstResolve.current) {
-        firstResolve.current = false;
-        return;
-      }
+      const href = window.location.pathname + window.location.search;
+      if (href === lastTracked.current) return;
+      lastTracked.current = href;
       trackPageView();
     });
   }, [router]);

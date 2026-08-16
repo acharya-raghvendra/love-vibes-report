@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { Icon } from "@/components/icon";
 
 const QUICK_LINKS = [
   { to: "/" as const, label: "Home" },

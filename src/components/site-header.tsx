@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { Icon } from "@/components/icon";
 import logoAsset from "@/assets/talktoguruji-logo.png.asset.json";
 
 const NAV_LINKS = [

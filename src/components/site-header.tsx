@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { Icon } from "@/components/icon";
 import { LanguageToggle } from "@/components/language-toggle";
-import { CTA_LABEL, HEADER_COPY } from "@/lib/site-copy";
+import { CTA_LABEL, HEADER_COPY, NEW_PAIR_LABEL } from "@/lib/site-copy";
 import { useSiteLanguage } from "@/lib/site-language";
 import logoAsset from "@/assets/talktoguruji-logo.png.asset.json";
+
 
 function Logo() {
   return (

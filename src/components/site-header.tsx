@@ -152,14 +152,25 @@ export function SiteHeader() {
             </div>
           </nav>
           <div className="p-5 pb-8">
-            <Link
-              to="/input"
-              onClick={() => setOpen(false)}
-              className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md text-on-primary-fixed shadow-lg"
-            >
-              {cta}
-            </Link>
+            {isNoCtaPage ? (
+              <Link
+                to="/input"
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center justify-center font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
+              >
+                {newPair}
+              </Link>
+            ) : (
+              <Link
+                to="/input"
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md text-on-primary-fixed shadow-lg"
+              >
+                {cta}
+              </Link>
+            )}
           </div>
+
         </aside>
       </div>
     </>

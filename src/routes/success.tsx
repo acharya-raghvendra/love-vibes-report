@@ -70,7 +70,7 @@ function Step({
       <div className="relative">
         {state === "done" ? (
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary">
-            <Icon name="check" size={16} className="text-background" strokeWidth={3} />
+            <Icon name="check" size={16} className="text-background" />
           </div>
         ) : state === "active" ? (
           <div className="flex h-6 w-6 items-center justify-center rounded-full border border-primary/50">

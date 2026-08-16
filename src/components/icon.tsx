@@ -111,7 +111,6 @@ export const Icon = memo(function Icon({
   return (
     <Component
       aria-hidden="true"
-      focusable="false"
       className={className}
       size={size}
       strokeWidth={1.5}

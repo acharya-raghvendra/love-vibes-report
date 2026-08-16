@@ -281,6 +281,15 @@
   font-family: var(--font-devanagari-display);
 }
 
+/* Devanagari must never receive letter-spacing: tracking breaks matras and
+   conjuncts ("मेल" rendering as "मे ल"). Overrides tracking-* utilities. */
+[lang="hi"],
+[lang="hi"] *,
+:lang(hi) {
+  letter-spacing: normal !important;
+}
+
+
 /* Decorative locked-content tease. Purely visual bars — no report text is ever
    rendered behind the blur, so nothing readable reaches the browser. */
 .lock-tease {

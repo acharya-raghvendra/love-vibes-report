@@ -3,24 +3,25 @@ import { useEffect, useRef, useState, type FormEvent, type RefObject } from "rea
 import { Icon } from "@/components/icon";
 import { couponSearch, resolveCoupon, validateCouponSearch } from "@/lib/coupon-link";
 import { initAdvancedMatching, trackOnce } from "@/lib/meta-pixel";
+import { PriceLine } from "@/components/price-line";
+import { INPUT_COPY, META } from "@/lib/site-copy";
+import { setSiteLanguage, useLocalizedMeta, useSiteLanguage } from "@/lib/site-language";
 
 
 export const Route = createFileRoute("/input")({
   validateSearch: validateCouponSearch,
   head: () => ({
     meta: [
-      { title: "Enter Your Details — Love Match Compatibility" },
-      {
-        name: "description",
-        content:
-          "Share your birth details to reveal your cosmic numerology compatibility with your partner.",
-      },
-      { property: "og:title", content: "Enter Your Details — Love Match" },
-      {
-        property: "og:description",
-        content: "Share your birth details to reveal your cosmic numerology compatibility.",
-      },
+      { title: META.input.hi.title },
+      { name: "description", content: META.input.hi.description },
+      { property: "og:title", content: META.input.hi.title },
+      { property: "og:description", content: META.input.hi.description },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: META.input.hi.title },
+      { name: "twitter:description", content: META.input.hi.description },
     ],
+    links: [{ rel: "canonical", href: "https://love.talktoguruji.com/input" }],
   }),
   component: InputPage,
 });
@@ -28,15 +29,31 @@ export const Route = createFileRoute("/input")({
 type Gender = "MALE" | "FEMALE";
 type ReportLanguage = "en" | "hi";
 
-function GenderToggle({ value, onChange }: { value: Gender; onChange: (v: Gender) => void }) {
+function GenderToggle({
+  value,
+  onChange,
+  labels,
+  labelledBy,
+}: {
+  value: Gender;
+  onChange: (v: Gender) => void;
+  labels: { MALE: string; FEMALE: string };
+  labelledBy: string;
+}) {
   return (
-    <div className="flex rounded-full border border-outline-variant/30 bg-surface-container/60 p-1">
+    <div
+      role="radiogroup"
+      aria-labelledby={labelledBy}
+      className="flex rounded-full border border-outline-variant/30 bg-surface-container/60 p-1"
+    >
       {(["MALE", "FEMALE"] as const).map((g) => {
         const active = value === g;
         return (
           <button
             key={g}
             type="button"
+            role="radio"
+            aria-checked={active}
             onClick={() => onChange(g)}
             className={`flex-1 rounded-full py-2 font-label-md text-label-md transition-all ${
               active
@@ -44,7 +61,7 @@ function GenderToggle({ value, onChange }: { value: Gender; onChange: (v: Gender
                 : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
-            {g}
+            {labels[g]}
           </button>
         );
       })}
@@ -70,6 +87,7 @@ function PartnerCard({
   index,
   label,
   icon,
+  copy,
   name,
   setName,
   nameError,
@@ -86,6 +104,7 @@ function PartnerCard({
   index: 1 | 2;
   label: string;
   icon: string;
+  copy: (typeof INPUT_COPY)["hi"];
   name: string;
   setName: (v: string) => void;
   nameError: string | null;
@@ -101,6 +120,9 @@ function PartnerCard({
 }) {
   const errorId = `p${index}-name-error`;
   const dobErrorId = `p${index}-dob-error`;
+  const nameId = `p${index}-name`;
+  const dobId = `p${index}-dob`;
+  const genderId = `p${index}-gender-label`;
 
   return (
     <div className="glass-card relative rounded-2xl border border-outline-variant/25 p-6 shadow-2xl lg:p-8">
@@ -110,7 +132,7 @@ function PartnerCard({
       <div className="mb-6 flex items-center justify-between">
         <h2 className="font-headline-sm text-headline-sm flex items-center gap-2 text-primary">
           <Icon name={icon} size={24} />
-          Partner {index}
+          {copy.partner(index)}
         </h2>
         <span className="font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant">
           {label}
@@ -119,10 +141,16 @@ function PartnerCard({
 
       <div className="space-y-6">
         <div className="group relative">
-          <label className="mb-1 block font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant transition-colors group-focus-within:text-primary">
-            Name
+          <label
+            htmlFor={nameId}
+            className="mb-1 block font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant transition-colors group-focus-within:text-primary"
+          >
+            {copy.name}
           </label>
           <input
+            id={nameId}
+            name={nameId}
+            autoComplete="name"
             type="text"
             value={name}
             ref={nameRef}
@@ -133,7 +161,7 @@ function PartnerCard({
               onValidateName(e.target.value);
             }}
             onBlur={(e) => onValidateName(e.target.value)}
-            placeholder="Enter full name in English"
+            placeholder={copy.namePlaceholder}
             className={`w-full border-0 border-b bg-transparent px-0 py-2 font-headline-sm text-headline-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/40 ${
               nameError
                 ? "border-error focus:border-error"
@@ -145,10 +173,16 @@ function PartnerCard({
 
         <div className="grid gap-6 md:grid-cols-2">
           <div className="group relative">
-            <label className="mb-1 block font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant">
-              Date of Birth
+            <label
+              htmlFor={dobId}
+              className="mb-1 block font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant"
+            >
+              {copy.dob}
             </label>
             <input
+              id={dobId}
+              name={dobId}
+              autoComplete="bday"
               type="date"
               value={dob}
               ref={dobRef}
@@ -170,10 +204,18 @@ function PartnerCard({
           </div>
 
           <div>
-            <label className="mb-1 block font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant">
-              Gender
-            </label>
-            <GenderToggle value={gender} onChange={setGender} />
+            <span
+              id={genderId}
+              className="mb-1 block font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant"
+            >
+              {copy.gender}
+            </span>
+            <GenderToggle
+              value={gender}
+              onChange={setGender}
+              labelledBy={genderId}
+              labels={{ MALE: copy.male, FEMALE: copy.female }}
+            />
           </div>
         </div>
       </div>
@@ -186,10 +228,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
 // Latin letters (incl. accents) plus space, hyphen, apostrophe.
 // Must start and end with a letter; at least 2 chars.
 const LATIN_NAME_RE = /^[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F'\u2019 -]*[A-Za-z\u00C0-\u024F]$/;
-const NAME_ERROR = "Please enter the name in English.";
-const DOB_ERROR = "Please select a date of birth.";
-const PHONE_ERROR = "Enter a 10-digit WhatsApp number.";
-
 function isLatinName(v: string): boolean {
   return LATIN_NAME_RE.test(v.trim());
 }
@@ -200,6 +238,9 @@ function normaliseEmail(v: string): string {
 
 function InputPage() {
   const navigate = useNavigate();
+  const [siteLang, setSiteLang] = useSiteLanguage();
+  const copy = INPUT_COPY[siteLang];
+  useLocalizedMeta(META.input[siteLang]);
   const { coupon: urlCoupon } = Route.useSearch();
   const [coupon, setCoupon] = useState<string | null>(null);
   // URL coupon wins; the stored mirror covers a lost query param / refresh.
@@ -220,7 +261,17 @@ function InputPage() {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
+  // Report language mirrors the site language; changing either keeps both in sync.
   const [language, setLanguage] = useState<ReportLanguage>("hi");
+  useEffect(() => {
+    setLanguage(siteLang);
+  }, [siteLang]);
+
+  function chooseLanguage(next: ReportLanguage) {
+    setLanguage(next);
+    setSiteLang(next);
+    setSiteLanguage(next);
+  }
 
   const p1NameRef = useRef<HTMLInputElement>(null);
   const p1DobRef = useRef<HTMLInputElement>(null);
@@ -231,30 +282,30 @@ function InputPage() {
 
   function validateName(value: string, setError: (v: string | null) => void): boolean {
     const valid = isLatinName(value);
-    setError(valid ? null : NAME_ERROR);
+    setError(valid ? null : copy.errors.name);
     return valid;
   }
 
   function validateDob(value: string, setError: (v: string | null) => void): boolean {
     const valid = Boolean(value);
-    setError(valid ? null : DOB_ERROR);
+    setError(valid ? null : copy.errors.dob);
     return valid;
   }
 
   function validatePhone(value: string): boolean {
     const valid = value.replace(/\D/g, "").length >= 10;
-    setPhoneError(valid ? null : PHONE_ERROR);
+    setPhoneError(valid ? null : copy.errors.phone);
     return valid;
   }
 
   function validateEmail(value: string): boolean {
     const clean = normaliseEmail(value);
     if (!clean) {
-      setEmailError("Email address is required — we send your report here.");
+      setEmailError(copy.errors.emailRequired);
       return false;
     }
     if (!EMAIL_RE.test(clean)) {
-      setEmailError("Enter a valid email address, e.g. name@example.com");
+      setEmailError(copy.errors.emailInvalid);
       return false;
     }
     setEmailError(null);
@@ -322,7 +373,7 @@ function InputPage() {
 
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-background text-on-background">
+    <div lang={siteLang} className="relative min-h-screen overflow-x-hidden bg-background text-on-background">
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="nebula-glow absolute top-[-10%] right-[-10%] h-[70vw] w-[70vw] rounded-full bg-tertiary" />
         <div
@@ -334,10 +385,11 @@ function InputPage() {
       <main className="relative mx-auto max-w-[800px] px-margin-mobile pt-28 pb-24 lg:pt-32 lg:pb-24 lg:px-6">
         <section className="mb-10 space-y-2 text-center">
           <h1 className="font-display-lg-mobile text-display-lg-mobile text-on-surface lg:text-display-lg">
-            Enter Your <span className="text-gold-gradient">Details</span>
+            {copy.headingLead}
+            <span className="text-gold-gradient">{copy.headingAccent}</span>
           </h1>
           <p className="font-body-lg text-body-lg mx-auto max-w-md text-on-surface-variant">
-            Share your birth details to reveal your cosmic compatibility.
+            {copy.sub}
           </p>
         </section>
 
@@ -345,8 +397,9 @@ function InputPage() {
           <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
             <PartnerCard
               index={1}
-              label="Initiator"
+              label={copy.roleA}
               icon="person"
+              copy={copy}
               name={p1Name}
               setName={setP1Name}
               nameError={p1NameError}
@@ -373,8 +426,9 @@ function InputPage() {
 
             <PartnerCard
               index={2}
-              label="Companion"
+              label={copy.roleB}
               icon="person_2"
+              copy={copy}
               name={p2Name}
               setName={setP2Name}
               nameError={p2NameError}
@@ -392,11 +446,14 @@ function InputPage() {
 
           {/* WhatsApp */}
           <div className="glass-card rounded-2xl border border-dashed border-outline-variant/40 p-6">
-            <label className="mb-2 flex items-center gap-2 font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant">
+            <label
+              htmlFor="phone"
+              className="mb-2 flex items-center gap-2 font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant"
+            >
               <Icon name="chat" size={16} />
-              WhatsApp Number <span className="text-primary">*</span>
+              {copy.whatsapp} <span className="text-primary">*</span>
               <span className="ml-1 normal-case tracking-normal text-on-surface-variant/70">
-                (required to deliver your report)
+                {copy.whatsappHelp}
               </span>
             </label>
             <div className="flex items-center gap-3">
@@ -404,6 +461,9 @@ function InputPage() {
                 +91
               </div>
               <input
+                id="phone"
+                name="phone"
+                autoComplete="tel-national"
                 type="tel"
                 inputMode="numeric"
                 ref={phoneRef}
@@ -415,7 +475,7 @@ function InputPage() {
                   if (phoneError) setPhoneError(null);
                 }}
                 onBlur={(e) => validatePhone(e.target.value)}
-                placeholder="WhatsApp Number"
+                placeholder={copy.whatsappPlaceholder}
                 className={`font-body-lg flex-1 rounded-lg border bg-surface-container px-4 py-3 text-on-surface outline-none placeholder:text-on-surface-variant/40 focus:ring-1 ${
                   phoneError
                     ? "border-error focus:border-error focus:ring-error"
@@ -433,9 +493,9 @@ function InputPage() {
               className="mb-2 flex items-center gap-2 font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant"
             >
               <Icon name="mail" size={16} />
-              Email Address <span className="text-primary">*</span>
+              {copy.email} <span className="text-primary">*</span>
               <span className="ml-1 normal-case tracking-normal text-on-surface-variant/70">
-                (your report is emailed here)
+                {copy.emailHelp}
               </span>
             </label>
             <input
@@ -471,9 +531,9 @@ function InputPage() {
             className="mb-2 flex items-center gap-2 font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant"
           >
             <Icon name="translate" size={16} />
-            Report Language <span className="text-primary">*</span>
+            {copy.language} <span className="text-primary">*</span>
               <span className="ml-1 normal-case tracking-normal text-on-surface-variant/70">
-                (your report is written in this language)
+                {copy.languageHelp}
               </span>
             </span>
             <div
@@ -494,7 +554,7 @@ function InputPage() {
                     type="button"
                     role="radio"
                     aria-checked={active}
-                    onClick={() => setLanguage(opt.value)}
+                    onClick={() => chooseLanguage(opt.value)}
                     className={`flex-1 rounded-full py-3 font-label-md text-label-md transition-all ${
                       active
                         ? "bg-primary text-on-primary-fixed shadow-lg"
@@ -510,12 +570,13 @@ function InputPage() {
 
           {/* CTA */}
           <div className="pt-4">
+            <PriceLine lang={siteLang} format={copy.priceLine} className="mb-3 text-center" />
             <button
               type="submit"
               className="shimmer flex w-full items-center justify-center gap-3 rounded-full bg-gradient-to-r from-primary-container to-primary py-5 text-lg font-bold text-on-primary-fixed shadow-[0_0_20px_rgba(242,202,80,0.3)] transition-transform hover:scale-[1.01] active:scale-[0.98]"
             >
               <Icon name="auto_awesome" size={24} filled />
-              Check Compatibility
+              {copy.submit}
             </button>
           </div>
 
@@ -523,7 +584,7 @@ function InputPage() {
           <div className="flex flex-col items-center gap-4 pt-6 text-center">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-on-surface-variant">
               <Icon name="lock" size={14} />
-              100% Secure &amp; Confidential
+              {copy.secure}
             </div>
             <div className="flex justify-center gap-6 text-on-surface-variant opacity-50">
               <Icon name="stars" size={24} />

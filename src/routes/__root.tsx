@@ -152,13 +152,11 @@ function usePixelRouteTracking() {
   useEffect(() => {
     // The base snippet already fired PageView for the URL we mounted on.
     if (lastTracked.current === null) {
-      lastTracked.current =
-        typeof window !== "undefined"
-          ? window.location.pathname + window.location.search
-          : "";
+      const l = router.state.location;
+      lastTracked.current = l.pathname + (l.searchStr ?? "");
     }
-    return router.subscribe("onResolved", () => {
-      const href = window.location.pathname + window.location.search;
+    return router.subscribe("onResolved", ({ toLocation }) => {
+      const href = toLocation.pathname + (toLocation.searchStr ?? "");
       if (href === lastTracked.current) return;
       lastTracked.current = href;
       trackPageView();

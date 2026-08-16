@@ -8,12 +8,14 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import faviconAsset from "../assets/favicon.png.asset.json";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { metaPixelBootstrap, metaPixelNoscriptSrc, trackPageView } from "../lib/meta-pixel";
 import { SiteHeader } from "../components/site-header";
+
 import { SiteFooter } from "../components/site-footer";
 
 function NotFoundComponent() {

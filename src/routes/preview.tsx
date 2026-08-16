@@ -2,6 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { couponSearch, resolveCoupon, storeCoupon, validateCouponSearch } from "@/lib/coupon-link";
+import { trackOnce } from "@/lib/meta-pixel";
+
 
 export const Route = createFileRoute("/preview")({
   validateSearch: validateCouponSearch,
@@ -458,6 +460,19 @@ function PreviewPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.kind, input]);
 
+  // Meta Pixel: ViewContent once per couple per session, with the live price.
+  // Keyed off the couple (not the server order id, which is regenerated on
+  // every preview render) so refresh and back/forward never re-fire it.
+  useEffect(() => {
+    if (state.kind !== "ready" || !pricing || !input) return;
+    const key = `${input.person_a.first}|${input.person_a.dob}|${input.person_b.first}|${input.person_b.dob}`;
+    trackOnce("ViewContent", key, {
+      value: Math.round(pricing.finalAmount),
+      currency: "INR",
+    });
+  }, [state, pricing, input]);
+
+
   // Single apply path for the box and for an auto-applied carried coupon.
   const applyCoupon = useCallback(
     async (rawCode: string, opts: { silent?: boolean } = {}) => {
@@ -566,6 +581,13 @@ function PreviewPage() {
         }
       }
       const gatewayOrder = o;
+      // Meta Pixel: one InitiateCheckout per gateway order (price card and
+      // floating CTA share this handler, so it cannot double-fire).
+      trackOnce("InitiateCheckout", gatewayOrder.internalOrderId, {
+        value: Math.round(gatewayOrder.amount / 100),
+        currency: "INR",
+      });
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rzp = new (window as any).Razorpay({
         key: gatewayOrder.keyId,

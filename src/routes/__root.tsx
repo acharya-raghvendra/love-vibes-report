@@ -8,12 +8,14 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import faviconAsset from "../assets/favicon.png.asset.json";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { metaPixelBootstrap, metaPixelNoscriptSrc, trackPageView } from "../lib/meta-pixel";
 import { SiteHeader } from "../components/site-header";
+
 import { SiteFooter } from "../components/site-footer";
 
 function NotFoundComponent() {
@@ -119,8 +121,19 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en" className="dark">
       <head>
         <HeadContent />
+        {/* Meta Pixel base code — loads once for every page (async script). */}
+        <script async dangerouslySetInnerHTML={{ __html: metaPixelBootstrap }} />
       </head>
       <body>
+        <noscript>
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            alt=""
+            src={metaPixelNoscriptSrc}
+          />
+        </noscript>
         {children}
         <Scripts />
       </body>
@@ -128,10 +141,34 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Client-side routing means the base snippet's PageView only covers the first
+ * route. Fire one PageView per subsequent navigation, skipping the initial
+ * resolve so it is never counted twice.
+ */
+function usePixelRouteTracking() {
+  const router = useRouter();
+  const lastTracked = useRef<string | null>(null);
+  useEffect(() => {
+    // The base snippet already fired PageView for the URL we mounted on.
+    if (lastTracked.current === null) {
+      const l = router.state.location;
+      lastTracked.current = l.pathname + (l.searchStr ?? "");
+    }
+    return router.subscribe("onResolved", ({ toLocation }) => {
+      const href = toLocation.pathname + (toLocation.searchStr ?? "");
+      if (href === lastTracked.current) return;
+      lastTracked.current = href;
+      trackPageView();
+    });
+  }, [router]);
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isDashboard = pathname.startsWith("/dashboard");
+  usePixelRouteTracking();
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -141,3 +178,4 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+

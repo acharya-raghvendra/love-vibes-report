@@ -15,7 +15,7 @@ export const Route = createFileRoute("/api/public/love-match-status")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: order } = await supabaseAdmin
           .from("love_match_orders")
-          .select("status, pdf_url, error_message, attempt_count, whatsapp_sent, email_sent, language")
+          .select("status, pdf_url, error_message, attempt_count, whatsapp_sent, email_sent, language, final_price")
           .eq("order_id", orderId)
           .maybeSingle();
 
@@ -35,6 +35,9 @@ export const Route = createFileRoute("/api/public/love-match-status")({
             // Report language, so the success page picks its copy from the
             // order rather than trusting a URL param.
             language: order.language === "en" ? "en" : "hi",
+            // Non-PII order value (rupees) so the success page can report an
+            // accurate conversion value. Price logic is unchanged.
+            amount: typeof order.final_price === "number" ? order.final_price : null,
             // An order counts as delivered when EITHER channel succeeded.
             delivered: emailSent || whatsappSent,
 

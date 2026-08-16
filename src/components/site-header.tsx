@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Icon } from "@/components/icon";
+import { LanguageToggle } from "@/components/language-toggle";
+import { CTA_LABEL, HEADER_COPY } from "@/lib/site-copy";
+import { useSiteLanguage } from "@/lib/site-language";
 import logoAsset from "@/assets/talktoguruji-logo.png.asset.json";
-
-const NAV_LINKS = [
-  { href: "/#hero", label: "Home" },
-  { href: "/#how-it-works", label: "How It Works" },
-  { href: "/#faq", label: "FAQ" },
-];
 
 function Logo() {
   return (
@@ -23,6 +20,9 @@ function Logo() {
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const [lang] = useSiteLanguage();
+  const copy = HEADER_COPY[lang];
+  const cta = CTA_LABEL[lang];
 
   useEffect(() => {
     if (!open) return;
@@ -39,7 +39,10 @@ export function SiteHeader() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-primary/15 bg-background/70 backdrop-blur-2xl">
+      <header
+        lang={lang}
+        className="fixed inset-x-0 top-0 z-50 border-b border-primary/15 bg-background/70 backdrop-blur-2xl"
+      >
         <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-5 lg:h-[72px] lg:px-6">
           <Logo />
 
@@ -48,7 +51,7 @@ export function SiteHeader() {
             aria-label="Primary"
             className="hidden lg:flex items-center gap-8 absolute left-1/2 -translate-x-1/2"
           >
-            {NAV_LINKS.map((l) => (
+            {copy.nav.map((l) => (
               <a
                 key={l.href}
                 href={l.href}
@@ -59,29 +62,34 @@ export function SiteHeader() {
             ))}
           </nav>
 
-          {/* Desktop CTA */}
-          <Link
-            to="/input"
-            className="hidden lg:inline-flex items-center rounded-xl bg-gradient-to-r from-primary-container to-primary px-5 py-2.5 font-label-md text-label-md uppercase tracking-wider text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.25)] hover:scale-[0.98] active:scale-95 transition-transform"
-          >
-            Check Compatibility
-          </Link>
+          <div className="flex items-center gap-2 lg:gap-3">
+            <LanguageToggle />
 
-          {/* Mobile hamburger */}
-          <button
-            type="button"
-            aria-label="Open menu"
-            aria-expanded={open}
-            onClick={() => setOpen(true)}
-            className="lg:hidden flex h-10 w-10 items-center justify-center rounded-lg border border-primary/20 text-primary"
-          >
-            <Icon name="menu" size={24} />
-          </button>
+            {/* Desktop CTA */}
+            <Link
+              to="/input"
+              className="hidden lg:inline-flex items-center rounded-xl bg-gradient-to-r from-primary-container to-primary px-5 py-2.5 font-label-md text-label-md text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.25)] hover:scale-[0.98] active:scale-95 transition-transform"
+            >
+              {cta}
+            </Link>
+
+            {/* Mobile hamburger */}
+            <button
+              type="button"
+              aria-label={copy.openMenu}
+              aria-expanded={open}
+              onClick={() => setOpen(true)}
+              className="lg:hidden flex h-10 w-10 items-center justify-center rounded-lg border border-primary/20 text-primary"
+            >
+              <Icon name="menu" size={24} />
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Drawer */}
       <div
+        lang={lang}
         className={`lg:hidden fixed inset-0 z-[70] transition-opacity duration-200 ${
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
@@ -103,15 +111,15 @@ export function SiteHeader() {
             <Logo />
             <button
               type="button"
-              aria-label="Close menu"
+              aria-label={copy.closeMenu}
               onClick={() => setOpen(false)}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant"
-          >
-            <Icon name="close" size={24} />
-          </button>
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant"
+            >
+              <Icon name="close" size={24} />
+            </button>
           </div>
           <nav aria-label="Mobile" className="flex flex-1 flex-col gap-1 px-5 py-6">
-            {NAV_LINKS.map((l) => (
+            {copy.nav.map((l) => (
               <a
                 key={l.href}
                 href={l.href}
@@ -121,14 +129,17 @@ export function SiteHeader() {
                 {l.label}
               </a>
             ))}
+            <div className="pt-5">
+              <LanguageToggle />
+            </div>
           </nav>
           <div className="p-5 pb-8">
             <Link
               to="/input"
               onClick={() => setOpen(false)}
-              className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md uppercase tracking-widest text-on-primary-fixed shadow-lg"
+              className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md text-on-primary-fixed shadow-lg"
             >
-              Check Compatibility
+              {cta}
             </Link>
           </div>
         </aside>

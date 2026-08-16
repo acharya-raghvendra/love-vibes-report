@@ -104,7 +104,7 @@ function PartnerCard({
   index: 1 | 2;
   label: string;
   icon: string;
-  copy: (typeof INPUT_COPY)["hi"];
+  copy: (typeof INPUT_COPY)[keyof typeof INPUT_COPY];
   name: string;
   setName: (v: string) => void;
   nameError: string | null;

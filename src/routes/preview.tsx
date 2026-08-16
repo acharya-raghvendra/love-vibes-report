@@ -460,14 +460,17 @@ function PreviewPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.kind, input]);
 
-  // Meta Pixel: ViewContent once per rendered preview, with the live price.
+  // Meta Pixel: ViewContent once per couple per session, with the live price.
+  // Keyed off the couple (not the server order id, which is regenerated on
+  // every preview render) so refresh and back/forward never re-fire it.
   useEffect(() => {
-    if (state.kind !== "ready" || !pricing) return;
-    trackOnce("ViewContent", state.data.order_id, {
+    if (state.kind !== "ready" || !pricing || !input) return;
+    const key = `${input.person_a.first}|${input.person_a.dob}|${input.person_b.first}|${input.person_b.dob}`;
+    trackOnce("ViewContent", key, {
       value: Math.round(pricing.finalAmount),
       currency: "INR",
     });
-  }, [state, pricing]);
+  }, [state, pricing, input]);
 
 
   // Single apply path for the box and for an auto-applied carried coupon.

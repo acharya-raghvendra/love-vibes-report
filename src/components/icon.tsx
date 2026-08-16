@@ -3,6 +3,7 @@ import {
   User,
   Users,
   Heart,
+  Star,
   Menu,
   X,
   ChevronDown,
@@ -17,6 +18,7 @@ import {
   ArrowLeft,
   RefreshCw,
   AlertCircle,
+  AlertTriangle,
   Languages,
   Sparkles,
   BadgeCheck,
@@ -43,12 +45,19 @@ import {
   Handshake,
   Shield,
   Gem,
+  Check,
+  CheckCircle2,
+  Circle,
+  Eye,
+  EyeOff,
+  Wand2,
 } from "lucide-react";
 
-const ICONS: Record<string, React.ComponentType<{ className?: string; size?: number; strokeWidth?: number }>> = {
+const ICONS: Record<string, React.ComponentType<{ className?: string; size?: number; strokeWidth?: number; fill?: string }>> = {
   person: User,
   person_2: Users,
   favorite: Heart,
+  star: Star,
   menu: Menu,
   close: X,
   expand_more: ChevronDown,
@@ -90,16 +99,26 @@ const ICONS: Record<string, React.ComponentType<{ className?: string; size?: num
   handshake: Handshake,
   shield: Shield,
   diamond: Gem,
+  check: Check,
+  check_circle: CheckCircle2,
+  warning: AlertTriangle,
+  circle: Circle,
+  visibility: Eye,
+  visibility_off: EyeOff,
+  auto_fix_high: Wand2,
+  auto_awesome: Sparkles,
 };
 
 export const Icon = memo(function Icon({
   name,
   className,
   size = 24,
+  filled = false,
 }: {
   name: string;
   className?: string;
   size?: number;
+  filled?: boolean;
 }) {
   const Component = ICONS[name];
   if (!Component) {
@@ -114,6 +133,8 @@ export const Icon = memo(function Icon({
       className={className}
       size={size}
       strokeWidth={1.5}
+      fill={filled ? "currentColor" : "none"}
     />
   );
 });
+

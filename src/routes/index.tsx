@@ -287,12 +287,11 @@ function Index() {
                   key={t.name}
                   className="glass-card relative rounded-2xl border border-outline-variant/20 p-6 lg:p-8"
                 >
-                  <span
-                    className="material-symbols-outlined absolute -top-2 -left-2 rotate-12 scale-150 text-primary/20"
-                    style={{ fontSize: "3.5rem" }}
-                  >
-                    format_quote
-                  </span>
+                  <Icon
+                    name="format_quote"
+                    size={56}
+                    className="absolute -top-2 -left-2 rotate-12 scale-150 text-primary/20"
+                  />
                   <p className="font-body-md relative z-10 mb-4 italic text-on-surface">
                     “{t.quote}”
                   </p>

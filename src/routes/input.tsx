@@ -309,8 +309,16 @@ function InputPage() {
     } catch {
       /* ignore */
     }
+
+    // Meta Pixel: hashed advanced matching, then one Lead per submitted couple.
+    // No raw email/phone or names are ever sent as event params.
+    const leadKey = `${a.first}|${p1Dob}|${b.first}|${p2Dob}`;
+    void initAdvancedMatching({ email: cleanEmail, phone: phone });
+    trackOnce("Lead", leadKey);
+
     navigate({ to: "/preview", search: couponSearch(coupon) });
   }
+
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background text-on-background">

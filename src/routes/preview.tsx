@@ -2,6 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { couponSearch, resolveCoupon, storeCoupon, validateCouponSearch } from "@/lib/coupon-link";
+import { trackOnce } from "@/lib/meta-pixel";
+
 
 export const Route = createFileRoute("/preview")({
   validateSearch: validateCouponSearch,

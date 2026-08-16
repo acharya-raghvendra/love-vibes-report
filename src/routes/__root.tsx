@@ -121,8 +121,19 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en" className="dark">
       <head>
         <HeadContent />
+        {/* Meta Pixel base code — loads once for every page (async script). */}
+        <script async dangerouslySetInnerHTML={{ __html: metaPixelBootstrap }} />
       </head>
       <body>
+        <noscript>
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            alt=""
+            src={metaPixelNoscriptSrc}
+          />
+        </noscript>
         {children}
         <Scripts />
       </body>
@@ -130,10 +141,30 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Client-side routing means the base snippet's PageView only covers the first
+ * route. Fire one PageView per subsequent navigation, skipping the initial
+ * resolve so it is never counted twice.
+ */
+function usePixelRouteTracking() {
+  const router = useRouter();
+  const firstResolve = useRef(true);
+  useEffect(() => {
+    return router.subscribe("onResolved", () => {
+      if (firstResolve.current) {
+        firstResolve.current = false;
+        return;
+      }
+      trackPageView();
+    });
+  }, [router]);
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isDashboard = pathname.startsWith("/dashboard");
+  usePixelRouteTracking();
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -143,3 +174,4 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+

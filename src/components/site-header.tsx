@@ -72,13 +72,24 @@ export function SiteHeader() {
           <div className="flex items-center gap-2 lg:gap-3">
             <LanguageToggle />
 
-            {/* Desktop CTA */}
-            <Link
-              to="/input"
-              className="hidden lg:inline-flex items-center rounded-xl bg-gradient-to-r from-primary-container to-primary px-5 py-2.5 font-label-md text-label-md text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.25)] hover:scale-[0.98] active:scale-95 transition-transform"
-            >
-              {cta}
-            </Link>
+            {/* Desktop CTA: low-emphasis text link on report/success pages so
+                the single page goal isn't competing with a gold button. */}
+            {isNoCtaPage ? (
+              <Link
+                to="/input"
+                className="hidden lg:inline-flex items-center font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
+              >
+                {newPair}
+              </Link>
+            ) : (
+              <Link
+                to="/input"
+                className="hidden lg:inline-flex items-center rounded-xl bg-gradient-to-r from-primary-container to-primary px-5 py-2.5 font-label-md text-label-md text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.25)] hover:scale-[0.98] active:scale-95 transition-transform"
+              >
+                {cta}
+              </Link>
+            )}
+
 
             {/* Mobile hamburger */}
             <button

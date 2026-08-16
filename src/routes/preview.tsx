@@ -460,6 +460,16 @@ function PreviewPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.kind, input]);
 
+  // Meta Pixel: ViewContent once per rendered preview, with the live price.
+  useEffect(() => {
+    if (state.kind !== "ready" || !pricing) return;
+    trackOnce("ViewContent", state.data.order_id, {
+      value: Math.round(pricing.finalAmount),
+      currency: "INR",
+    });
+  }, [state, pricing]);
+
+
   // Single apply path for the box and for an auto-applied carried coupon.
   const applyCoupon = useCallback(
     async (rawCode: string, opts: { silent?: boolean } = {}) => {

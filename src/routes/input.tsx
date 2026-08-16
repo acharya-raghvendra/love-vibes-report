@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
 import { couponSearch, resolveCoupon, validateCouponSearch } from "@/lib/coupon-link";
+import { initAdvancedMatching, trackOnce } from "@/lib/meta-pixel";
+
 
 export const Route = createFileRoute("/input")({
   validateSearch: validateCouponSearch,

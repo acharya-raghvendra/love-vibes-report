@@ -578,6 +578,13 @@ function PreviewPage() {
         }
       }
       const gatewayOrder = o;
+      // Meta Pixel: one InitiateCheckout per gateway order (price card and
+      // floating CTA share this handler, so it cannot double-fire).
+      trackOnce("InitiateCheckout", gatewayOrder.internalOrderId, {
+        value: Math.round(gatewayOrder.amount / 100),
+        currency: "INR",
+      });
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rzp = new (window as any).Razorpay({
         key: gatewayOrder.keyId,

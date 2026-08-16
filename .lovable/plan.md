@@ -9,7 +9,7 @@ Add one shared `Icon` component that maps the icon names already used in the cod
 ### 1. New `src/components/icon.tsx`
 - `Icon({ name, className, size })` looks up a name → lucide component map and renders the SVG with `aria-hidden="true"` and `focusable="false"`.
 - Default size 24 (matches the current font-size), `strokeWidth` tuned to read like the outlined Material set.
-- Unknown name renders nothing (never a word).
+- Unknown name renders nothing and `console.warn` in development (so a missed mapping shows up during testing instead of silently shipping an invisible icon). Never render the unknown name as text.
 - Map covers every name in use today:
   person→User, person_2→Users, favorite→Heart, menu→Menu, close→X,
   expand_more→ChevronDown, format_quote→Quote, edit_calendar→CalendarPlus,

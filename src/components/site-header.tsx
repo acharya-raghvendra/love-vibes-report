@@ -24,6 +24,12 @@ export function SiteHeader() {
   const [lang] = useSiteLanguage();
   const copy = HEADER_COPY[lang];
   const cta = CTA_LABEL[lang];
+  const newPair = NEW_PAIR_LABEL[lang];
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Robust to /preview, /preview/, /success, /success/ so the gold CTA never
+  // reappears on trailing-slash variants of the report/success pages.
+  const isNoCtaPage = /^\/(preview|success)\/?$/.test(pathname);
+
 
   useEffect(() => {
     if (!open) return;

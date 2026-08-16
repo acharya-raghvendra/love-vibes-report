@@ -287,6 +287,8 @@
 [lang="hi"] *,
 :lang(hi) {
   letter-spacing: normal !important;
+  /* uppercase-tracking labels read as shouted Latin inside Hindi copy */
+  text-transform: none !important;
 }
 
 

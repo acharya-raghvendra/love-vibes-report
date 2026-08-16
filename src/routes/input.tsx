@@ -60,7 +60,7 @@ function FieldError({ id, message }: { id: string; message: string | null }) {
       role="alert"
       className="mt-2 flex items-center gap-1.5 font-label-md text-label-md font-medium text-error"
     >
-      <span className="material-symbols-outlined text-base leading-none">error</span>
+      <Icon name="error" size={16} className="leading-none" />
       {message}
     </p>
   );
@@ -109,7 +109,7 @@ function PartnerCard({
 
       <div className="mb-6 flex items-center justify-between">
         <h2 className="font-headline-sm text-headline-sm flex items-center gap-2 text-primary">
-          <span className="material-symbols-outlined">{icon}</span>
+          <Icon name={icon} size={24} />
           Partner {index}
         </h2>
         <span className="font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant">
@@ -364,15 +364,10 @@ function InputPage() {
             {/* Heart divider — mobile only (between stacked cards) */}
             <div className="flex items-center justify-center py-1 lg:hidden">
               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-              <div className="relative px-6">
-                <span
-                  className="material-symbols-outlined animate-pulse text-primary"
-                  style={{ fontVariationSettings: "'FILL' 1", fontSize: "2rem" }}
-                >
-                  favorite
-                </span>
-                <div className="absolute inset-0 animate-pulse rounded-full bg-primary/20 blur-md" />
-              </div>
+            <div className="relative px-6">
+              <Icon name="favorite" size={32} filled className="animate-pulse text-primary" />
+              <div className="absolute inset-0 animate-pulse rounded-full bg-primary/20 blur-md" />
+            </div>
               <div className="h-px flex-1 bg-gradient-to-l from-transparent via-primary/30 to-transparent" />
             </div>
 
@@ -398,7 +393,7 @@ function InputPage() {
           {/* WhatsApp */}
           <div className="glass-card rounded-2xl border border-dashed border-outline-variant/40 p-6">
             <label className="mb-2 flex items-center gap-2 font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant">
-              <span className="material-symbols-outlined text-base">chat</span>
+              <Icon name="chat" size={16} />
               WhatsApp Number <span className="text-primary">*</span>
               <span className="ml-1 normal-case tracking-normal text-on-surface-variant/70">
                 (required to deliver your report)
@@ -437,7 +432,7 @@ function InputPage() {
               htmlFor="email"
               className="mb-2 flex items-center gap-2 font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant"
             >
-              <span className="material-symbols-outlined text-base">mail</span>
+              <Icon name="mail" size={16} />
               Email Address <span className="text-primary">*</span>
               <span className="ml-1 normal-case tracking-normal text-on-surface-variant/70">
                 (your report is emailed here)
@@ -472,11 +467,11 @@ function InputPage() {
           {/* Report language */}
           <div className="glass-card rounded-2xl border border-dashed border-outline-variant/40 p-6">
             <span
-              id="language-label"
-              className="mb-2 flex items-center gap-2 font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant"
-            >
-              <span className="material-symbols-outlined text-base">translate</span>
-              Report Language <span className="text-primary">*</span>
+            id="language-label"
+            className="mb-2 flex items-center gap-2 font-label-md text-label-sm uppercase tracking-widest text-on-surface-variant"
+          >
+            <Icon name="translate" size={16} />
+            Report Language <span className="text-primary">*</span>
               <span className="ml-1 normal-case tracking-normal text-on-surface-variant/70">
                 (your report is written in this language)
               </span>
@@ -519,12 +514,7 @@ function InputPage() {
               type="submit"
               className="shimmer flex w-full items-center justify-center gap-3 rounded-full bg-gradient-to-r from-primary-container to-primary py-5 text-lg font-bold text-on-primary-fixed shadow-[0_0_20px_rgba(242,202,80,0.3)] transition-transform hover:scale-[1.01] active:scale-[0.98]"
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                auto_awesome
-              </span>
+              <Icon name="auto_awesome" size={24} filled />
               Check Compatibility
             </button>
           </div>
@@ -532,13 +522,13 @@ function InputPage() {
           {/* Trust */}
           <div className="flex flex-col items-center gap-4 pt-6 text-center">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-on-surface-variant">
-              <span className="material-symbols-outlined text-sm">lock</span>
+              <Icon name="lock" size={14} />
               100% Secure &amp; Confidential
             </div>
             <div className="flex justify-center gap-6 text-on-surface-variant opacity-50">
-              <span className="material-symbols-outlined">stars</span>
-              <span className="material-symbols-outlined">verified</span>
-              <span className="material-symbols-outlined">history_edu</span>
+              <Icon name="stars" size={24} />
+              <Icon name="verified" size={24} />
+              <Icon name="history_edu" size={24} />
             </div>
           </div>
         </form>

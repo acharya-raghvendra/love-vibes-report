@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { Icon } from "@/components/icon";
 import { supabase } from "@/integrations/supabase/client";
 import { useRole } from "@/hooks/use-role";
 
@@ -69,7 +70,7 @@ function StatCard({ label, value, icon, hint, loading }: { label: string; value:
     <div className="rounded-2xl border border-border bg-surface-container-low p-5">
       <div className="flex items-center justify-between">
         <span className="text-label-md text-on-surface-variant">{label}</span>
-        <span className="material-symbols-outlined text-on-surface-variant">{icon}</span>
+        <Icon name={icon} size={20} className="text-on-surface-variant" />
       </div>
       <div className="mt-2 text-headline-md font-semibold text-on-surface">
         {loading ? "—" : value}

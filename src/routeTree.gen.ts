@@ -27,6 +27,7 @@ import { Route as AdminDashboardIndexRouteImport } from './routes/_admin.dashboa
 import { Route as ApiPublicReconcileOrdersRouteImport } from './routes/api/public/reconcile-orders'
 import { Route as ApiPublicLoveMatchStatusRouteImport } from './routes/api/public/love-match-status'
 import { Route as ApiPublicLoveMatchRetryRouteImport } from './routes/api/public/love-match-retry'
+import { Route as ApiPublicLoveMatchPriceRouteImport } from './routes/api/public/love-match-price'
 import { Route as AffiliatePortalSalesRouteImport } from './routes/_affiliate.portal.sales'
 import { Route as AffiliatePortalCouponsRouteImport } from './routes/_affiliate.portal.coupons'
 import { Route as AdminDashboardSettingsRouteImport } from './routes/_admin.dashboard.settings'
@@ -127,6 +128,11 @@ const ApiPublicLoveMatchRetryRoute = ApiPublicLoveMatchRetryRouteImport.update({
   path: '/api/public/love-match-retry',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicLoveMatchPriceRoute = ApiPublicLoveMatchPriceRouteImport.update({
+  id: '/api/public/love-match-price',
+  path: '/api/public/love-match-price',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AffiliatePortalSalesRoute = AffiliatePortalSalesRouteImport.update({
   id: '/sales',
   path: '/sales',
@@ -196,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings': typeof AdminDashboardSettingsRoute
   '/portal/coupons': typeof AffiliatePortalCouponsRoute
   '/portal/sales': typeof AffiliatePortalSalesRoute
+  '/api/public/love-match-price': typeof ApiPublicLoveMatchPriceRoute
   '/api/public/love-match-retry': typeof ApiPublicLoveMatchRetryRoute
   '/api/public/love-match-status': typeof ApiPublicLoveMatchStatusRoute
   '/api/public/reconcile-orders': typeof ApiPublicReconcileOrdersRoute
@@ -221,6 +228,7 @@ export interface FileRoutesByTo {
   '/dashboard/settings': typeof AdminDashboardSettingsRoute
   '/portal/coupons': typeof AffiliatePortalCouponsRoute
   '/portal/sales': typeof AffiliatePortalSalesRoute
+  '/api/public/love-match-price': typeof ApiPublicLoveMatchPriceRoute
   '/api/public/love-match-retry': typeof ApiPublicLoveMatchRetryRoute
   '/api/public/love-match-status': typeof ApiPublicLoveMatchStatusRoute
   '/api/public/reconcile-orders': typeof ApiPublicReconcileOrdersRoute
@@ -251,6 +259,7 @@ export interface FileRoutesById {
   '/_admin/dashboard/settings': typeof AdminDashboardSettingsRoute
   '/_affiliate/portal/coupons': typeof AffiliatePortalCouponsRoute
   '/_affiliate/portal/sales': typeof AffiliatePortalSalesRoute
+  '/api/public/love-match-price': typeof ApiPublicLoveMatchPriceRoute
   '/api/public/love-match-retry': typeof ApiPublicLoveMatchRetryRoute
   '/api/public/love-match-status': typeof ApiPublicLoveMatchStatusRoute
   '/api/public/reconcile-orders': typeof ApiPublicReconcileOrdersRoute
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/portal/coupons'
     | '/portal/sales'
+    | '/api/public/love-match-price'
     | '/api/public/love-match-retry'
     | '/api/public/love-match-status'
     | '/api/public/reconcile-orders'
@@ -305,6 +315,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/portal/coupons'
     | '/portal/sales'
+    | '/api/public/love-match-price'
     | '/api/public/love-match-retry'
     | '/api/public/love-match-status'
     | '/api/public/reconcile-orders'
@@ -334,6 +345,7 @@ export interface FileRouteTypes {
     | '/_admin/dashboard/settings'
     | '/_affiliate/portal/coupons'
     | '/_affiliate/portal/sales'
+    | '/api/public/love-match-price'
     | '/api/public/love-match-retry'
     | '/api/public/love-match-status'
     | '/api/public/reconcile-orders'
@@ -353,6 +365,7 @@ export interface RootRouteChildren {
   SuccessRoute: typeof SuccessRoute
   TermsRoute: typeof TermsRoute
   DashboardLoginRoute: typeof DashboardLoginRoute
+  ApiPublicLoveMatchPriceRoute: typeof ApiPublicLoveMatchPriceRoute
   ApiPublicLoveMatchRetryRoute: typeof ApiPublicLoveMatchRetryRoute
   ApiPublicLoveMatchStatusRoute: typeof ApiPublicLoveMatchStatusRoute
   ApiPublicReconcileOrdersRoute: typeof ApiPublicReconcileOrdersRoute
@@ -484,6 +497,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/love-match-retry'
       fullPath: '/api/public/love-match-retry'
       preLoaderRoute: typeof ApiPublicLoveMatchRetryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/love-match-price': {
+      id: '/api/public/love-match-price'
+      path: '/api/public/love-match-price'
+      fullPath: '/api/public/love-match-price'
+      preLoaderRoute: typeof ApiPublicLoveMatchPriceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_affiliate/portal/sales': {
@@ -628,6 +648,7 @@ const rootRouteChildren: RootRouteChildren = {
   SuccessRoute: SuccessRoute,
   TermsRoute: TermsRoute,
   DashboardLoginRoute: DashboardLoginRoute,
+  ApiPublicLoveMatchPriceRoute: ApiPublicLoveMatchPriceRoute,
   ApiPublicLoveMatchRetryRoute: ApiPublicLoveMatchRetryRoute,
   ApiPublicLoveMatchStatusRoute: ApiPublicLoveMatchStatusRoute,
   ApiPublicReconcileOrdersRoute: ApiPublicReconcileOrdersRoute,

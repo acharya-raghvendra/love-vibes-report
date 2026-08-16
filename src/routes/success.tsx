@@ -2,6 +2,8 @@ import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 
+import { trackOnce } from "@/lib/meta-pixel";
+
 const successSearchSchema = z.object({
   order_id: z.string().optional(),
   phone: z.string().optional(),
@@ -27,6 +29,7 @@ type OrderStatus = {
   ready: boolean;
   delivered: boolean;
   language?: string;
+  amount?: number | null;
   email_sent?: boolean;
   whatsapp_sent?: boolean;
 
@@ -223,6 +226,21 @@ function SuccessPage() {
       setRetrying(false);
     }
   };
+
+  // Meta Pixel: Purchase fires only once the server confirms the order left
+  // "created" (i.e. payment verified), never on a button click. The eventID is
+  // our order_id so a future Conversions API event deduplicates against it.
+  useEffect(() => {
+    if (!orderId || !order) return;
+    const paid = ["paid", "generating", "ready", "delivered"].includes(order.status);
+    if (!paid) return;
+    trackOnce(
+      "Purchase",
+      orderId,
+      { value: typeof order.amount === "number" ? order.amount : undefined, currency: "INR" },
+      { eventID: orderId },
+    );
+  }, [orderId, order]);
 
   const status = order?.status ?? (orderId ? "loading" : "created");
   const isReady = Boolean(order?.ready);

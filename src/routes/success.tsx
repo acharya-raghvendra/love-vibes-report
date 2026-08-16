@@ -1,7 +1,7 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
-
+import { Icon } from "@/components/icon";
 import { trackOnce } from "@/lib/meta-pixel";
 
 const successSearchSchema = z.object({
@@ -70,12 +70,7 @@ function Step({
       <div className="relative">
         {state === "done" ? (
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary">
-            <span
-              className="material-symbols-outlined text-background"
-              style={{ fontSize: "16px", fontVariationSettings: "'wght' 700" }}
-            >
-              check
-            </span>
+            <Icon name="check" size={16} className="text-background" />
           </div>
         ) : state === "active" ? (
           <div className="flex h-6 w-6 items-center justify-center rounded-full border border-primary/50">
@@ -83,18 +78,11 @@ function Step({
           </div>
         ) : state === "failed" ? (
           <div className="flex h-6 w-6 items-center justify-center rounded-full border border-error/60 bg-error/10">
-            <span className="material-symbols-outlined text-error" style={{ fontSize: "14px" }}>
-              close
-            </span>
+            <Icon name="close" size={14} className="text-error" />
           </div>
         ) : (
           <div className="flex h-6 w-6 items-center justify-center rounded-full border border-outline-variant/50">
-            <span
-              className="material-symbols-outlined text-on-surface-variant/70"
-              style={{ fontSize: "14px" }}
-            >
-              schedule
-            </span>
+            <Icon name="schedule" size={14} className="text-on-surface-variant/70" />
           </div>
         )}
         {!last && (
@@ -265,12 +253,7 @@ function SuccessPage() {
         <section className="mb-10 flex flex-col items-center text-center">
           <div className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-primary/30 bg-primary-container/20">
             <span className="absolute inset-0 rounded-full bg-primary/25 blur-2xl" aria-hidden="true" />
-            <span
-              className="material-symbols-outlined relative text-primary"
-              style={{ fontSize: "48px", fontVariationSettings: "'FILL' 1" }}
-            >
-              check_circle
-            </span>
+            <Icon name="check_circle" size={48} filled className="relative text-primary" />
           </div>
           <h1 className="font-headline-md text-headline-md text-primary">Payment Successful</h1>
           <p className="mt-2 max-w-[340px] font-body-lg text-body-lg text-on-surface-variant">
@@ -355,9 +338,7 @@ function SuccessPage() {
         {/* Email delivery card */}
         <div className="mb-10 flex w-full items-center gap-4 rounded-2xl border border-outline-variant/20 bg-surface-container/50 p-6">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-            <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
-              mail
-            </span>
+            <Icon name="mail" size={22} />
           </div>
           <div className="min-w-0 flex-grow">
             <p className="font-label-md text-label-md text-on-surface">

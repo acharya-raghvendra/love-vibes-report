@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { Icon } from "@/components/icon";
 
 const QUICK_LINKS = [
   { to: "/" as const, label: "Home" },
@@ -11,9 +12,7 @@ const QUICK_LINKS = [
 function TrustChip({ icon, label }: { icon: string; label: string }) {
   return (
     <span className="glass-card inline-flex items-center gap-2 rounded-full border border-primary/20 px-3 py-1.5 text-label-sm text-on-surface">
-      <span className="material-symbols-outlined text-primary" style={{ fontSize: "16px" }}>
-        {icon}
-      </span>
+      <Icon name={icon} size={16} className="text-primary" />
       {label}
     </span>
   );
@@ -66,9 +65,7 @@ export function SiteFooter() {
               href="#"
               className="inline-flex items-center gap-2 font-body-md text-body-md text-on-surface hover:text-primary transition-colors w-fit"
             >
-              <span className="material-symbols-outlined text-primary" style={{ fontSize: "20px" }}>
-                chat
-              </span>
+              <Icon name="chat" size={20} className="text-primary" />
               WhatsApp Support
             </a>
           </div>

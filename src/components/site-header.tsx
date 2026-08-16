@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { Icon } from "@/components/icon";
 import logoAsset from "@/assets/talktoguruji-logo.png.asset.json";
 
 const NAV_LINKS = [
@@ -74,7 +75,7 @@ export function SiteHeader() {
             onClick={() => setOpen(true)}
             className="lg:hidden flex h-10 w-10 items-center justify-center rounded-lg border border-primary/20 text-primary"
           >
-            <span className="material-symbols-outlined">menu</span>
+            <Icon name="menu" size={24} />
           </button>
         </div>
       </header>
@@ -104,10 +105,10 @@ export function SiteHeader() {
               type="button"
               aria-label="Close menu"
               onClick={() => setOpen(false)}
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant"
-            >
-              <span className="material-symbols-outlined">close</span>
-            </button>
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant"
+          >
+            <Icon name="close" size={24} />
+          </button>
           </div>
           <nav aria-label="Mobile" className="flex flex-1 flex-col gap-1 px-5 py-6">
             {NAV_LINKS.map((l) => (

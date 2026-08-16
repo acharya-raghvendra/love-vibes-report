@@ -1,0 +1,140 @@
+import { memo } from "react";
+import {
+  User,
+  Users,
+  Heart,
+  Star,
+  Menu,
+  X,
+  ChevronDown,
+  Quote,
+  CalendarPlus,
+  BarChart3,
+  LockOpen,
+  Lock,
+  MessageCircle,
+  Mail,
+  Send,
+  ArrowLeft,
+  RefreshCw,
+  AlertCircle,
+  AlertTriangle,
+  Languages,
+  Sparkles,
+  BadgeCheck,
+  ScrollText,
+  Loader2,
+  LogOut,
+  LayoutDashboard,
+  ReceiptText,
+  Tag,
+  Gift,
+  CreditCard,
+  Settings,
+  TrendingUp,
+  IndianRupee,
+  Clock,
+  MapPin,
+  Landmark,
+  BrainCircuit,
+  Flower2,
+  BookOpen,
+  Route,
+  Cake,
+  LineChart,
+  Handshake,
+  Shield,
+  Gem,
+  Check,
+  CheckCircle2,
+  Circle,
+  Eye,
+  EyeOff,
+  Wand2,
+} from "lucide-react";
+
+const ICONS: Record<string, React.ComponentType<{ className?: string; size?: number; strokeWidth?: number; fill?: string }>> = {
+  person: User,
+  person_2: Users,
+  favorite: Heart,
+  star: Star,
+  menu: Menu,
+  close: X,
+  expand_more: ChevronDown,
+  format_quote: Quote,
+  edit_calendar: CalendarPlus,
+  analytics: BarChart3,
+  lock_open: LockOpen,
+  lock: Lock,
+  chat: MessageCircle,
+  mail: Mail,
+  send: Send,
+  arrow_back: ArrowLeft,
+  refresh: RefreshCw,
+  error: AlertCircle,
+  translate: Languages,
+  stars: Sparkles,
+  verified: BadgeCheck,
+  history_edu: ScrollText,
+  progress_activity: Loader2,
+  logout: LogOut,
+  dashboard: LayoutDashboard,
+  receipt_long: ReceiptText,
+  sell: Tag,
+  group: Users,
+  card_giftcard: Gift,
+  payments: CreditCard,
+  settings: Settings,
+  trending_up: TrendingUp,
+  currency_rupee: IndianRupee,
+  schedule: Clock,
+  location_on: MapPin,
+  account_balance: Landmark,
+  psychology: BrainCircuit,
+  self_improvement: Flower2,
+  auto_stories: BookOpen,
+  route: Route,
+  cake: Cake,
+  insights: LineChart,
+  handshake: Handshake,
+  shield: Shield,
+  diamond: Gem,
+  check: Check,
+  check_circle: CheckCircle2,
+  warning: AlertTriangle,
+  circle: Circle,
+  visibility: Eye,
+  visibility_off: EyeOff,
+  auto_fix_high: Wand2,
+  auto_awesome: Sparkles,
+};
+
+export const Icon = memo(function Icon({
+  name,
+  className,
+  size = 24,
+  filled = false,
+}: {
+  name: string;
+  className?: string;
+  size?: number;
+  filled?: boolean;
+}) {
+  const Component = ICONS[name];
+  if (!Component) {
+    if (import.meta.env.DEV) {
+      console.warn(`Icon: unknown icon name "${name}"`);
+    }
+    return null;
+  }
+  return (
+    <Component
+      aria-hidden="true"
+      className={className}
+      size={size}
+      strokeWidth={1.5}
+      fill={filled ? "currentColor" : "none"}
+    />
+  );
+});
+

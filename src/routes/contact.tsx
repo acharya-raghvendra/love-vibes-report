@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Icon } from "@/components/icon";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -21,7 +22,7 @@ function ContactPage() {
     <div className="relative min-h-screen bg-background text-on-background">
       <main className="mx-auto max-w-[860px] px-5 pt-28 pb-24 lg:px-6">
         <Link to="/" className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-8 text-body-md">
-          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>arrow_back</span>
+          <Icon name="arrow_back" size={18} />
           Back to Home
         </Link>
 
@@ -76,7 +77,7 @@ function ContactPage() {
             href="mailto:info@talktoguruji.com"
             className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-label-lg font-semibold text-on-primary hover:opacity-90 transition-opacity"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>send</span>
+            <Icon name="send" size={20} />
             Email us
           </a>
         </section>
@@ -99,9 +100,7 @@ function InfoCard({
   return (
     <div className={`glass-card rounded-2xl border border-primary/20 p-6 ${wide ? "sm:col-span-2" : ""}`}>
       <div className="flex items-center gap-3 mb-3">
-        <span className="material-symbols-outlined text-primary" style={{ fontSize: "22px" }}>
-          {icon}
-        </span>
+        <Icon name={icon} size={22} className="text-primary" />
         <h2 className="text-title-md font-semibold text-on-surface">{title}</h2>
       </div>
       <div className="text-body-md">{children}</div>

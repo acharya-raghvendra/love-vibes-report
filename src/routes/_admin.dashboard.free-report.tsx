@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { Icon } from "@/components/icon";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_admin/dashboard/free-report")({
@@ -200,7 +201,7 @@ function FreeReportPage() {
           )}
           {result.status !== "delivered" && result.status !== "failed" && (
             <div className="flex items-center gap-2 text-title-md font-medium text-on-surface">
-              <span className="material-symbols-outlined animate-spin">progress_activity</span>
+              <Icon name="progress_activity" size={24} className="animate-spin" />
               {timedOut
                 ? "Still generating — check the Orders page in a minute"
                 : "Generating (30–90s)…"}

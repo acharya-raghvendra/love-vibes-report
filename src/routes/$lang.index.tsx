@@ -49,9 +49,9 @@ const TESTIMONIALS = [
 
 function Index() {
   const { coupon: urlCoupon } = Route.useSearch();
-  const [lang] = useSiteLanguage();
+  const lang = usePageLanguage();
   const copy = LANDING_COPY[lang];
-  useLocalizedMeta(META.landing[lang]);
+
   const [coupon, setCoupon] = useState<string | null>(null);
   const [showStickyCta, setShowStickyCta] = useState(false);
   const heroCtaRef = useRef<HTMLAnchorElement>(null);

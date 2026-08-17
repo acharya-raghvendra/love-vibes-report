@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Icon } from "@/components/icon";
 
-export const Route = createFileRoute("/privacy")({
+export const Route = createFileRoute("/$lang/privacy")({
   head: () => ({
     meta: [
       { title: "Privacy Policy — Love Match" },

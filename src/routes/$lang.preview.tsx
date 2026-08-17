@@ -6,7 +6,7 @@ import { couponSearch, resolveCoupon, storeCoupon, validateCouponSearch } from "
 import { trackOnce } from "@/lib/meta-pixel";
 
 
-export const Route = createFileRoute("/preview")({
+export const Route = createFileRoute("/$lang/preview")({
   validateSearch: validateCouponSearch,
   head: () => ({
     meta: [

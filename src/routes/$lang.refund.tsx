@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Icon } from "@/components/icon";
 
-export const Route = createFileRoute("/refund")({
+export const Route = createFileRoute("/$lang/refund")({
   head: () => ({
     meta: [
       { title: "Refund & Cancellation Policy — Love Match" },

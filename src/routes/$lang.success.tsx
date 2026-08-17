@@ -9,7 +9,7 @@ const successSearchSchema = z.object({
   phone: z.string().optional(),
 });
 
-export const Route = createFileRoute("/success")({
+export const Route = createFileRoute("/$lang/success")({
   validateSearch: successSearchSchema,
   head: () => ({
     meta: [

@@ -9,19 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as SuccessRouteImport } from './routes/success'
-import { Route as RefundRouteImport } from './routes/refund'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as PreviewRouteImport } from './routes/preview'
-import { Route as InputRouteImport } from './routes/input'
-import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AffiliateRouteImport } from './routes/_affiliate'
 import { Route as AdminRouteImport } from './routes/_admin'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as LangIndexRouteImport } from './routes/$lang.index'
 import { Route as DashboardLoginRouteImport } from './routes/dashboard.login'
 import { Route as AffiliatePortalRouteImport } from './routes/_affiliate.portal'
 import { Route as AdminDashboardRouteImport } from './routes/_admin.dashboard'
+import { Route as LangTermsRouteImport } from './routes/$lang.terms'
+import { Route as LangSuccessRouteImport } from './routes/$lang.success'
+import { Route as LangRefundRouteImport } from './routes/$lang.refund'
+import { Route as LangPrivacyRouteImport } from './routes/$lang.privacy'
+import { Route as LangPreviewRouteImport } from './routes/$lang.preview'
+import { Route as LangInputRouteImport } from './routes/$lang.input'
+import { Route as LangContactRouteImport } from './routes/$lang.contact'
 import { Route as AffiliatePortalIndexRouteImport } from './routes/_affiliate.portal.index'
 import { Route as AdminDashboardIndexRouteImport } from './routes/_admin.dashboard.index'
 import { Route as ApiPublicReconcileOrdersRouteImport } from './routes/api/public/reconcile-orders'
@@ -38,41 +38,6 @@ import { Route as AdminDashboardFailuresRouteImport } from './routes/_admin.dash
 import { Route as AdminDashboardCouponsRouteImport } from './routes/_admin.dashboard.coupons'
 import { Route as AdminDashboardAffiliatesRouteImport } from './routes/_admin.dashboard.affiliates'
 
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SuccessRoute = SuccessRouteImport.update({
-  id: '/success',
-  path: '/success',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RefundRoute = RefundRouteImport.update({
-  id: '/refund',
-  path: '/refund',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PreviewRoute = PreviewRouteImport.update({
-  id: '/preview',
-  path: '/preview',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InputRoute = InputRouteImport.update({
-  id: '/input',
-  path: '/input',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AffiliateRoute = AffiliateRouteImport.update({
   id: '/_affiliate',
   getParentRoute: () => rootRouteImport,
@@ -81,9 +46,9 @@ const AdminRoute = AdminRouteImport.update({
   id: '/_admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const LangIndexRoute = LangIndexRouteImport.update({
+  id: '/$lang/',
+  path: '/$lang/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardLoginRoute = DashboardLoginRouteImport.update({
@@ -100,6 +65,41 @@ const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AdminRoute,
+} as any)
+const LangTermsRoute = LangTermsRouteImport.update({
+  id: '/$lang/terms',
+  path: '/$lang/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LangSuccessRoute = LangSuccessRouteImport.update({
+  id: '/$lang/success',
+  path: '/$lang/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LangRefundRoute = LangRefundRouteImport.update({
+  id: '/$lang/refund',
+  path: '/$lang/refund',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LangPrivacyRoute = LangPrivacyRouteImport.update({
+  id: '/$lang/privacy',
+  path: '/$lang/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LangPreviewRoute = LangPreviewRouteImport.update({
+  id: '/$lang/preview',
+  path: '/$lang/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LangInputRoute = LangInputRouteImport.update({
+  id: '/$lang/input',
+  path: '/$lang/input',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LangContactRoute = LangContactRouteImport.update({
+  id: '/$lang/contact',
+  path: '/$lang/contact',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AffiliatePortalIndexRoute = AffiliatePortalIndexRouteImport.update({
   id: '/',
@@ -182,17 +182,18 @@ const AdminDashboardAffiliatesRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/contact': typeof ContactRoute
-  '/input': typeof InputRoute
-  '/preview': typeof PreviewRoute
-  '/privacy': typeof PrivacyRoute
-  '/refund': typeof RefundRoute
-  '/success': typeof SuccessRoute
-  '/terms': typeof TermsRoute
+  '/': typeof AffiliateRouteWithChildren
+  '/$lang/contact': typeof LangContactRoute
+  '/$lang/input': typeof LangInputRoute
+  '/$lang/preview': typeof LangPreviewRoute
+  '/$lang/privacy': typeof LangPrivacyRoute
+  '/$lang/refund': typeof LangRefundRoute
+  '/$lang/success': typeof LangSuccessRoute
+  '/$lang/terms': typeof LangTermsRoute
   '/dashboard': typeof AdminDashboardRouteWithChildren
   '/portal': typeof AffiliatePortalRouteWithChildren
   '/dashboard/login': typeof DashboardLoginRoute
+  '/$lang/': typeof LangIndexRoute
   '/dashboard/affiliates': typeof AdminDashboardAffiliatesRoute
   '/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/dashboard/failures': typeof AdminDashboardFailuresRoute
@@ -210,15 +211,16 @@ export interface FileRoutesByFullPath {
   '/portal/': typeof AffiliatePortalIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/contact': typeof ContactRoute
-  '/input': typeof InputRoute
-  '/preview': typeof PreviewRoute
-  '/privacy': typeof PrivacyRoute
-  '/refund': typeof RefundRoute
-  '/success': typeof SuccessRoute
-  '/terms': typeof TermsRoute
+  '/': typeof AffiliateRouteWithChildren
+  '/$lang/contact': typeof LangContactRoute
+  '/$lang/input': typeof LangInputRoute
+  '/$lang/preview': typeof LangPreviewRoute
+  '/$lang/privacy': typeof LangPrivacyRoute
+  '/$lang/refund': typeof LangRefundRoute
+  '/$lang/success': typeof LangSuccessRoute
+  '/$lang/terms': typeof LangTermsRoute
   '/dashboard/login': typeof DashboardLoginRoute
+  '/$lang': typeof LangIndexRoute
   '/dashboard/affiliates': typeof AdminDashboardAffiliatesRoute
   '/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/dashboard/failures': typeof AdminDashboardFailuresRoute
@@ -237,19 +239,19 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/_admin': typeof AdminRouteWithChildren
   '/_affiliate': typeof AffiliateRouteWithChildren
-  '/contact': typeof ContactRoute
-  '/input': typeof InputRoute
-  '/preview': typeof PreviewRoute
-  '/privacy': typeof PrivacyRoute
-  '/refund': typeof RefundRoute
-  '/success': typeof SuccessRoute
-  '/terms': typeof TermsRoute
+  '/$lang/contact': typeof LangContactRoute
+  '/$lang/input': typeof LangInputRoute
+  '/$lang/preview': typeof LangPreviewRoute
+  '/$lang/privacy': typeof LangPrivacyRoute
+  '/$lang/refund': typeof LangRefundRoute
+  '/$lang/success': typeof LangSuccessRoute
+  '/$lang/terms': typeof LangTermsRoute
   '/_admin/dashboard': typeof AdminDashboardRouteWithChildren
   '/_affiliate/portal': typeof AffiliatePortalRouteWithChildren
   '/dashboard/login': typeof DashboardLoginRoute
+  '/$lang/': typeof LangIndexRoute
   '/_admin/dashboard/affiliates': typeof AdminDashboardAffiliatesRoute
   '/_admin/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/_admin/dashboard/failures': typeof AdminDashboardFailuresRoute
@@ -270,16 +272,17 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/contact'
-    | '/input'
-    | '/preview'
-    | '/privacy'
-    | '/refund'
-    | '/success'
-    | '/terms'
+    | '/$lang/contact'
+    | '/$lang/input'
+    | '/$lang/preview'
+    | '/$lang/privacy'
+    | '/$lang/refund'
+    | '/$lang/success'
+    | '/$lang/terms'
     | '/dashboard'
     | '/portal'
     | '/dashboard/login'
+    | '/$lang/'
     | '/dashboard/affiliates'
     | '/dashboard/coupons'
     | '/dashboard/failures'
@@ -298,14 +301,15 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/contact'
-    | '/input'
-    | '/preview'
-    | '/privacy'
-    | '/refund'
-    | '/success'
-    | '/terms'
+    | '/$lang/contact'
+    | '/$lang/input'
+    | '/$lang/preview'
+    | '/$lang/privacy'
+    | '/$lang/refund'
+    | '/$lang/success'
+    | '/$lang/terms'
     | '/dashboard/login'
+    | '/$lang'
     | '/dashboard/affiliates'
     | '/dashboard/coupons'
     | '/dashboard/failures'
@@ -323,19 +327,19 @@ export interface FileRouteTypes {
     | '/portal'
   id:
     | '__root__'
-    | '/'
     | '/_admin'
     | '/_affiliate'
-    | '/contact'
-    | '/input'
-    | '/preview'
-    | '/privacy'
-    | '/refund'
-    | '/success'
-    | '/terms'
+    | '/$lang/contact'
+    | '/$lang/input'
+    | '/$lang/preview'
+    | '/$lang/privacy'
+    | '/$lang/refund'
+    | '/$lang/success'
+    | '/$lang/terms'
     | '/_admin/dashboard'
     | '/_affiliate/portal'
     | '/dashboard/login'
+    | '/$lang/'
     | '/_admin/dashboard/affiliates'
     | '/_admin/dashboard/coupons'
     | '/_admin/dashboard/failures'
@@ -354,17 +358,17 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AffiliateRoute: typeof AffiliateRouteWithChildren
-  ContactRoute: typeof ContactRoute
-  InputRoute: typeof InputRoute
-  PreviewRoute: typeof PreviewRoute
-  PrivacyRoute: typeof PrivacyRoute
-  RefundRoute: typeof RefundRoute
-  SuccessRoute: typeof SuccessRoute
-  TermsRoute: typeof TermsRoute
+  LangContactRoute: typeof LangContactRoute
+  LangInputRoute: typeof LangInputRoute
+  LangPreviewRoute: typeof LangPreviewRoute
+  LangPrivacyRoute: typeof LangPrivacyRoute
+  LangRefundRoute: typeof LangRefundRoute
+  LangSuccessRoute: typeof LangSuccessRoute
+  LangTermsRoute: typeof LangTermsRoute
   DashboardLoginRoute: typeof DashboardLoginRoute
+  LangIndexRoute: typeof LangIndexRoute
   ApiPublicLoveMatchPriceRoute: typeof ApiPublicLoveMatchPriceRoute
   ApiPublicLoveMatchRetryRoute: typeof ApiPublicLoveMatchRetryRoute
   ApiPublicLoveMatchStatusRoute: typeof ApiPublicLoveMatchStatusRoute
@@ -373,55 +377,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/success': {
-      id: '/success'
-      path: '/success'
-      fullPath: '/success'
-      preLoaderRoute: typeof SuccessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/refund': {
-      id: '/refund'
-      path: '/refund'
-      fullPath: '/refund'
-      preLoaderRoute: typeof RefundRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/preview': {
-      id: '/preview'
-      path: '/preview'
-      fullPath: '/preview'
-      preLoaderRoute: typeof PreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/input': {
-      id: '/input'
-      path: '/input'
-      fullPath: '/input'
-      preLoaderRoute: typeof InputRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_affiliate': {
       id: '/_affiliate'
       path: ''
@@ -436,11 +391,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/$lang/': {
+      id: '/$lang/'
+      path: '/$lang'
+      fullPath: '/$lang/'
+      preLoaderRoute: typeof LangIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/login': {
@@ -463,6 +418,55 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard'
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/$lang/terms': {
+      id: '/$lang/terms'
+      path: '/$lang/terms'
+      fullPath: '/$lang/terms'
+      preLoaderRoute: typeof LangTermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$lang/success': {
+      id: '/$lang/success'
+      path: '/$lang/success'
+      fullPath: '/$lang/success'
+      preLoaderRoute: typeof LangSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$lang/refund': {
+      id: '/$lang/refund'
+      path: '/$lang/refund'
+      fullPath: '/$lang/refund'
+      preLoaderRoute: typeof LangRefundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$lang/privacy': {
+      id: '/$lang/privacy'
+      path: '/$lang/privacy'
+      fullPath: '/$lang/privacy'
+      preLoaderRoute: typeof LangPrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$lang/preview': {
+      id: '/$lang/preview'
+      path: '/$lang/preview'
+      fullPath: '/$lang/preview'
+      preLoaderRoute: typeof LangPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$lang/input': {
+      id: '/$lang/input'
+      path: '/$lang/input'
+      fullPath: '/$lang/input'
+      preLoaderRoute: typeof LangInputRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$lang/contact': {
+      id: '/$lang/contact'
+      path: '/$lang/contact'
+      fullPath: '/$lang/contact'
+      preLoaderRoute: typeof LangContactRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_affiliate/portal/': {
       id: '/_affiliate/portal/'
@@ -637,17 +641,17 @@ const AffiliateRouteWithChildren = AffiliateRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AffiliateRoute: AffiliateRouteWithChildren,
-  ContactRoute: ContactRoute,
-  InputRoute: InputRoute,
-  PreviewRoute: PreviewRoute,
-  PrivacyRoute: PrivacyRoute,
-  RefundRoute: RefundRoute,
-  SuccessRoute: SuccessRoute,
-  TermsRoute: TermsRoute,
+  LangContactRoute: LangContactRoute,
+  LangInputRoute: LangInputRoute,
+  LangPreviewRoute: LangPreviewRoute,
+  LangPrivacyRoute: LangPrivacyRoute,
+  LangRefundRoute: LangRefundRoute,
+  LangSuccessRoute: LangSuccessRoute,
+  LangTermsRoute: LangTermsRoute,
   DashboardLoginRoute: DashboardLoginRoute,
+  LangIndexRoute: LangIndexRoute,
   ApiPublicLoveMatchPriceRoute: ApiPublicLoveMatchPriceRoute,
   ApiPublicLoveMatchRetryRoute: ApiPublicLoveMatchRetryRoute,
   ApiPublicLoveMatchStatusRoute: ApiPublicLoveMatchStatusRoute,

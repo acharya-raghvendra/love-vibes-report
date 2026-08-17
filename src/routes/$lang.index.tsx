@@ -6,7 +6,7 @@ import { PriceLine } from "@/components/price-line";
 import { CTA_LABEL, LANDING_COPY, META } from "@/lib/site-copy";
 import { useLocalizedMeta, useSiteLanguage } from "@/lib/site-language";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/$lang/")({
   validateSearch: validateCouponSearch,
   // Hindi is the default UI language, so the crawler-visible tags are Hindi.
   // useLocalizedMeta() swaps them when a visitor picks English.

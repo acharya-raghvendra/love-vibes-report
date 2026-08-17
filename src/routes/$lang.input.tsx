@@ -8,7 +8,7 @@ import { INPUT_COPY, META } from "@/lib/site-copy";
 import { setSiteLanguage, useLocalizedMeta, useSiteLanguage } from "@/lib/site-language";
 
 
-export const Route = createFileRoute("/input")({
+export const Route = createFileRoute("/$lang/input")({
   validateSearch: validateCouponSearch,
   head: () => ({
     meta: [

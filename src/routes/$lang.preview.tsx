@@ -365,7 +365,12 @@ function PreviewPage() {
 
   // Read input from session storage; bounce to /input if missing (keeping the coupon).
   useEffect(() => {
-    const back = () => navigate({ to: "/input", search: couponSearch(resolveCoupon(urlCoupon)) });
+    const back = () =>
+      navigate({
+        to: "/$lang/input",
+        params: { lang },
+        search: couponSearch(resolveCoupon(urlCoupon)),
+      });
     try {
       const raw = sessionStorage.getItem("loveMatch:input");
       if (!raw) {
@@ -393,7 +398,8 @@ function PreviewPage() {
             last: payload.person_b.last,
             dob: payload.person_b.dob,
           },
-          language: payload.language ?? "hi",
+          // Preview copy follows the URL prefix, not the chosen report language.
+          language: pageLangRef.current,
         },
       });
       if (error || !data?.data) throw new Error("preview_failed");
@@ -412,7 +418,6 @@ function PreviewPage() {
     () => (state.kind === "ready" ? (state.data.data.headings ?? {}) : {}),
     [state],
   );
-  const lang: "en" | "hi" = input?.language === "en" ? "en" : "hi";
 
   const createOrder = useCallback(
     async (couponCode: string | null): Promise<OrderQuote | null> => {
@@ -542,7 +547,7 @@ function PreviewPage() {
     autoAppliedRef.current = true;
     setCarriedCoupon(null);
     storeCoupon(null);
-    if (urlCoupon) navigate({ to: "/preview", search: {}, replace: true });
+    if (urlCoupon) navigate({ to: "/$lang/preview", params: { lang }, search: {}, replace: true });
   }
 
   async function onUnlock() {
@@ -610,7 +615,8 @@ function PreviewPage() {
         theme: { color: "#f2ca50" },
         handler: () => {
           navigate({
-            to: "/success",
+            to: "/$lang/success",
+            params: { lang },
             search: { order_id: gatewayOrder.internalOrderId, phone: input.person_a.phone },
           });
         },
@@ -907,7 +913,7 @@ function PreviewPage() {
           </button>
                 <p className="mt-4 font-body-md text-label-sm text-on-surface-variant">
                   {state.data.data.refund_line}{" "}
-                  <Link to="/refund" className="underline hover:text-primary">
+                  <Link to="/$lang/refund" params={{ lang }} className="underline hover:text-primary">
                     {state.data.data.refund_link_label}
                   </Link>
                 </p>

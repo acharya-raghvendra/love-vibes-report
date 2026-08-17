@@ -357,8 +357,7 @@ export function InputPage() {
     trackOnce("Lead", leadKey, { language: siteLang });
 
     navigate({
-      to: "/$lang/preview",
-      params: { lang: siteLang },
+      to: langPath(siteLang, "/preview") as never,
       search: couponSearch(coupon),
     });
 

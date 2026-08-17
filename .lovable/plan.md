@@ -33,7 +33,13 @@ Admin, affiliate, dashboard and `/api/*` routes stay unprefixed and untouched.
 - `sitemap.xml`: emit each indexable page twice — unprefixed and `/hi` — with `hreflang` alternates as above and `x-default` on the unprefixed URL. `/preview` and `/success` stay excluded.
 - `robots.txt`: disallow `/preview`, `/success`, `/hi/preview`, `/hi/success`; drop the `/en/*` lines.
 
-### 5. Unchanged from the approved plan
+### 5. Preview content language vs report language
+Site language (URL) and report language (form toggle) are independent, so the preview must not mix them.
+- `love-match-generate` is called with the **site/URL language**, so all server-generated preview content (band label, score line, dimension names, Life Path readings, chemistry paragraph, locked-section descriptions, friction line) matches the page chrome.
+- The form's report-language choice is stored in the order's `language` field only, and drives the delivered PDF, email and WhatsApp copy plus the delivery link's tree.
+- The preview cache key includes the site language so `/preview` and `/hi/preview` never serve each other's copy.
+
+### 6. Unchanged from the approved plan
 - Meta Pixel `language` param on `Lead`, `ViewContent`, `InitiateCheckout`, `Purchase`.
 - Report-language control on the input form: initialised from the URL prefix, then independently changeable.
 - Server-side delivery links (email/WhatsApp/Razorpay callbacks) point at the order's language tree — Hindi orders get `/hi/...`, English orders get the unprefixed path.

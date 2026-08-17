@@ -1,27 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Icon } from "@/components/icon";
+import { usePageLanguage, type SiteLanguage } from "@/lib/site-language";
+import { langHead } from "@/lib/site-seo";
 
 export const Route = createFileRoute("/$lang/contact")({
-  head: () => ({
-    meta: [
-      { title: "Contact Us — Love Match" },
-      { name: "description", content: "Get in touch with the Love Match team at TalkToGuruji for support, order questions, or feedback." },
-      { property: "og:title", content: "Contact Us — Love Match" },
-      { property: "og:description", content: "Get in touch with the Love Match team for support and order questions." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "Contact Us — Love Match" },
-      { name: "twitter:description", content: "Get in touch with the Love Match team." },
-    ],
-  }),
+  head: ({ params }) => {
+    const lang = (params.lang === "en" ? "en" : "hi") as SiteLanguage;
+    return langHead({ lang, page: "/contact", title: "Contact Us — Love Match", description: "Get in touch with the Love Match team at TalkToGuruji for support, order questions, or feedback.", twitterCard: "summary" });
+  },
   component: ContactPage,
 });
 
 function ContactPage() {
+  const lang = usePageLanguage();
   return (
     <div className="relative min-h-screen bg-background text-on-background">
       <main className="mx-auto max-w-[860px] px-5 pt-28 pb-24 lg:px-6">
-        <Link to="/" className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-8 text-body-md">
+        <Link to="/$lang" params={{ lang }} className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-8 text-body-md">
           <Icon name="arrow_back" size={18} />
           Back to Home
         </Link>
@@ -67,7 +62,7 @@ function ContactPage() {
           <ul className="list-disc pl-6 space-y-2 text-on-surface-variant">
             <li>For order-related queries, include your order ID and the email used for purchase.</li>
             <li>For refund requests, please read our{" "}
-              <Link to="/refund" className="text-primary hover:underline">Refund & Cancellation Policy</Link>{" "}
+              <Link to="/$lang/refund" params={{ lang }} className="text-primary hover:underline">Refund & Cancellation Policy</Link>{" "}
               first — no refunds are issued once the report has been delivered.
             </li>
             <li>Check your spam / promotions folder before reporting a missing report email.</li>

@@ -1,27 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Icon } from "@/components/icon";
+import { usePageLanguage, type SiteLanguage } from "@/lib/site-language";
+import { langHead } from "@/lib/site-seo";
 
 export const Route = createFileRoute("/$lang/privacy")({
-  head: () => ({
-    meta: [
-      { title: "Privacy Policy — Love Match" },
-      { name: "description", content: "How Love Match collects, uses, and protects the personal data you share to generate your compatibility report." },
-      { property: "og:title", content: "Privacy Policy — Love Match" },
-      { property: "og:description", content: "How Love Match collects, uses, and protects the personal data you share." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "Privacy Policy — Love Match" },
-      { name: "twitter:description", content: "How Love Match collects, uses, and protects your data." },
-    ],
-  }),
+  head: ({ params }) => {
+    const lang = (params.lang === "en" ? "en" : "hi") as SiteLanguage;
+    return langHead({ lang, page: "/privacy", title: "Privacy Policy — Love Match", description: "How Love Match collects, uses, and protects the personal data you share to generate your compatibility report.", twitterCard: "summary" });
+  },
   component: PrivacyPage,
 });
 
 function PrivacyPage() {
+  const lang = usePageLanguage();
   return (
     <div className="relative min-h-screen bg-background text-on-background">
       <main className="mx-auto max-w-[860px] px-5 pt-28 pb-24 lg:px-6">
-        <Link to="/" className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-8 text-body-md">
+        <Link to="/$lang" params={{ lang }} className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-8 text-body-md">
           <Icon name="arrow_back" size={18} />
           Back to Home
         </Link>

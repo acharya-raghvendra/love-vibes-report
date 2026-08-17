@@ -1,27 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Icon } from "@/components/icon";
+import { usePageLanguage, type SiteLanguage } from "@/lib/site-language";
+import { langHead } from "@/lib/site-seo";
 
 export const Route = createFileRoute("/$lang/terms")({
-  head: () => ({
-    meta: [
-      { title: "Terms & Conditions — Love Match" },
-      { name: "description", content: "The terms and conditions governing your use of the Love Match compatibility report service." },
-      { property: "og:title", content: "Terms & Conditions — Love Match" },
-      { property: "og:description", content: "The terms governing your use of the Love Match compatibility report service." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "Terms & Conditions — Love Match" },
-      { name: "twitter:description", content: "The terms governing your use of Love Match." },
-    ],
-  }),
+  head: ({ params }) => {
+    const lang = (params.lang === "en" ? "en" : "hi") as SiteLanguage;
+    return langHead({ lang, page: "/terms", title: "Terms & Conditions — Love Match", description: "The terms and conditions governing your use of the Love Match compatibility report service.", twitterCard: "summary" });
+  },
   component: TermsPage,
 });
 
 function TermsPage() {
+  const lang = usePageLanguage();
   return (
     <div className="relative min-h-screen bg-background text-on-background">
       <main className="mx-auto max-w-[860px] px-5 pt-28 pb-24 lg:px-6">
-        <Link to="/" className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-8 text-body-md">
+        <Link to="/$lang" params={{ lang }} className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-8 text-body-md">
           <Icon name="arrow_back" size={18} />
           Back to Home
         </Link>

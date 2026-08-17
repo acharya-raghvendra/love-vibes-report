@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AffiliateRouteImport } from './routes/_affiliate'
 import { Route as AdminRouteImport } from './routes/_admin'
+import { Route as LangRouteImport } from './routes/$lang'
 import { Route as LangIndexRouteImport } from './routes/$lang.index'
 import { Route as DashboardLoginRouteImport } from './routes/dashboard.login'
 import { Route as AffiliatePortalRouteImport } from './routes/_affiliate.portal'
@@ -46,10 +47,15 @@ const AdminRoute = AdminRouteImport.update({
   id: '/_admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LangIndexRoute = LangIndexRouteImport.update({
-  id: '/$lang/',
-  path: '/$lang/',
+const LangRoute = LangRouteImport.update({
+  id: '/$lang',
+  path: '/$lang',
   getParentRoute: () => rootRouteImport,
+} as any)
+const LangIndexRoute = LangIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LangRoute,
 } as any)
 const DashboardLoginRoute = DashboardLoginRouteImport.update({
   id: '/dashboard/login',
@@ -67,39 +73,39 @@ const AdminDashboardRoute = AdminDashboardRouteImport.update({
   getParentRoute: () => AdminRoute,
 } as any)
 const LangTermsRoute = LangTermsRouteImport.update({
-  id: '/$lang/terms',
-  path: '/$lang/terms',
-  getParentRoute: () => rootRouteImport,
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => LangRoute,
 } as any)
 const LangSuccessRoute = LangSuccessRouteImport.update({
-  id: '/$lang/success',
-  path: '/$lang/success',
-  getParentRoute: () => rootRouteImport,
+  id: '/success',
+  path: '/success',
+  getParentRoute: () => LangRoute,
 } as any)
 const LangRefundRoute = LangRefundRouteImport.update({
-  id: '/$lang/refund',
-  path: '/$lang/refund',
-  getParentRoute: () => rootRouteImport,
+  id: '/refund',
+  path: '/refund',
+  getParentRoute: () => LangRoute,
 } as any)
 const LangPrivacyRoute = LangPrivacyRouteImport.update({
-  id: '/$lang/privacy',
-  path: '/$lang/privacy',
-  getParentRoute: () => rootRouteImport,
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => LangRoute,
 } as any)
 const LangPreviewRoute = LangPreviewRouteImport.update({
-  id: '/$lang/preview',
-  path: '/$lang/preview',
-  getParentRoute: () => rootRouteImport,
+  id: '/preview',
+  path: '/preview',
+  getParentRoute: () => LangRoute,
 } as any)
 const LangInputRoute = LangInputRouteImport.update({
-  id: '/$lang/input',
-  path: '/$lang/input',
-  getParentRoute: () => rootRouteImport,
+  id: '/input',
+  path: '/input',
+  getParentRoute: () => LangRoute,
 } as any)
 const LangContactRoute = LangContactRouteImport.update({
-  id: '/$lang/contact',
-  path: '/$lang/contact',
-  getParentRoute: () => rootRouteImport,
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => LangRoute,
 } as any)
 const AffiliatePortalIndexRoute = AffiliatePortalIndexRouteImport.update({
   id: '/',
@@ -182,6 +188,7 @@ const AdminDashboardAffiliatesRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/$lang': typeof LangRouteWithChildren
   '/': typeof AffiliateRouteWithChildren
   '/$lang/contact': typeof LangContactRoute
   '/$lang/input': typeof LangInputRoute
@@ -239,6 +246,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/$lang': typeof LangRouteWithChildren
   '/_admin': typeof AdminRouteWithChildren
   '/_affiliate': typeof AffiliateRouteWithChildren
   '/$lang/contact': typeof LangContactRoute
@@ -271,6 +279,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/$lang'
     | '/'
     | '/$lang/contact'
     | '/$lang/input'
@@ -327,6 +336,7 @@ export interface FileRouteTypes {
     | '/portal'
   id:
     | '__root__'
+    | '/$lang'
     | '/_admin'
     | '/_affiliate'
     | '/$lang/contact'
@@ -358,17 +368,10 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  LangRoute: typeof LangRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AffiliateRoute: typeof AffiliateRouteWithChildren
-  LangContactRoute: typeof LangContactRoute
-  LangInputRoute: typeof LangInputRoute
-  LangPreviewRoute: typeof LangPreviewRoute
-  LangPrivacyRoute: typeof LangPrivacyRoute
-  LangRefundRoute: typeof LangRefundRoute
-  LangSuccessRoute: typeof LangSuccessRoute
-  LangTermsRoute: typeof LangTermsRoute
   DashboardLoginRoute: typeof DashboardLoginRoute
-  LangIndexRoute: typeof LangIndexRoute
   ApiPublicLoveMatchPriceRoute: typeof ApiPublicLoveMatchPriceRoute
   ApiPublicLoveMatchRetryRoute: typeof ApiPublicLoveMatchRetryRoute
   ApiPublicLoveMatchStatusRoute: typeof ApiPublicLoveMatchStatusRoute
@@ -391,12 +394,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$lang': {
+      id: '/$lang'
+      path: '/$lang'
+      fullPath: '/$lang'
+      preLoaderRoute: typeof LangRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$lang/': {
       id: '/$lang/'
-      path: '/$lang'
+      path: '/'
       fullPath: '/$lang/'
       preLoaderRoute: typeof LangIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof LangRoute
     }
     '/dashboard/login': {
       id: '/dashboard/login'
@@ -421,52 +431,52 @@ declare module '@tanstack/react-router' {
     }
     '/$lang/terms': {
       id: '/$lang/terms'
-      path: '/$lang/terms'
+      path: '/terms'
       fullPath: '/$lang/terms'
       preLoaderRoute: typeof LangTermsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof LangRoute
     }
     '/$lang/success': {
       id: '/$lang/success'
-      path: '/$lang/success'
+      path: '/success'
       fullPath: '/$lang/success'
       preLoaderRoute: typeof LangSuccessRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof LangRoute
     }
     '/$lang/refund': {
       id: '/$lang/refund'
-      path: '/$lang/refund'
+      path: '/refund'
       fullPath: '/$lang/refund'
       preLoaderRoute: typeof LangRefundRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof LangRoute
     }
     '/$lang/privacy': {
       id: '/$lang/privacy'
-      path: '/$lang/privacy'
+      path: '/privacy'
       fullPath: '/$lang/privacy'
       preLoaderRoute: typeof LangPrivacyRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof LangRoute
     }
     '/$lang/preview': {
       id: '/$lang/preview'
-      path: '/$lang/preview'
+      path: '/preview'
       fullPath: '/$lang/preview'
       preLoaderRoute: typeof LangPreviewRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof LangRoute
     }
     '/$lang/input': {
       id: '/$lang/input'
-      path: '/$lang/input'
+      path: '/input'
       fullPath: '/$lang/input'
       preLoaderRoute: typeof LangInputRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof LangRoute
     }
     '/$lang/contact': {
       id: '/$lang/contact'
-      path: '/$lang/contact'
+      path: '/contact'
       fullPath: '/$lang/contact'
       preLoaderRoute: typeof LangContactRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof LangRoute
     }
     '/_affiliate/portal/': {
       id: '/_affiliate/portal/'
@@ -576,6 +586,30 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface LangRouteChildren {
+  LangContactRoute: typeof LangContactRoute
+  LangInputRoute: typeof LangInputRoute
+  LangPreviewRoute: typeof LangPreviewRoute
+  LangPrivacyRoute: typeof LangPrivacyRoute
+  LangRefundRoute: typeof LangRefundRoute
+  LangSuccessRoute: typeof LangSuccessRoute
+  LangTermsRoute: typeof LangTermsRoute
+  LangIndexRoute: typeof LangIndexRoute
+}
+
+const LangRouteChildren: LangRouteChildren = {
+  LangContactRoute: LangContactRoute,
+  LangInputRoute: LangInputRoute,
+  LangPreviewRoute: LangPreviewRoute,
+  LangPrivacyRoute: LangPrivacyRoute,
+  LangRefundRoute: LangRefundRoute,
+  LangSuccessRoute: LangSuccessRoute,
+  LangTermsRoute: LangTermsRoute,
+  LangIndexRoute: LangIndexRoute,
+}
+
+const LangRouteWithChildren = LangRoute._addFileChildren(LangRouteChildren)
+
 interface AdminDashboardRouteChildren {
   AdminDashboardAffiliatesRoute: typeof AdminDashboardAffiliatesRoute
   AdminDashboardCouponsRoute: typeof AdminDashboardCouponsRoute
@@ -641,17 +675,10 @@ const AffiliateRouteWithChildren = AffiliateRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  LangRoute: LangRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AffiliateRoute: AffiliateRouteWithChildren,
-  LangContactRoute: LangContactRoute,
-  LangInputRoute: LangInputRoute,
-  LangPreviewRoute: LangPreviewRoute,
-  LangPrivacyRoute: LangPrivacyRoute,
-  LangRefundRoute: LangRefundRoute,
-  LangSuccessRoute: LangSuccessRoute,
-  LangTermsRoute: LangTermsRoute,
   DashboardLoginRoute: DashboardLoginRoute,
-  LangIndexRoute: LangIndexRoute,
   ApiPublicLoveMatchPriceRoute: ApiPublicLoveMatchPriceRoute,
   ApiPublicLoveMatchRetryRoute: ApiPublicLoveMatchRetryRoute,
   ApiPublicLoveMatchStatusRoute: ApiPublicLoveMatchStatusRoute,

@@ -2,14 +2,18 @@ import type { SiteLanguage } from "@/lib/site-language";
 
 export const SITE_ORIGIN = "https://love.talktoguruji.com";
 
-/** Absolute URL for a page inside a language tree. `page` is "" or "/input". */
+/**
+ * Absolute URL for a page in a language. English keeps the original
+ * unprefixed URLs; Hindi lives under /hi. `page` is "" or "/input".
+ */
 export function langUrl(lang: SiteLanguage, page: string): string {
-  return `${SITE_ORIGIN}/${lang}${page}`;
+  if (lang === "hi") return `${SITE_ORIGIN}/hi${page}`;
+  return page === "" ? `${SITE_ORIGIN}/` : `${SITE_ORIGIN}${page}`;
 }
 
 /**
  * Head fragment for a language-prefixed page: localized title/description/OG,
- * a self-referencing canonical and hi/en hreflang alternates (x-default = hi).
+ * a self-referencing canonical and en/hi hreflang alternates (x-default = en).
  */
 export function langHead(args: {
   lang: SiteLanguage;
@@ -41,9 +45,9 @@ export function langHead(args: {
   // hreflang is only meaningful for indexable pages.
   if (!noindex) {
     links.push(
-      { rel: "alternate", hrefLang: "hi", href: langUrl("hi", page) },
       { rel: "alternate", hrefLang: "en", href: langUrl("en", page) },
-      { rel: "alternate", hrefLang: "x-default", href: langUrl("hi", page) },
+      { rel: "alternate", hrefLang: "hi", href: langUrl("hi", page) },
+      { rel: "alternate", hrefLang: "x-default", href: langUrl("en", page) },
     );
   }
 

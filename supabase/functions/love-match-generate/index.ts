@@ -67,14 +67,15 @@ async function sha256(s: string): Promise<string> {
 }
 
 // Cache key: normalized so "Rohit" / " rohit " collide. refYear included
-// because Personal Year changes the output each calendar year. Language is
-// part of the key (payload copy is language-specific), and the v2 prefix
-// retires pre-enrichment payloads so no stale half-empty preview renders.
+// because Personal Year changes the output each calendar year. The language in
+// the key is now the SITE language of the page being rendered (it used to be
+// the chosen report language), so the v4 prefix retires every payload cached
+// under the old meaning — otherwise /hi/preview could serve English copy.
 async function cacheKey(a: Person, b: Person, refYear: number, lang: string): Promise<string> {
   const norm = (p: Person) => `${p.first.toLowerCase()}|${p.last.toLowerCase()}|${p.dob}`;
   // Order-independent: same couple regardless of who is A/B.
   const parts = [norm(a), norm(b)].sort();
-  return await sha256(`lovematch:v3:${lang}:${refYear}:${parts.join("::")}`);
+  return await sha256(`lovematch:v4:${lang}:${refYear}:${parts.join("::")}`);
 }
 
 Deno.serve(async (req: Request) => {

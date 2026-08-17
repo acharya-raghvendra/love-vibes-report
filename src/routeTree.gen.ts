@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SuccessRouteImport } from './routes/success'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RefundRouteImport } from './routes/refund'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PreviewRouteImport } from './routes/preview'
@@ -55,6 +56,11 @@ const TermsRoute = TermsRouteImport.update({
 const SuccessRoute = SuccessRouteImport.update({
   id: '/success',
   path: '/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RefundRoute = RefundRouteImport.update({
@@ -243,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/preview': typeof PreviewRoute
   '/privacy': typeof PrivacyRoute
   '/refund': typeof RefundRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/terms': typeof TermsRoute
   '/$lang/contact': typeof LangContactRoute
@@ -279,6 +286,7 @@ export interface FileRoutesByTo {
   '/preview': typeof PreviewRoute
   '/privacy': typeof PrivacyRoute
   '/refund': typeof RefundRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/terms': typeof TermsRoute
   '/$lang/contact': typeof LangContactRoute
@@ -317,6 +325,7 @@ export interface FileRoutesById {
   '/preview': typeof PreviewRoute
   '/privacy': typeof PrivacyRoute
   '/refund': typeof RefundRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/terms': typeof TermsRoute
   '/$lang/contact': typeof LangContactRoute
@@ -356,6 +365,7 @@ export interface FileRouteTypes {
     | '/preview'
     | '/privacy'
     | '/refund'
+    | '/sitemap.xml'
     | '/success'
     | '/terms'
     | '/$lang/contact'
@@ -392,6 +402,7 @@ export interface FileRouteTypes {
     | '/preview'
     | '/privacy'
     | '/refund'
+    | '/sitemap.xml'
     | '/success'
     | '/terms'
     | '/$lang/contact'
@@ -429,6 +440,7 @@ export interface FileRouteTypes {
     | '/preview'
     | '/privacy'
     | '/refund'
+    | '/sitemap.xml'
     | '/success'
     | '/terms'
     | '/$lang/contact'
@@ -469,6 +481,7 @@ export interface RootRouteChildren {
   PreviewRoute: typeof PreviewRoute
   PrivacyRoute: typeof PrivacyRoute
   RefundRoute: typeof RefundRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuccessRoute: typeof SuccessRoute
   TermsRoute: typeof TermsRoute
   DashboardLoginRoute: typeof DashboardLoginRoute
@@ -492,6 +505,13 @@ declare module '@tanstack/react-router' {
       path: '/success'
       fullPath: '/success'
       preLoaderRoute: typeof SuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/refund': {
@@ -840,6 +860,7 @@ const rootRouteChildren: RootRouteChildren = {
   PreviewRoute: PreviewRoute,
   PrivacyRoute: PrivacyRoute,
   RefundRoute: RefundRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuccessRoute: SuccessRoute,
   TermsRoute: TermsRoute,
   DashboardLoginRoute: DashboardLoginRoute,

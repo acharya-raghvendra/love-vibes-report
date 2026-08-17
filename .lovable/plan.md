@@ -52,3 +52,5 @@ Site language (URL) and report language (form toggle) are independent, so the pr
 - Confirm canonical, hreflang pair + x-default, and `<html lang>` in the served HTML for both trees.
 - `sitemap.xml` lists both trees; `robots.txt` blocks only the four session pages.
 - Pixel events carry `language` with the right value in both trees.
+- Hindi site + English report selected: `/hi/preview` is fully Hindi, delivered report is English.
+- English site + Hindi report selected: `/preview` is fully English, delivered report is Hindi.

@@ -399,7 +399,7 @@ function PreviewPage() {
             dob: payload.person_b.dob,
           },
           // Preview copy follows the URL prefix, not the chosen report language.
-          language: pageLangRef.current,
+          language: lang,
         },
       });
       if (error || !data?.data) throw new Error("preview_failed");
@@ -407,7 +407,7 @@ function PreviewPage() {
     } catch {
       setState({ kind: "error" });
     }
-  }, []);
+  }, [lang]);
 
   useEffect(() => {
     if (input) fetchPreview(input);

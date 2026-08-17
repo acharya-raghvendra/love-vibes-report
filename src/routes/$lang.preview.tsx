@@ -303,7 +303,10 @@ function Toast({ msg }: { msg: string }) {
 
 function PreviewPage() {
   const navigate = useNavigate();
+  // The URL prefix is the page language, whatever the visitor's stored choice.
+  const lang = usePageLanguage();
   const { coupon: urlCoupon } = Route.useSearch();
+
   // Coupon carried from the affiliate link / earlier funnel step.
   const [carriedCoupon, setCarriedCoupon] = useState<string | null>(null);
   const autoAppliedRef = useRef(false);

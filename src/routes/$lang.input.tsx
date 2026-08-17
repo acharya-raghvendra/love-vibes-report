@@ -5,26 +5,19 @@ import { couponSearch, resolveCoupon, validateCouponSearch } from "@/lib/coupon-
 import { initAdvancedMatching, trackOnce } from "@/lib/meta-pixel";
 import { PriceLine } from "@/components/price-line";
 import { INPUT_COPY, META } from "@/lib/site-copy";
-import { setSiteLanguage, useLocalizedMeta, useSiteLanguage } from "@/lib/site-language";
+import { usePageLanguage, type SiteLanguage } from "@/lib/site-language";
+import { langHead } from "@/lib/site-seo";
 
 
 export const Route = createFileRoute("/$lang/input")({
   validateSearch: validateCouponSearch,
-  head: () => ({
-    meta: [
-      { title: META.input.hi.title },
-      { name: "description", content: META.input.hi.description },
-      { property: "og:title", content: META.input.hi.title },
-      { property: "og:description", content: META.input.hi.description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: META.input.hi.title },
-      { name: "twitter:description", content: META.input.hi.description },
-    ],
-    links: [{ rel: "canonical", href: "https://love.talktoguruji.com/input" }],
-  }),
+  head: ({ params }) => {
+    const lang = (params.lang === "en" ? "en" : "hi") as SiteLanguage;
+    return langHead({ lang, page: "/input", ...META.input[lang] });
+  },
   component: InputPage,
 });
+
 
 type Gender = "MALE" | "FEMALE";
 type ReportLanguage = "en" | "hi";

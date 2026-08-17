@@ -4,23 +4,31 @@ import { Icon } from "@/components/icon";
 import { supabase } from "@/integrations/supabase/client";
 import { couponSearch, resolveCoupon, storeCoupon, validateCouponSearch } from "@/lib/coupon-link";
 import { trackOnce } from "@/lib/meta-pixel";
+import { usePageLanguage, type SiteLanguage } from "@/lib/site-language";
+import { langHead } from "@/lib/site-seo";
 
+const PREVIEW_META: Record<SiteLanguage, { title: string; description: string }> = {
+  hi: {
+    title: "आपका compatibility preview — Love Match | TalkToGuruji",
+    description:
+      "अपना compatibility score देखिए और पूरी 12-पेज numerology report unlock कीजिए.",
+  },
+  en: {
+    title: "Your Compatibility Preview — Love Match | TalkToGuruji",
+    description:
+      "Preview your cosmic compatibility score and unlock the full 12-page numerology report.",
+  },
+};
 
 export const Route = createFileRoute("/$lang/preview")({
   validateSearch: validateCouponSearch,
-  head: () => ({
-    meta: [
-      { title: "Your Compatibility Preview — Love Match" },
-      {
-        name: "description",
-        content:
-          "Preview your cosmic compatibility score and unlock the full 12-page numerology report.",
-      },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
+  head: ({ params }) => {
+    const lang = (params.lang === "en" ? "en" : "hi") as SiteLanguage;
+    return langHead({ lang, page: "/preview", noindex: true, ...PREVIEW_META[lang] });
+  },
   component: PreviewPage,
 });
+
 
 type InputPayload = {
   person_a: { first: string; last: string; dob: string; phone: string; email?: string };

@@ -1,55 +1,48 @@
-# Language-prefixed URLs for the Love Match funnel
+# Revision: English stays unprefixed, Hindi lives under /hi
 
 ## Goal
-Every visitor-facing page lives under a language prefix: `/hi/...` and `/en/...`. The prefix — not localStorage — decides the page language. Old URLs permanently redirect into the Hindi tree so live ads, WhatsApp and email links keep working.
+Undo the `/en` tree and the 301s. The existing unprefixed URLs remain exactly where they are and become the English version; Hindi gets a mirrored `/hi/...` tree. The prefix decides the page language: `/hi/*` = Hindi, everything else = English. The URL still beats localStorage.
 
 ## URL map
 
 ```text
-/                 -> 301 /hi
-/input            -> 301 /hi/input
-/preview          -> 301 /hi/preview
-/success          -> 301 /hi/success   (search params preserved: order_id, phone, coupon)
-/contact          -> 301 /hi/contact
-/privacy|terms|refund -> 301 /hi/<same>
-
-/hi  /hi/input  /hi/preview  /hi/success  /hi/contact  /hi/privacy  /hi/terms  /hi/refund
-/en  /en/input  /en/preview  /en/success  /en/contact  /en/privacy  /en/terms  /en/refund
+/  /input  /preview  /success  /contact  /privacy  /terms  /refund      -> English (unchanged, no redirects)
+/hi  /hi/input  /hi/preview  /hi/success  /hi/contact  /hi/privacy  /hi/terms  /hi/refund  -> Hindi
 ```
 
-Admin, affiliate, dashboard and `/api/*` routes stay exactly as they are (no prefix).
+Admin, affiliate, dashboard and `/api/*` routes stay unprefixed and untouched.
 
 ## Changes
 
 ### 1. Route tree
-- New layout route `src/routes/$lang.tsx`: validates the param (`hi` | `en`; anything else -> not found), renders `<Outlet />`, and exposes the language.
-- Move the current page bodies into `$lang.index.tsx`, `$lang.input.tsx`, `$lang.preview.tsx`, `$lang.success.tsx`, `$lang.contact.tsx`, `$lang.privacy.tsx`, `$lang.terms.tsx`, `$lang.refund.tsx`. Existing search-param validation (coupon, order_id, phone) moves with them unchanged.
-- The old files (`index.tsx`, `input.tsx`, `preview.tsx`, `success.tsx`, `contact.tsx`, `privacy.tsx`, `terms.tsx`, `refund.tsx`) become redirect-only routes: `beforeLoad` throws a permanent redirect to the `/hi` equivalent, forwarding search params.
+- Delete the `$lang` layout and its children; delete the redirect-only stubs currently sitting at `/`, `/input`, `/preview`, `/success`, `/contact`, `/privacy`, `/terms`, `/refund`.
+- The full page bodies (currently in the `$lang.*` files) move back to the unprefixed files: `index.tsx`, `input.tsx`, `preview.tsx`, `success.tsx`, `contact.tsx`, `privacy.tsx`, `terms.tsx`, `refund.tsx`. Search-param validation (coupon, order_id, phone) moves with them unchanged.
+- Add a Hindi mirror: `hi.tsx` (layout returning `<Outlet />`) plus `hi.index.tsx`, `hi.input.tsx`, `hi.preview.tsx`, `hi.success.tsx`, `hi.contact.tsx`, `hi.privacy.tsx`, `hi.terms.tsx`, `hi.refund.tsx`. Each Hindi leaf is a thin wrapper: it renders the same page component (extracted into a shared component module per page) and supplies its own `head()`. No duplicated page logic.
 
-### 2. Language resolution (URL wins)
-- `src/lib/site-language.ts`: add `usePageLanguage()` which reads the `lang` route param and returns it (default `hi` outside the tree, e.g. dashboard). An effect mirrors the prefix into localStorage so it stays the remembered preference.
-- Pages and shared components (`site-header`, `site-footer`, `price-line`) switch from `useSiteLanguage()` to `usePageLanguage()`. Because the prefix is known during SSR, the first render is already in the right language — the current "default-then-swap" hydration dance and `useLocalizedMeta` are removed.
-- `language-toggle.tsx`: instead of writing state, it navigates to the same route under the other prefix, preserving path and search params, and writes the new choice to localStorage. Form state on `/input` is preserved via the existing sessionStorage payload where present.
-- All internal `<Link to="/input">` / `to="/preview"` / `to="/success"` / `to="/refund"` and `navigate({to})` calls become param-aware links to the `$lang` routes with `params={{ lang }}`. Header nav hash links (`/#hero`, `/#how-it-works`, `/#faq`) become prefix-aware too.
+### 2. Language resolution
+- `src/lib/site-language.ts`: `langFromPath()` returns `"hi"` for `/hi` and `/hi/...`, otherwise `"en"`; default becomes `en` for unprefixed URLs. `usePageLanguage()` keeps reading the pathname (identical on server and client, no hydration flip) and keeps mirroring the value into localStorage.
+- `language-toggle.tsx`: switching adds or strips the `/hi` prefix on the current path, preserving search params and hash. Same navigate-based approach as now, just one prefix instead of two.
+- Internal links: header nav, hero/sticky CTAs, footer links and programmatic `navigate()` calls target the unprefixed route in English and the `/hi/...` route in Hindi (a small helper that maps a page key + language to a route path keeps this in one place).
 
 ### 3. SEO per URL
-- Each leaf route's `head()` returns: language-specific `title`, `description`, `og:title`, `og:description`, `og:url`, plus `links` with a self-referencing `canonical` and hreflang alternates:
-  - `hreflang="hi"` -> `https://love.talktoguruji.com/hi/<page>`
-  - `hreflang="en"` -> `https://love.talktoguruji.com/en/<page>`
-  - `hreflang="x-default"` -> the `/hi` URL
-- `/preview` and `/success` keep `robots: noindex` (and therefore no hreflang value for search, but the canonical stays self-referencing).
-- `<html lang>` in `__root.tsx`'s shell is derived from the current pathname prefix (`hi`/`en`) instead of the hardcoded `en`.
+- `src/lib/site-seo.ts`: `langUrl(lang, page)` returns `${ORIGIN}${page}` for `en` and `${ORIGIN}/hi${page}` for `hi`. `langHead()` emits a self-referencing canonical plus `hreflang="en"` -> unprefixed, `hreflang="hi"` -> `/hi`, `hreflang="x-default"` -> unprefixed.
+- `/preview` and `/success` keep `robots: noindex` in both trees (canonical still self-references, no hreflang).
+- `<html lang>` in `__root.tsx` is `hi` only under `/hi`, else `en`.
 
-### 4. Report language on /input
-Initialised from the URL prefix, then independently changeable — switching the report-language control no longer navigates or changes the site language, and the chosen value is what gets sent to order creation.
+### 4. Sitemap and robots
+- `sitemap.xml`: emit each indexable page twice — unprefixed and `/hi` — with `hreflang` alternates as above and `x-default` on the unprefixed URL. `/preview` and `/success` stay excluded.
+- `robots.txt`: disallow `/preview`, `/success`, `/hi/preview`, `/hi/success`; drop the `/en/*` lines.
 
-### 5. Meta Pixel
-`src/lib/meta-pixel.ts` gains a `language` param alongside `content_name`, and `Lead`, `ViewContent`, `InitiateCheckout` and `Purchase` call sites pass the current page language (`hi` | `en`).
+### 5. Unchanged from the approved plan
+- Meta Pixel `language` param on `Lead`, `ViewContent`, `InitiateCheckout`, `Purchase`.
+- Report-language control on the input form: initialised from the URL prefix, then independently changeable.
+- Server-side delivery links (email/WhatsApp/Razorpay callbacks) point at the order's language tree — Hindi orders get `/hi/...`, English orders get the unprefixed path.
 
 ## Verification
-- Hit every old URL and confirm a 301 into `/hi/...` with search params intact.
-- Walk `/hi` and `/en` end to end (landing -> input -> preview) and confirm no page mixes languages.
-- Toggle on each page: URL prefix and rendered copy change together; localStorage updates.
-- Open `/hi` with `en` stored in localStorage: page renders Hindi.
-- Confirm canonical, hreflang and `<html lang>` per URL in the served HTML.
-- Confirm pixel events carry `language` with the right value in both trees.
+- All old URLs return 200 with English content — no redirects anywhere.
+- Walk `/` and `/hi` end to end (landing -> input -> preview -> success); no page mixes languages.
+- Toggle on each page: prefix appears/disappears, copy changes with it, search params survive.
+- Open `/` with `hi` stored in localStorage: page renders English.
+- Confirm canonical, hreflang pair + x-default, and `<html lang>` in the served HTML for both trees.
+- `sitemap.xml` lists both trees; `robots.txt` blocks only the four session pages.
+- Pixel events carry `language` with the right value in both trees.

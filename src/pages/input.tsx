@@ -358,7 +358,7 @@ export function InputPage() {
 
     navigate({
       to: langPath(siteLang, "/preview") as never,
-      search: couponSearch(coupon),
+      search: couponSearch(coupon) as never,
     });
 
   }

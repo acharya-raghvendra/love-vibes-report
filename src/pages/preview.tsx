@@ -362,7 +362,7 @@ export function PreviewPage() {
     const back = () =>
       navigate({
         to: langPath(lang, "/input") as never,
-        search: couponSearch(resolveCoupon(urlCoupon)),
+        search: couponSearch(resolveCoupon(urlCoupon)) as never,
       });
     try {
       const raw = sessionStorage.getItem("loveMatch:input");
@@ -541,7 +541,7 @@ export function PreviewPage() {
     autoAppliedRef.current = true;
     setCarriedCoupon(null);
     storeCoupon(null);
-    if (urlCoupon) navigate({ to: langPath(lang, "/preview") as never, search: {}, replace: true });
+    if (urlCoupon) navigate({ to: langPath(lang, "/preview") as never, search: {} as never, replace: true });
   }
 
   async function onUnlock() {
@@ -611,7 +611,7 @@ export function PreviewPage() {
         handler: () => {
           navigate({
             to: langPath(lang, "/success") as never,
-            search: { order_id: gatewayOrder.internalOrderId, phone: input.person_a.phone },
+            search: { order_id: gatewayOrder.internalOrderId, phone: input.person_a.phone } as never,
           });
         },
         modal: {

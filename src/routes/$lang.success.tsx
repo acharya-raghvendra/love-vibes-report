@@ -3,6 +3,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { Icon } from "@/components/icon";
 import { trackOnce } from "@/lib/meta-pixel";
+import { usePageLanguage, type SiteLanguage } from "@/lib/site-language";
+import { langHead } from "@/lib/site-seo";
+
+const SUCCESS_META: Record<SiteLanguage, { title: string; description: string }> = {
+  hi: {
+    title: "Payment successful — आपकी report तैयार हो रही है | TalkToGuruji",
+    description:
+      "आपकी Love Match report बन रही है और WhatsApp + email पर भेज दी जाएगी.",
+  },
+  en: {
+    title: "Payment Successful — Your Report Is On Its Way | TalkToGuruji",
+    description:
+      "Your Love Match compatibility report is being prepared and will be sent on WhatsApp and email.",
+  },
+};
 
 const successSearchSchema = z.object({
   order_id: z.string().optional(),
@@ -11,16 +26,10 @@ const successSearchSchema = z.object({
 
 export const Route = createFileRoute("/$lang/success")({
   validateSearch: successSearchSchema,
-  head: () => ({
-    meta: [
-      { title: "Payment Successful — Love Match" },
-      {
-        name: "description",
-        content: "Your Love Match compatibility report is being prepared and will be emailed to you shortly.",
-      },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
+  head: ({ params }) => {
+    const lang = (params.lang === "en" ? "en" : "hi") as SiteLanguage;
+    return langHead({ lang, page: "/success", noindex: true, ...SUCCESS_META[lang] });
+  },
   component: SuccessPage,
 });
 
@@ -120,7 +129,8 @@ function Step({
 }
 
 function SuccessPage() {
-  const { phone, order_id: orderId } = useSearch({ from: "/success" });
+  const lang = usePageLanguage();
+  const { phone, order_id: orderId } = useSearch({ from: "/$lang/success" });
   const [order, setOrder] = useState<OrderStatus | null>(null);
   const [retrying, setRetrying] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -225,10 +235,14 @@ function SuccessPage() {
     trackOnce(
       "Purchase",
       orderId,
-      { value: typeof order.amount === "number" ? order.amount : undefined, currency: "INR" },
+      {
+        value: typeof order.amount === "number" ? order.amount : undefined,
+        currency: "INR",
+        language: lang,
+      },
       { eventID: orderId },
     );
-  }, [orderId, order]);
+  }, [orderId, order, lang]);
 
   const status = order?.status ?? (orderId ? "loading" : "created");
   const isReady = Boolean(order?.ready);
@@ -261,7 +275,7 @@ function SuccessPage() {
               ? "Your full report is ready."
               : isFailed
                 ? "We hit a snag while preparing your report."
-                : REASSURANCE[order?.language === "en" ? "en" : "hi"]}
+                : REASSURANCE[lang]}
           </p>
         </section>
 

@@ -21,7 +21,7 @@ export const SUCCESS_META: Record<SiteLanguage, { title: string; description: st
   },
 };
 
-const successSearchSchema = z.object({
+export const successSearchSchema = z.object({
   order_id: z.string().optional(),
   phone: z.string().optional(),
 });

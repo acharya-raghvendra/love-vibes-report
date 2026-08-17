@@ -1,12 +1,9 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { TermsPage } from "@/pages/terms";
+import { langHead } from "@/lib/site-seo";
 
-// Legacy unprefixed URL — permanently redirected into the Hindi tree so old
-// ads, WhatsApp and email links keep working. Search params are preserved.
+// English lives on the original unprefixed URLs — never redirect these.
 export const Route = createFileRoute("/terms")({
-  beforeLoad: ({ location }) => {
-    throw redirect({
-      href: `/hi${location.pathname}${location.searchStr}`,
-      statusCode: 301,
-    });
-  },
+  head: () => langHead({ lang: "en", page: "/terms", title: "Terms & Conditions — Love Match", description: "The terms and conditions governing your use of the Love Match compatibility report service.", twitterCard: "summary" }),
+  component: TermsPage,
 });

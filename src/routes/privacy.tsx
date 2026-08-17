@@ -1,12 +1,9 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { PrivacyPage } from "@/pages/privacy";
+import { langHead } from "@/lib/site-seo";
 
-// Legacy unprefixed URL — permanently redirected into the Hindi tree so old
-// ads, WhatsApp and email links keep working. Search params are preserved.
+// English lives on the original unprefixed URLs — never redirect these.
 export const Route = createFileRoute("/privacy")({
-  beforeLoad: ({ location }) => {
-    throw redirect({
-      href: `/hi${location.pathname}${location.searchStr}`,
-      statusCode: 301,
-    });
-  },
+  head: () => langHead({ lang: "en", page: "/privacy", title: "Privacy Policy — Love Match", description: "How Love Match collects, uses, and protects the personal data you share to generate your compatibility report.", twitterCard: "summary" }),
+  component: PrivacyPage,
 });

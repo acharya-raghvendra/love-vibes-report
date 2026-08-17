@@ -1,25 +1,20 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSearch } from "@tanstack/react-router";
 import { Icon } from "@/components/icon";
+import { LangLink } from "@/components/lang-link";
+import { langPath } from "@/lib/lang-path";
 import { usePageLanguage, type SiteLanguage } from "@/lib/site-language";
 import { langHead } from "@/lib/site-seo";
 
-export const Route = createFileRoute("/$lang/refund")({
-  head: ({ params }) => {
-    const lang = (params.lang === "en" ? "en" : "hi") as SiteLanguage;
-    return langHead({ lang, page: "/refund", title: "Refund & Cancellation Policy — Love Match", description: "Love Match compatibility reports are digital products. No refunds are issued once the report has been delivered.", twitterCard: "summary" });
-  },
-  component: RefundPage,
-});
 
-function RefundPage() {
+export function RefundPage() {
   const lang = usePageLanguage();
   return (
     <div className="relative min-h-screen bg-background text-on-background">
       <main className="mx-auto max-w-[860px] px-5 pt-28 pb-24 lg:px-6">
-        <Link to="/$lang" params={{ lang }} className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-8 text-body-md">
+        <LangLink to={langPath(lang, "")} className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-8 text-body-md">
           <Icon name="arrow_back" size={18} />
           Back to Home
-        </Link>
+        </LangLink>
 
         <h1 className="font-display-lg-mobile text-display-lg-mobile text-on-surface lg:text-display-lg mb-8">
           Refund & Cancellation Policy

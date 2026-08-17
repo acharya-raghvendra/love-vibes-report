@@ -1,13 +1,15 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { supabase } from "@/integrations/supabase/client";
 import { couponSearch, resolveCoupon, storeCoupon, validateCouponSearch } from "@/lib/coupon-link";
 import { trackOnce } from "@/lib/meta-pixel";
+import { LangLink } from "@/components/lang-link";
+import { langPath } from "@/lib/lang-path";
 import { usePageLanguage, type SiteLanguage } from "@/lib/site-language";
 import { langHead } from "@/lib/site-seo";
 
-const PREVIEW_META: Record<SiteLanguage, { title: string; description: string }> = {
+export const PREVIEW_META: Record<SiteLanguage, { title: string; description: string }> = {
   hi: {
     title: "आपका compatibility preview — Love Match | TalkToGuruji",
     description:
@@ -20,14 +22,6 @@ const PREVIEW_META: Record<SiteLanguage, { title: string; description: string }>
   },
 };
 
-export const Route = createFileRoute("/$lang/preview")({
-  validateSearch: validateCouponSearch,
-  head: ({ params }) => {
-    const lang = (params.lang === "en" ? "en" : "hi") as SiteLanguage;
-    return langHead({ lang, page: "/preview", noindex: true, ...PREVIEW_META[lang] });
-  },
-  component: PreviewPage,
-});
 
 
 type InputPayload = {
@@ -301,11 +295,11 @@ function Toast({ msg }: { msg: string }) {
   );
 }
 
-function PreviewPage() {
+export function PreviewPage() {
   const navigate = useNavigate();
   // The URL prefix is the page language, whatever the visitor's stored choice.
   const lang = usePageLanguage();
-  const { coupon: urlCoupon } = Route.useSearch();
+  const { coupon: urlCoupon } = useSearch({ strict: false }) as { coupon?: string };
 
   // Coupon carried from the affiliate link / earlier funnel step.
   const [carriedCoupon, setCarriedCoupon] = useState<string | null>(null);
@@ -367,9 +361,8 @@ function PreviewPage() {
   useEffect(() => {
     const back = () =>
       navigate({
-        to: "/$lang/input",
-        params: { lang },
-        search: couponSearch(resolveCoupon(urlCoupon)),
+        to: langPath(lang, "/input") as never,
+        search: couponSearch(resolveCoupon(urlCoupon)) as never,
       });
     try {
       const raw = sessionStorage.getItem("loveMatch:input");
@@ -548,7 +541,7 @@ function PreviewPage() {
     autoAppliedRef.current = true;
     setCarriedCoupon(null);
     storeCoupon(null);
-    if (urlCoupon) navigate({ to: "/$lang/preview", params: { lang }, search: {}, replace: true });
+    if (urlCoupon) navigate({ to: langPath(lang, "/preview") as never, search: {} as never, replace: true });
   }
 
   async function onUnlock() {
@@ -617,9 +610,8 @@ function PreviewPage() {
         theme: { color: "#f2ca50" },
         handler: () => {
           navigate({
-            to: "/$lang/success",
-            params: { lang },
-            search: { order_id: gatewayOrder.internalOrderId, phone: input.person_a.phone },
+            to: langPath(lang, "/success") as never,
+            search: { order_id: gatewayOrder.internalOrderId, phone: input.person_a.phone } as never,
           });
         },
         modal: {
@@ -915,9 +907,9 @@ function PreviewPage() {
           </button>
                 <p className="mt-4 font-body-md text-label-sm text-on-surface-variant">
                   {state.data.data.refund_line}{" "}
-                  <Link to="/$lang/refund" params={{ lang }} className="underline hover:text-primary">
+                  <LangLink to={langPath(lang, "/refund")} className="underline hover:text-primary">
                     {state.data.data.refund_link_label}
-                  </Link>
+                  </LangLink>
                 </p>
               </div>
             </section>
@@ -975,7 +967,7 @@ function PreviewPage() {
       {toast && <Toast msg={toast} />}
 
       <div className="hidden">
-        <Link to="/$lang/input" params={{ lang }}>back</Link>
+        <LangLink to={langPath(lang, "/input")}>back</LangLink>
       </div>
     </div>
   );

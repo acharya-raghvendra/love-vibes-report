@@ -14,7 +14,13 @@ const PAGES: Array<{ path: string; changefreq: string; priority: string }> = [
   { path: "/refund", changefreq: "yearly", priority: "0.2" },
 ];
 
-const LANGS = ["hi", "en"] as const;
+const LANGS = ["en", "hi"] as const;
+
+// English keeps the original unprefixed URLs; Hindi lives under /hi.
+function langLoc(lang: (typeof LANGS)[number], page: string): string {
+  if (lang === "hi") return `${BASE_URL}/hi${page}`;
+  return page === "" ? `${BASE_URL}/` : `${BASE_URL}${page}`;
+}
 
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
@@ -22,16 +28,16 @@ export const Route = createFileRoute("/sitemap.xml")({
       GET: async () => {
         const urls = LANGS.flatMap((lang) =>
           PAGES.map((p) => {
-            const loc = `${BASE_URL}/${lang}${p.path}`;
+            const loc = langLoc(lang, p.path);
             const alternates = LANGS.map(
               (l) =>
-                `    <xhtml:link rel="alternate" hreflang="${l}" href="${BASE_URL}/${l}${p.path}" />`,
+                `    <xhtml:link rel="alternate" hreflang="${l}" href="${langLoc(l, p.path)}" />`,
             );
             return [
               `  <url>`,
               `    <loc>${loc}</loc>`,
               ...alternates,
-              `    <xhtml:link rel="alternate" hreflang="x-default" href="${BASE_URL}/hi${p.path}" />`,
+              `    <xhtml:link rel="alternate" hreflang="x-default" href="${langLoc("en", p.path)}" />`,
               `    <changefreq>${p.changefreq}</changefreq>`,
               `    <priority>${p.priority}</priority>`,
               `  </url>`,

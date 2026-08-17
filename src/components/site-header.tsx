@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { useRouterState } from "@tanstack/react-router";
+import { LangLink } from "@/components/lang-link";
+import { langPath } from "@/lib/lang-path";
 import { Icon } from "@/components/icon";
 import { LanguageToggle } from "@/components/language-toggle";
 import { CTA_LABEL, HEADER_COPY, NEW_PAIR_LABEL } from "@/lib/site-copy";
@@ -9,13 +11,13 @@ import logoAsset from "@/assets/talktoguruji-logo.png.asset.json";
 
 function Logo({ lang }: { lang: "hi" | "en" }) {
   return (
-    <Link to="/$lang" params={{ lang }} className="flex items-center" aria-label="Talk To Guruji home">
+    <LangLink to={langPath(lang, "")} className="flex items-center" aria-label="Talk To Guruji home">
       <img
         src={logoAsset.url}
         alt="Talk To Guruji"
         className="h-9 w-auto brand-logo lg:h-10"
       />
-    </Link>
+    </LangLink>
   );
 }
 
@@ -28,7 +30,7 @@ export function SiteHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // Robust to /preview, /preview/, /success, /success/ so the gold CTA never
   // reappears on trailing-slash variants of the report/success pages.
-  const isNoCtaPage = /^\/(hi|en)\/(preview|success)\/?$/.test(pathname);
+  const isNoCtaPage = /^(\/hi)?\/(preview|success)\/?$/.test(pathname);
 
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export function SiteHeader() {
             {copy.nav.map((l) => (
               <a
                 key={l.href}
-                href={`/${lang}${l.href.replace(/^\//, "")}`}
+                href={`${langPath(lang, "")}${l.href.replace(/^\/+/, "").replace(/^/, "")}`}
                 className="nav-link font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
               >
                 {l.label}
@@ -75,21 +77,19 @@ export function SiteHeader() {
             {/* Desktop CTA: low-emphasis text link on report/success pages so
                 the single page goal isn't competing with a gold button. */}
             {isNoCtaPage ? (
-              <Link
-                to="/$lang/input"
-                params={{ lang }}
+              <LangLink
+                to={langPath(lang, "/input")}
                 className="hidden lg:inline-flex items-center font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
               >
                 {newPair}
-              </Link>
+              </LangLink>
             ) : (
-              <Link
-                to="/$lang/input"
-                params={{ lang }}
+              <LangLink
+                to={langPath(lang, "/input")}
                 className="hidden lg:inline-flex items-center rounded-xl bg-gradient-to-r from-primary-container to-primary px-5 py-2.5 font-label-md text-label-md text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.25)] hover:scale-[0.98] active:scale-95 transition-transform"
               >
                 {cta}
-              </Link>
+              </LangLink>
             )}
 
 
@@ -142,7 +142,7 @@ export function SiteHeader() {
             {copy.nav.map((l) => (
               <a
                 key={l.href}
-                href={`/${lang}${l.href.replace(/^\//, "")}`}
+                href={`${langPath(lang, "")}${l.href.replace(/^\/+/, "").replace(/^/, "")}`}
                 onClick={() => setOpen(false)}
                 className="font-label-md text-label-md py-3 text-on-surface hover:text-primary transition-colors border-b border-outline-variant/10"
               >
@@ -155,23 +155,21 @@ export function SiteHeader() {
           </nav>
           <div className="p-5 pb-8">
             {isNoCtaPage ? (
-              <Link
-                to="/$lang/input"
-                params={{ lang }}
+              <LangLink
+                to={langPath(lang, "/input")}
                 onClick={() => setOpen(false)}
                 className="flex w-full items-center justify-center font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
               >
                 {newPair}
-              </Link>
+              </LangLink>
             ) : (
-              <Link
-                to="/$lang/input"
-                params={{ lang }}
+              <LangLink
+                to={langPath(lang, "/input")}
                 onClick={() => setOpen(false)}
                 className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md text-on-primary-fixed shadow-lg"
               >
                 {cta}
-              </Link>
+              </LangLink>
             )}
           </div>
 

@@ -1,14 +1,15 @@
-import { Link } from "@tanstack/react-router";
+import { LangLink } from "@/components/lang-link";
+import { langPath } from "@/lib/lang-path";
 import { Icon } from "@/components/icon";
 import { FOOTER_COPY } from "@/lib/site-copy";
 import { usePageLanguage } from "@/lib/site-language";
 
 const QUICK_LINKS = [
-  { key: "/", to: "/$lang" },
-  { key: "/privacy", to: "/$lang/privacy" },
-  { key: "/terms", to: "/$lang/terms" },
-  { key: "/refund", to: "/$lang/refund" },
-  { key: "/contact", to: "/$lang/contact" },
+  { key: "/", page: "" },
+  { key: "/privacy", page: "/privacy" },
+  { key: "/terms", page: "/terms" },
+  { key: "/refund", page: "/refund" },
+  { key: "/contact", page: "/contact" },
 ] as const;
 
 function TrustChip({ icon, label }: { icon: string; label: string }) {
@@ -49,14 +50,13 @@ export function SiteFooter() {
               {copy.quickLinks}
             </h3>
             {QUICK_LINKS.map((l) => (
-              <Link
+              <LangLink
                 key={l.key}
-                to={l.to}
-                params={{ lang }}
+                to={langPath(lang, l.page)}
                 className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors w-fit"
               >
                 {copy.links[l.key]}
-              </Link>
+              </LangLink>
             ))}
           </nav>
 

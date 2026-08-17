@@ -1,22 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSearch } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { couponSearch, resolveCoupon, validateCouponSearch } from "@/lib/coupon-link";
 import { PriceLine } from "@/components/price-line";
 import { CTA_LABEL, LANDING_COPY, META } from "@/lib/site-copy";
+import { LangLink } from "@/components/lang-link";
+import { langPath } from "@/lib/lang-path";
 import { usePageLanguage, type SiteLanguage } from "@/lib/site-language";
 import { langHead } from "@/lib/site-seo";
 
-export const Route = createFileRoute("/$lang/")({
-  validateSearch: validateCouponSearch,
-  // The URL prefix decides the language, so the crawler sees the right tags
-  // for the exact URL it fetched.
-  head: ({ params }) => {
-    const lang = (params.lang === "en" ? "en" : "hi") as SiteLanguage;
-    return langHead({ lang, page: "", ...META.landing[lang] });
-  },
-  component: Index,
-});
 
 
 const AVATARS = [
@@ -47,8 +39,8 @@ const TESTIMONIALS = [
 
 
 
-function Index() {
-  const { coupon: urlCoupon } = Route.useSearch();
+export function Index() {
+  const { coupon: urlCoupon } = useSearch({ strict: false }) as { coupon?: string };
   const lang = usePageLanguage();
   const copy = LANDING_COPY[lang];
 
@@ -105,14 +97,14 @@ function Index() {
               <p className="font-body-lg text-body-lg text-on-surface-variant mx-auto mb-10 max-w-sm lg:mx-0 lg:max-w-md">
                 {copy.heroSub}
               </p>
-              <Link
+              <LangLink
                 ref={heroCtaRef}
-                to="/$lang/input" params={{ lang }}
+                to={langPath(lang, "/input")}
                 search={ctaSearch}
                 className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-5 font-label-md text-label-md text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-transform hover:scale-[0.98] active:scale-95 lg:w-auto lg:px-10"
               >
                 {CTA_LABEL[lang]}
-              </Link>
+              </LangLink>
               <PriceLine
                 lang={lang}
                 format={copy.priceLine}
@@ -249,13 +241,12 @@ function Index() {
                   <p className="font-body-md text-on-surface-variant mb-6">
                     {copy.previewBody}
                   </p>
-                  <Link
-                    to="/$lang/input" params={{ lang }}
+                  <LangLink to={langPath(lang, "/input")}
                     search={ctaSearch}
                     className="inline-flex rounded-xl bg-primary px-8 py-3 font-label-md text-label-md text-on-primary-fixed"
                   >
                     {copy.previewCta}
-                  </Link>
+                  </LangLink>
                 </div>
               </div>
             </div>
@@ -325,14 +316,13 @@ function Index() {
           aria-hidden={!showStickyCta}
         >
           <div className="mx-auto max-w-container-max">
-            <Link
-              to="/$lang/input" params={{ lang }}
+            <LangLink to={langPath(lang, "/input")}
               search={ctaSearch}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md text-on-primary-fixed shadow-lg transition-transform active:scale-95"
             >
               <Icon name="favorite" filled />
               {CTA_LABEL[lang]}
-            </Link>
+            </LangLink>
           </div>
         </div>
       </div>

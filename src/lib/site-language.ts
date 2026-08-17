@@ -1,21 +1,19 @@
 import { useEffect, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 
-// UI language for the marketing funnel (/hi/… and /en/…).
-// The URL prefix is the single source of truth: localStorage only remembers
-// the last choice so the entry point (/) can send a returning visitor to the
-// tree they used before.
+// UI language for the marketing funnel. English lives on the original
+// unprefixed URLs (/, /input, …) and Hindi under /hi/…. The URL is the single
+// source of truth: localStorage only remembers the last choice.
 export type SiteLanguage = "en" | "hi";
 
 const KEY = "ttg_lang";
 const EVENT = "ttg-lang-change";
 
-export const DEFAULT_LANGUAGE: SiteLanguage = "hi";
+export const DEFAULT_LANGUAGE: SiteLanguage = "en";
 
-/** Language carried by the current URL prefix, e.g. /hi/preview -> "hi". */
-export function langFromPath(pathname: string): SiteLanguage | null {
-  const m = /^\/(hi|en)(\/|$)/.exec(pathname);
-  return m ? (m[1] as SiteLanguage) : null;
+/** Language carried by the URL: /hi and /hi/... are Hindi, everything else English. */
+export function langFromPath(pathname: string): SiteLanguage {
+  return /^\/hi(\/|$)/.test(pathname) ? "hi" : "en";
 }
 
 /**
@@ -26,7 +24,7 @@ export function langFromPath(pathname: string): SiteLanguage | null {
  */
 export function usePageLanguage(): SiteLanguage {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const lang = langFromPath(pathname) ?? DEFAULT_LANGUAGE;
+  const lang = langFromPath(pathname);
   useEffect(() => {
     if (readStoredLanguage() !== lang) setSiteLanguage(lang);
   }, [lang]);

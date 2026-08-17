@@ -16,22 +16,22 @@ import { Route as RefundRouteImport } from './routes/refund'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PreviewRouteImport } from './routes/preview'
 import { Route as InputRouteImport } from './routes/input'
+import { Route as HiRouteImport } from './routes/hi'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AffiliateRouteImport } from './routes/_affiliate'
 import { Route as AdminRouteImport } from './routes/_admin'
-import { Route as LangRouteImport } from './routes/$lang'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as LangIndexRouteImport } from './routes/$lang.index'
+import { Route as HiIndexRouteImport } from './routes/hi.index'
+import { Route as HiTermsRouteImport } from './routes/hi.terms'
+import { Route as HiSuccessRouteImport } from './routes/hi.success'
+import { Route as HiRefundRouteImport } from './routes/hi.refund'
+import { Route as HiPrivacyRouteImport } from './routes/hi.privacy'
+import { Route as HiPreviewRouteImport } from './routes/hi.preview'
+import { Route as HiInputRouteImport } from './routes/hi.input'
+import { Route as HiContactRouteImport } from './routes/hi.contact'
 import { Route as DashboardLoginRouteImport } from './routes/dashboard.login'
 import { Route as AffiliatePortalRouteImport } from './routes/_affiliate.portal'
 import { Route as AdminDashboardRouteImport } from './routes/_admin.dashboard'
-import { Route as LangTermsRouteImport } from './routes/$lang.terms'
-import { Route as LangSuccessRouteImport } from './routes/$lang.success'
-import { Route as LangRefundRouteImport } from './routes/$lang.refund'
-import { Route as LangPrivacyRouteImport } from './routes/$lang.privacy'
-import { Route as LangPreviewRouteImport } from './routes/$lang.preview'
-import { Route as LangInputRouteImport } from './routes/$lang.input'
-import { Route as LangContactRouteImport } from './routes/$lang.contact'
 import { Route as AffiliatePortalIndexRouteImport } from './routes/_affiliate.portal.index'
 import { Route as AdminDashboardIndexRouteImport } from './routes/_admin.dashboard.index'
 import { Route as ApiPublicReconcileOrdersRouteImport } from './routes/api/public/reconcile-orders'
@@ -83,6 +83,11 @@ const InputRoute = InputRouteImport.update({
   path: '/input',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HiRoute = HiRouteImport.update({
+  id: '/hi',
+  path: '/hi',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
@@ -96,20 +101,50 @@ const AdminRoute = AdminRouteImport.update({
   id: '/_admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LangRoute = LangRouteImport.update({
-  id: '/$lang',
-  path: '/$lang',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LangIndexRoute = LangIndexRouteImport.update({
+const HiIndexRoute = HiIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => LangRoute,
+  getParentRoute: () => HiRoute,
+} as any)
+const HiTermsRoute = HiTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => HiRoute,
+} as any)
+const HiSuccessRoute = HiSuccessRouteImport.update({
+  id: '/success',
+  path: '/success',
+  getParentRoute: () => HiRoute,
+} as any)
+const HiRefundRoute = HiRefundRouteImport.update({
+  id: '/refund',
+  path: '/refund',
+  getParentRoute: () => HiRoute,
+} as any)
+const HiPrivacyRoute = HiPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => HiRoute,
+} as any)
+const HiPreviewRoute = HiPreviewRouteImport.update({
+  id: '/preview',
+  path: '/preview',
+  getParentRoute: () => HiRoute,
+} as any)
+const HiInputRoute = HiInputRouteImport.update({
+  id: '/input',
+  path: '/input',
+  getParentRoute: () => HiRoute,
+} as any)
+const HiContactRoute = HiContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => HiRoute,
 } as any)
 const DashboardLoginRoute = DashboardLoginRouteImport.update({
   id: '/dashboard/login',
@@ -125,41 +160,6 @@ const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AdminRoute,
-} as any)
-const LangTermsRoute = LangTermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => LangRoute,
-} as any)
-const LangSuccessRoute = LangSuccessRouteImport.update({
-  id: '/success',
-  path: '/success',
-  getParentRoute: () => LangRoute,
-} as any)
-const LangRefundRoute = LangRefundRouteImport.update({
-  id: '/refund',
-  path: '/refund',
-  getParentRoute: () => LangRoute,
-} as any)
-const LangPrivacyRoute = LangPrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => LangRoute,
-} as any)
-const LangPreviewRoute = LangPreviewRouteImport.update({
-  id: '/preview',
-  path: '/preview',
-  getParentRoute: () => LangRoute,
-} as any)
-const LangInputRoute = LangInputRouteImport.update({
-  id: '/input',
-  path: '/input',
-  getParentRoute: () => LangRoute,
-} as any)
-const LangContactRoute = LangContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => LangRoute,
 } as any)
 const AffiliatePortalIndexRoute = AffiliatePortalIndexRouteImport.update({
   id: '/',
@@ -243,8 +243,8 @@ const AdminDashboardAffiliatesRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/$lang': typeof LangRouteWithChildren
   '/contact': typeof ContactRoute
+  '/hi': typeof HiRouteWithChildren
   '/input': typeof InputRoute
   '/preview': typeof PreviewRoute
   '/privacy': typeof PrivacyRoute
@@ -252,17 +252,17 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/terms': typeof TermsRoute
-  '/$lang/contact': typeof LangContactRoute
-  '/$lang/input': typeof LangInputRoute
-  '/$lang/preview': typeof LangPreviewRoute
-  '/$lang/privacy': typeof LangPrivacyRoute
-  '/$lang/refund': typeof LangRefundRoute
-  '/$lang/success': typeof LangSuccessRoute
-  '/$lang/terms': typeof LangTermsRoute
   '/dashboard': typeof AdminDashboardRouteWithChildren
   '/portal': typeof AffiliatePortalRouteWithChildren
   '/dashboard/login': typeof DashboardLoginRoute
-  '/$lang/': typeof LangIndexRoute
+  '/hi/contact': typeof HiContactRoute
+  '/hi/input': typeof HiInputRoute
+  '/hi/preview': typeof HiPreviewRoute
+  '/hi/privacy': typeof HiPrivacyRoute
+  '/hi/refund': typeof HiRefundRoute
+  '/hi/success': typeof HiSuccessRoute
+  '/hi/terms': typeof HiTermsRoute
+  '/hi/': typeof HiIndexRoute
   '/dashboard/affiliates': typeof AdminDashboardAffiliatesRoute
   '/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/dashboard/failures': typeof AdminDashboardFailuresRoute
@@ -289,15 +289,15 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/terms': typeof TermsRoute
-  '/$lang/contact': typeof LangContactRoute
-  '/$lang/input': typeof LangInputRoute
-  '/$lang/preview': typeof LangPreviewRoute
-  '/$lang/privacy': typeof LangPrivacyRoute
-  '/$lang/refund': typeof LangRefundRoute
-  '/$lang/success': typeof LangSuccessRoute
-  '/$lang/terms': typeof LangTermsRoute
   '/dashboard/login': typeof DashboardLoginRoute
-  '/$lang': typeof LangIndexRoute
+  '/hi/contact': typeof HiContactRoute
+  '/hi/input': typeof HiInputRoute
+  '/hi/preview': typeof HiPreviewRoute
+  '/hi/privacy': typeof HiPrivacyRoute
+  '/hi/refund': typeof HiRefundRoute
+  '/hi/success': typeof HiSuccessRoute
+  '/hi/terms': typeof HiTermsRoute
+  '/hi': typeof HiIndexRoute
   '/dashboard/affiliates': typeof AdminDashboardAffiliatesRoute
   '/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/dashboard/failures': typeof AdminDashboardFailuresRoute
@@ -317,10 +317,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/$lang': typeof LangRouteWithChildren
   '/_admin': typeof AdminRouteWithChildren
   '/_affiliate': typeof AffiliateRouteWithChildren
   '/contact': typeof ContactRoute
+  '/hi': typeof HiRouteWithChildren
   '/input': typeof InputRoute
   '/preview': typeof PreviewRoute
   '/privacy': typeof PrivacyRoute
@@ -328,17 +328,17 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/terms': typeof TermsRoute
-  '/$lang/contact': typeof LangContactRoute
-  '/$lang/input': typeof LangInputRoute
-  '/$lang/preview': typeof LangPreviewRoute
-  '/$lang/privacy': typeof LangPrivacyRoute
-  '/$lang/refund': typeof LangRefundRoute
-  '/$lang/success': typeof LangSuccessRoute
-  '/$lang/terms': typeof LangTermsRoute
   '/_admin/dashboard': typeof AdminDashboardRouteWithChildren
   '/_affiliate/portal': typeof AffiliatePortalRouteWithChildren
   '/dashboard/login': typeof DashboardLoginRoute
-  '/$lang/': typeof LangIndexRoute
+  '/hi/contact': typeof HiContactRoute
+  '/hi/input': typeof HiInputRoute
+  '/hi/preview': typeof HiPreviewRoute
+  '/hi/privacy': typeof HiPrivacyRoute
+  '/hi/refund': typeof HiRefundRoute
+  '/hi/success': typeof HiSuccessRoute
+  '/hi/terms': typeof HiTermsRoute
+  '/hi/': typeof HiIndexRoute
   '/_admin/dashboard/affiliates': typeof AdminDashboardAffiliatesRoute
   '/_admin/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/_admin/dashboard/failures': typeof AdminDashboardFailuresRoute
@@ -359,8 +359,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/$lang'
     | '/contact'
+    | '/hi'
     | '/input'
     | '/preview'
     | '/privacy'
@@ -368,17 +368,17 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/success'
     | '/terms'
-    | '/$lang/contact'
-    | '/$lang/input'
-    | '/$lang/preview'
-    | '/$lang/privacy'
-    | '/$lang/refund'
-    | '/$lang/success'
-    | '/$lang/terms'
     | '/dashboard'
     | '/portal'
     | '/dashboard/login'
-    | '/$lang/'
+    | '/hi/contact'
+    | '/hi/input'
+    | '/hi/preview'
+    | '/hi/privacy'
+    | '/hi/refund'
+    | '/hi/success'
+    | '/hi/terms'
+    | '/hi/'
     | '/dashboard/affiliates'
     | '/dashboard/coupons'
     | '/dashboard/failures'
@@ -405,15 +405,15 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/success'
     | '/terms'
-    | '/$lang/contact'
-    | '/$lang/input'
-    | '/$lang/preview'
-    | '/$lang/privacy'
-    | '/$lang/refund'
-    | '/$lang/success'
-    | '/$lang/terms'
     | '/dashboard/login'
-    | '/$lang'
+    | '/hi/contact'
+    | '/hi/input'
+    | '/hi/preview'
+    | '/hi/privacy'
+    | '/hi/refund'
+    | '/hi/success'
+    | '/hi/terms'
+    | '/hi'
     | '/dashboard/affiliates'
     | '/dashboard/coupons'
     | '/dashboard/failures'
@@ -432,10 +432,10 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/$lang'
     | '/_admin'
     | '/_affiliate'
     | '/contact'
+    | '/hi'
     | '/input'
     | '/preview'
     | '/privacy'
@@ -443,17 +443,17 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/success'
     | '/terms'
-    | '/$lang/contact'
-    | '/$lang/input'
-    | '/$lang/preview'
-    | '/$lang/privacy'
-    | '/$lang/refund'
-    | '/$lang/success'
-    | '/$lang/terms'
     | '/_admin/dashboard'
     | '/_affiliate/portal'
     | '/dashboard/login'
-    | '/$lang/'
+    | '/hi/contact'
+    | '/hi/input'
+    | '/hi/preview'
+    | '/hi/privacy'
+    | '/hi/refund'
+    | '/hi/success'
+    | '/hi/terms'
+    | '/hi/'
     | '/_admin/dashboard/affiliates'
     | '/_admin/dashboard/coupons'
     | '/_admin/dashboard/failures'
@@ -473,10 +473,10 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  LangRoute: typeof LangRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AffiliateRoute: typeof AffiliateRouteWithChildren
   ContactRoute: typeof ContactRoute
+  HiRoute: typeof HiRouteWithChildren
   InputRoute: typeof InputRoute
   PreviewRoute: typeof PreviewRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -542,6 +542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InputRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/hi': {
+      id: '/hi'
+      path: '/hi'
+      fullPath: '/hi'
+      preLoaderRoute: typeof HiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
@@ -563,13 +570,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$lang': {
-      id: '/$lang'
-      path: '/$lang'
-      fullPath: '/$lang'
-      preLoaderRoute: typeof LangRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -577,12 +577,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$lang/': {
-      id: '/$lang/'
+    '/hi/': {
+      id: '/hi/'
       path: '/'
-      fullPath: '/$lang/'
-      preLoaderRoute: typeof LangIndexRouteImport
-      parentRoute: typeof LangRoute
+      fullPath: '/hi/'
+      preLoaderRoute: typeof HiIndexRouteImport
+      parentRoute: typeof HiRoute
+    }
+    '/hi/terms': {
+      id: '/hi/terms'
+      path: '/terms'
+      fullPath: '/hi/terms'
+      preLoaderRoute: typeof HiTermsRouteImport
+      parentRoute: typeof HiRoute
+    }
+    '/hi/success': {
+      id: '/hi/success'
+      path: '/success'
+      fullPath: '/hi/success'
+      preLoaderRoute: typeof HiSuccessRouteImport
+      parentRoute: typeof HiRoute
+    }
+    '/hi/refund': {
+      id: '/hi/refund'
+      path: '/refund'
+      fullPath: '/hi/refund'
+      preLoaderRoute: typeof HiRefundRouteImport
+      parentRoute: typeof HiRoute
+    }
+    '/hi/privacy': {
+      id: '/hi/privacy'
+      path: '/privacy'
+      fullPath: '/hi/privacy'
+      preLoaderRoute: typeof HiPrivacyRouteImport
+      parentRoute: typeof HiRoute
+    }
+    '/hi/preview': {
+      id: '/hi/preview'
+      path: '/preview'
+      fullPath: '/hi/preview'
+      preLoaderRoute: typeof HiPreviewRouteImport
+      parentRoute: typeof HiRoute
+    }
+    '/hi/input': {
+      id: '/hi/input'
+      path: '/input'
+      fullPath: '/hi/input'
+      preLoaderRoute: typeof HiInputRouteImport
+      parentRoute: typeof HiRoute
+    }
+    '/hi/contact': {
+      id: '/hi/contact'
+      path: '/contact'
+      fullPath: '/hi/contact'
+      preLoaderRoute: typeof HiContactRouteImport
+      parentRoute: typeof HiRoute
     }
     '/dashboard/login': {
       id: '/dashboard/login'
@@ -604,55 +653,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard'
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof AdminRoute
-    }
-    '/$lang/terms': {
-      id: '/$lang/terms'
-      path: '/terms'
-      fullPath: '/$lang/terms'
-      preLoaderRoute: typeof LangTermsRouteImport
-      parentRoute: typeof LangRoute
-    }
-    '/$lang/success': {
-      id: '/$lang/success'
-      path: '/success'
-      fullPath: '/$lang/success'
-      preLoaderRoute: typeof LangSuccessRouteImport
-      parentRoute: typeof LangRoute
-    }
-    '/$lang/refund': {
-      id: '/$lang/refund'
-      path: '/refund'
-      fullPath: '/$lang/refund'
-      preLoaderRoute: typeof LangRefundRouteImport
-      parentRoute: typeof LangRoute
-    }
-    '/$lang/privacy': {
-      id: '/$lang/privacy'
-      path: '/privacy'
-      fullPath: '/$lang/privacy'
-      preLoaderRoute: typeof LangPrivacyRouteImport
-      parentRoute: typeof LangRoute
-    }
-    '/$lang/preview': {
-      id: '/$lang/preview'
-      path: '/preview'
-      fullPath: '/$lang/preview'
-      preLoaderRoute: typeof LangPreviewRouteImport
-      parentRoute: typeof LangRoute
-    }
-    '/$lang/input': {
-      id: '/$lang/input'
-      path: '/input'
-      fullPath: '/$lang/input'
-      preLoaderRoute: typeof LangInputRouteImport
-      parentRoute: typeof LangRoute
-    }
-    '/$lang/contact': {
-      id: '/$lang/contact'
-      path: '/contact'
-      fullPath: '/$lang/contact'
-      preLoaderRoute: typeof LangContactRouteImport
-      parentRoute: typeof LangRoute
     }
     '/_affiliate/portal/': {
       id: '/_affiliate/portal/'
@@ -762,30 +762,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface LangRouteChildren {
-  LangContactRoute: typeof LangContactRoute
-  LangInputRoute: typeof LangInputRoute
-  LangPreviewRoute: typeof LangPreviewRoute
-  LangPrivacyRoute: typeof LangPrivacyRoute
-  LangRefundRoute: typeof LangRefundRoute
-  LangSuccessRoute: typeof LangSuccessRoute
-  LangTermsRoute: typeof LangTermsRoute
-  LangIndexRoute: typeof LangIndexRoute
-}
-
-const LangRouteChildren: LangRouteChildren = {
-  LangContactRoute: LangContactRoute,
-  LangInputRoute: LangInputRoute,
-  LangPreviewRoute: LangPreviewRoute,
-  LangPrivacyRoute: LangPrivacyRoute,
-  LangRefundRoute: LangRefundRoute,
-  LangSuccessRoute: LangSuccessRoute,
-  LangTermsRoute: LangTermsRoute,
-  LangIndexRoute: LangIndexRoute,
-}
-
-const LangRouteWithChildren = LangRoute._addFileChildren(LangRouteChildren)
-
 interface AdminDashboardRouteChildren {
   AdminDashboardAffiliatesRoute: typeof AdminDashboardAffiliatesRoute
   AdminDashboardCouponsRoute: typeof AdminDashboardCouponsRoute
@@ -850,12 +826,36 @@ const AffiliateRouteWithChildren = AffiliateRoute._addFileChildren(
   AffiliateRouteChildren,
 )
 
+interface HiRouteChildren {
+  HiContactRoute: typeof HiContactRoute
+  HiInputRoute: typeof HiInputRoute
+  HiPreviewRoute: typeof HiPreviewRoute
+  HiPrivacyRoute: typeof HiPrivacyRoute
+  HiRefundRoute: typeof HiRefundRoute
+  HiSuccessRoute: typeof HiSuccessRoute
+  HiTermsRoute: typeof HiTermsRoute
+  HiIndexRoute: typeof HiIndexRoute
+}
+
+const HiRouteChildren: HiRouteChildren = {
+  HiContactRoute: HiContactRoute,
+  HiInputRoute: HiInputRoute,
+  HiPreviewRoute: HiPreviewRoute,
+  HiPrivacyRoute: HiPrivacyRoute,
+  HiRefundRoute: HiRefundRoute,
+  HiSuccessRoute: HiSuccessRoute,
+  HiTermsRoute: HiTermsRoute,
+  HiIndexRoute: HiIndexRoute,
+}
+
+const HiRouteWithChildren = HiRoute._addFileChildren(HiRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LangRoute: LangRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AffiliateRoute: AffiliateRouteWithChildren,
   ContactRoute: ContactRoute,
+  HiRoute: HiRouteWithChildren,
   InputRoute: InputRoute,
   PreviewRoute: PreviewRoute,
   PrivacyRoute: PrivacyRoute,

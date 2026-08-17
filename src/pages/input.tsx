@@ -1,22 +1,16 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
 import { Icon } from "@/components/icon";
 import { couponSearch, resolveCoupon, validateCouponSearch } from "@/lib/coupon-link";
 import { initAdvancedMatching, trackOnce } from "@/lib/meta-pixel";
 import { PriceLine } from "@/components/price-line";
 import { INPUT_COPY, META } from "@/lib/site-copy";
+import { LangLink } from "@/components/lang-link";
+import { langPath } from "@/lib/lang-path";
 import { usePageLanguage, type SiteLanguage } from "@/lib/site-language";
 import { langHead } from "@/lib/site-seo";
 
 
-export const Route = createFileRoute("/$lang/input")({
-  validateSearch: validateCouponSearch,
-  head: ({ params }) => {
-    const lang = (params.lang === "en" ? "en" : "hi") as SiteLanguage;
-    return langHead({ lang, page: "/input", ...META.input[lang] });
-  },
-  component: InputPage,
-});
 
 
 type Gender = "MALE" | "FEMALE";
@@ -229,11 +223,11 @@ function normaliseEmail(v: string): string {
   return v.trim().toLowerCase().slice(0, 254);
 }
 
-function InputPage() {
+export function InputPage() {
   const navigate = useNavigate();
   const siteLang = usePageLanguage();
   const copy = INPUT_COPY[siteLang];
-  const { coupon: urlCoupon } = Route.useSearch();
+  const { coupon: urlCoupon } = useSearch({ strict: false }) as { coupon?: string };
   const [coupon, setCoupon] = useState<string | null>(null);
   // URL coupon wins; the stored mirror covers a lost query param / refresh.
   useEffect(() => {
@@ -363,9 +357,8 @@ function InputPage() {
     trackOnce("Lead", leadKey, { language: siteLang });
 
     navigate({
-      to: "/$lang/preview",
-      params: { lang: siteLang },
-      search: couponSearch(coupon),
+      to: langPath(siteLang, "/preview") as never,
+      search: couponSearch(coupon) as never,
     });
 
   }

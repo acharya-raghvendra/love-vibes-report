@@ -1,12 +1,14 @@
-import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { Icon } from "@/components/icon";
 import { trackOnce } from "@/lib/meta-pixel";
+import { LangLink } from "@/components/lang-link";
+import { langPath } from "@/lib/lang-path";
 import { usePageLanguage, type SiteLanguage } from "@/lib/site-language";
 import { langHead } from "@/lib/site-seo";
 
-const SUCCESS_META: Record<SiteLanguage, { title: string; description: string }> = {
+export const SUCCESS_META: Record<SiteLanguage, { title: string; description: string }> = {
   hi: {
     title: "Payment successful — आपकी report तैयार हो रही है | TalkToGuruji",
     description:
@@ -19,19 +21,11 @@ const SUCCESS_META: Record<SiteLanguage, { title: string; description: string }>
   },
 };
 
-const successSearchSchema = z.object({
+export const successSearchSchema = z.object({
   order_id: z.string().optional(),
   phone: z.string().optional(),
 });
 
-export const Route = createFileRoute("/$lang/success")({
-  validateSearch: successSearchSchema,
-  head: ({ params }) => {
-    const lang = (params.lang === "en" ? "en" : "hi") as SiteLanguage;
-    return langHead({ lang, page: "/success", noindex: true, ...SUCCESS_META[lang] });
-  },
-  component: SuccessPage,
-});
 
 type OrderStatus = {
   status: string;
@@ -128,9 +122,9 @@ function Step({
   );
 }
 
-function SuccessPage() {
+export function SuccessPage() {
   const lang = usePageLanguage();
-  const { phone, order_id: orderId } = useSearch({ from: "/$lang/success" });
+  const { phone, order_id: orderId } = useSearch({ strict: false }) as { phone?: string; order_id?: string };
   const [order, setOrder] = useState<OrderStatus | null>(null);
   const [retrying, setRetrying] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);

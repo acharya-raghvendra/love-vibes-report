@@ -1,15 +1,11 @@
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { HEADER_COPY } from "@/lib/site-copy";
-import {
-  langFromPath,
-  setSiteLanguage,
-  usePageLanguage,
-  type SiteLanguage,
-} from "@/lib/site-language";
+import { langPath } from "@/lib/lang-path";
+import { setSiteLanguage, usePageLanguage, type SiteLanguage } from "@/lib/site-language";
 
 /**
- * Compact हिंदी | English switch. Switching navigates to the same page under
- * the other language prefix (the URL is the source of truth) and remembers the
+ * Compact हिंदी | English switch. Switching navigates to the same page with or
+ * without the /hi prefix (the URL is the source of truth) and remembers the
  * choice for the next visit.
  */
 export function LanguageToggle({ className = "" }: { className?: string }) {
@@ -24,13 +20,12 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
   function switchTo(next: SiteLanguage) {
     if (next === lang) return;
     setSiteLanguage(next);
-    // Swap only the prefix so the visitor stays on the same page, keeping the
-    // query string (coupon, order_id) and hash intact.
-    const rest = langFromPath(location.pathname)
-      ? location.pathname.replace(/^\/(hi|en)/, "")
-      : location.pathname;
+    // Add or strip the /hi prefix so the visitor stays on the same page,
+    // keeping the query string (coupon, order_id) and hash intact.
+    const page = location.pathname.replace(/^\/hi/, "").replace(/\/$/, "");
+    const href = langPath(next, page);
     navigate({
-      href: `/${next}${rest}${location.searchStr}${location.hash ? `#${location.hash}` : ""}`,
+      href: `${href}${location.searchStr}${location.hash ? `#${location.hash}` : ""}`,
     });
   }
 

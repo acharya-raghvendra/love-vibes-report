@@ -14,7 +14,7 @@ import appCss from "../styles.css?url";
 import faviconAsset from "../assets/favicon.png.asset.json";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { metaPixelBootstrap, metaPixelNoscriptSrc, trackPageView } from "../lib/meta-pixel";
-import { DEFAULT_LANGUAGE, langFromPath } from "../lib/site-language";
+import { langFromPath } from "../lib/site-language";
 import { SiteHeader } from "../components/site-header";
 
 import { SiteFooter } from "../components/site-footer";
@@ -118,7 +118,7 @@ function RootShell({ children }: { children: ReactNode }) {
   // language of the page that was actually requested.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
-    <html lang={langFromPath(pathname) ?? DEFAULT_LANGUAGE} className="dark">
+    <html lang={langFromPath(pathname)} className="dark">
       <head>
         <HeadContent />
         {/* Meta Pixel base code — loads once for every page (async script). */}

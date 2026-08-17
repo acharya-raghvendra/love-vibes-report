@@ -2,9 +2,9 @@ User-agent: *
 Allow: /
 
 # Funnel pages that only make sense with a live session.
+Disallow: /preview
+Disallow: /success
 Disallow: /hi/preview
-Disallow: /en/preview
 Disallow: /hi/success
-Disallow: /en/success
 
 Sitemap: https://love.talktoguruji.com/sitemap.xml

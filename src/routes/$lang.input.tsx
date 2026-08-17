@@ -231,9 +231,8 @@ function normaliseEmail(v: string): string {
 
 function InputPage() {
   const navigate = useNavigate();
-  const [siteLang, setSiteLang] = useSiteLanguage();
+  const siteLang = usePageLanguage();
   const copy = INPUT_COPY[siteLang];
-  useLocalizedMeta(META.input[siteLang]);
   const { coupon: urlCoupon } = Route.useSearch();
   const [coupon, setCoupon] = useState<string | null>(null);
   // URL coupon wins; the stored mirror covers a lost query param / refresh.
@@ -254,17 +253,19 @@ function InputPage() {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
-  // Report language mirrors the site language; changing either keeps both in sync.
-  const [language, setLanguage] = useState<ReportLanguage>("hi");
+  // Report language starts from the URL prefix but is independently changeable:
+  // someone on the Hindi site may still want an English report.
+  const [language, setLanguage] = useState<ReportLanguage>(siteLang);
+  const languageTouched = useRef(false);
   useEffect(() => {
-    setLanguage(siteLang);
+    if (!languageTouched.current) setLanguage(siteLang);
   }, [siteLang]);
 
   function chooseLanguage(next: ReportLanguage) {
+    languageTouched.current = true;
     setLanguage(next);
-    setSiteLang(next);
-    setSiteLanguage(next);
   }
+
 
   const p1NameRef = useRef<HTMLInputElement>(null);
   const p1DobRef = useRef<HTMLInputElement>(null);

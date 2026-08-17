@@ -1,9 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { Icon } from "@/components/icon";
 import { FOOTER_COPY } from "@/lib/site-copy";
-import { useSiteLanguage } from "@/lib/site-language";
+import { usePageLanguage } from "@/lib/site-language";
 
-const QUICK_LINKS = ["/", "/privacy", "/terms", "/refund", "/contact"] as const;
+const QUICK_LINKS = [
+  { key: "/", to: "/$lang" },
+  { key: "/privacy", to: "/$lang/privacy" },
+  { key: "/terms", to: "/$lang/terms" },
+  { key: "/refund", to: "/$lang/refund" },
+  { key: "/contact", to: "/$lang/contact" },
+] as const;
 
 function TrustChip({ icon, label }: { icon: string; label: string }) {
   return (
@@ -15,7 +21,7 @@ function TrustChip({ icon, label }: { icon: string; label: string }) {
 }
 
 export function SiteFooter() {
-  const [lang] = useSiteLanguage();
+  const lang = usePageLanguage();
   const copy = FOOTER_COPY[lang];
 
   return (
@@ -42,13 +48,14 @@ export function SiteFooter() {
             <h3 className="font-label-md text-label-md uppercase tracking-wider text-primary mb-1">
               {copy.quickLinks}
             </h3>
-            {QUICK_LINKS.map((to) => (
+            {QUICK_LINKS.map((l) => (
               <Link
-                key={to}
-                to={to}
+                key={l.key}
+                to={l.to}
+                params={{ lang }}
                 className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors w-fit"
               >
-                {copy.links[to]}
+                {copy.links[l.key]}
               </Link>
             ))}
           </nav>

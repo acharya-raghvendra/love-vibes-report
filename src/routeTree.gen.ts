@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SuccessRouteImport } from './routes/success'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RefundRouteImport } from './routes/refund'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PreviewRouteImport } from './routes/preview'
@@ -18,10 +19,19 @@ import { Route as InputRouteImport } from './routes/input'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AffiliateRouteImport } from './routes/_affiliate'
 import { Route as AdminRouteImport } from './routes/_admin'
+import { Route as LangRouteImport } from './routes/$lang'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LangIndexRouteImport } from './routes/$lang.index'
 import { Route as DashboardLoginRouteImport } from './routes/dashboard.login'
 import { Route as AffiliatePortalRouteImport } from './routes/_affiliate.portal'
 import { Route as AdminDashboardRouteImport } from './routes/_admin.dashboard'
+import { Route as LangTermsRouteImport } from './routes/$lang.terms'
+import { Route as LangSuccessRouteImport } from './routes/$lang.success'
+import { Route as LangRefundRouteImport } from './routes/$lang.refund'
+import { Route as LangPrivacyRouteImport } from './routes/$lang.privacy'
+import { Route as LangPreviewRouteImport } from './routes/$lang.preview'
+import { Route as LangInputRouteImport } from './routes/$lang.input'
+import { Route as LangContactRouteImport } from './routes/$lang.contact'
 import { Route as AffiliatePortalIndexRouteImport } from './routes/_affiliate.portal.index'
 import { Route as AdminDashboardIndexRouteImport } from './routes/_admin.dashboard.index'
 import { Route as ApiPublicReconcileOrdersRouteImport } from './routes/api/public/reconcile-orders'
@@ -46,6 +56,11 @@ const TermsRoute = TermsRouteImport.update({
 const SuccessRoute = SuccessRouteImport.update({
   id: '/success',
   path: '/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RefundRoute = RefundRouteImport.update({
@@ -81,10 +96,20 @@ const AdminRoute = AdminRouteImport.update({
   id: '/_admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LangRoute = LangRouteImport.update({
+  id: '/$lang',
+  path: '/$lang',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const LangIndexRoute = LangIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LangRoute,
 } as any)
 const DashboardLoginRoute = DashboardLoginRouteImport.update({
   id: '/dashboard/login',
@@ -100,6 +125,41 @@ const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AdminRoute,
+} as any)
+const LangTermsRoute = LangTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangSuccessRoute = LangSuccessRouteImport.update({
+  id: '/success',
+  path: '/success',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangRefundRoute = LangRefundRouteImport.update({
+  id: '/refund',
+  path: '/refund',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangPrivacyRoute = LangPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangPreviewRoute = LangPreviewRouteImport.update({
+  id: '/preview',
+  path: '/preview',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangInputRoute = LangInputRouteImport.update({
+  id: '/input',
+  path: '/input',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangContactRoute = LangContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => LangRoute,
 } as any)
 const AffiliatePortalIndexRoute = AffiliatePortalIndexRouteImport.update({
   id: '/',
@@ -183,16 +243,26 @@ const AdminDashboardAffiliatesRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$lang': typeof LangRouteWithChildren
   '/contact': typeof ContactRoute
   '/input': typeof InputRoute
   '/preview': typeof PreviewRoute
   '/privacy': typeof PrivacyRoute
   '/refund': typeof RefundRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/terms': typeof TermsRoute
+  '/$lang/contact': typeof LangContactRoute
+  '/$lang/input': typeof LangInputRoute
+  '/$lang/preview': typeof LangPreviewRoute
+  '/$lang/privacy': typeof LangPrivacyRoute
+  '/$lang/refund': typeof LangRefundRoute
+  '/$lang/success': typeof LangSuccessRoute
+  '/$lang/terms': typeof LangTermsRoute
   '/dashboard': typeof AdminDashboardRouteWithChildren
   '/portal': typeof AffiliatePortalRouteWithChildren
   '/dashboard/login': typeof DashboardLoginRoute
+  '/$lang/': typeof LangIndexRoute
   '/dashboard/affiliates': typeof AdminDashboardAffiliatesRoute
   '/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/dashboard/failures': typeof AdminDashboardFailuresRoute
@@ -216,9 +286,18 @@ export interface FileRoutesByTo {
   '/preview': typeof PreviewRoute
   '/privacy': typeof PrivacyRoute
   '/refund': typeof RefundRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/terms': typeof TermsRoute
+  '/$lang/contact': typeof LangContactRoute
+  '/$lang/input': typeof LangInputRoute
+  '/$lang/preview': typeof LangPreviewRoute
+  '/$lang/privacy': typeof LangPrivacyRoute
+  '/$lang/refund': typeof LangRefundRoute
+  '/$lang/success': typeof LangSuccessRoute
+  '/$lang/terms': typeof LangTermsRoute
   '/dashboard/login': typeof DashboardLoginRoute
+  '/$lang': typeof LangIndexRoute
   '/dashboard/affiliates': typeof AdminDashboardAffiliatesRoute
   '/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/dashboard/failures': typeof AdminDashboardFailuresRoute
@@ -238,6 +317,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$lang': typeof LangRouteWithChildren
   '/_admin': typeof AdminRouteWithChildren
   '/_affiliate': typeof AffiliateRouteWithChildren
   '/contact': typeof ContactRoute
@@ -245,11 +325,20 @@ export interface FileRoutesById {
   '/preview': typeof PreviewRoute
   '/privacy': typeof PrivacyRoute
   '/refund': typeof RefundRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/terms': typeof TermsRoute
+  '/$lang/contact': typeof LangContactRoute
+  '/$lang/input': typeof LangInputRoute
+  '/$lang/preview': typeof LangPreviewRoute
+  '/$lang/privacy': typeof LangPrivacyRoute
+  '/$lang/refund': typeof LangRefundRoute
+  '/$lang/success': typeof LangSuccessRoute
+  '/$lang/terms': typeof LangTermsRoute
   '/_admin/dashboard': typeof AdminDashboardRouteWithChildren
   '/_affiliate/portal': typeof AffiliatePortalRouteWithChildren
   '/dashboard/login': typeof DashboardLoginRoute
+  '/$lang/': typeof LangIndexRoute
   '/_admin/dashboard/affiliates': typeof AdminDashboardAffiliatesRoute
   '/_admin/dashboard/coupons': typeof AdminDashboardCouponsRoute
   '/_admin/dashboard/failures': typeof AdminDashboardFailuresRoute
@@ -270,16 +359,26 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/$lang'
     | '/contact'
     | '/input'
     | '/preview'
     | '/privacy'
     | '/refund'
+    | '/sitemap.xml'
     | '/success'
     | '/terms'
+    | '/$lang/contact'
+    | '/$lang/input'
+    | '/$lang/preview'
+    | '/$lang/privacy'
+    | '/$lang/refund'
+    | '/$lang/success'
+    | '/$lang/terms'
     | '/dashboard'
     | '/portal'
     | '/dashboard/login'
+    | '/$lang/'
     | '/dashboard/affiliates'
     | '/dashboard/coupons'
     | '/dashboard/failures'
@@ -303,9 +402,18 @@ export interface FileRouteTypes {
     | '/preview'
     | '/privacy'
     | '/refund'
+    | '/sitemap.xml'
     | '/success'
     | '/terms'
+    | '/$lang/contact'
+    | '/$lang/input'
+    | '/$lang/preview'
+    | '/$lang/privacy'
+    | '/$lang/refund'
+    | '/$lang/success'
+    | '/$lang/terms'
     | '/dashboard/login'
+    | '/$lang'
     | '/dashboard/affiliates'
     | '/dashboard/coupons'
     | '/dashboard/failures'
@@ -324,6 +432,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/$lang'
     | '/_admin'
     | '/_affiliate'
     | '/contact'
@@ -331,11 +440,20 @@ export interface FileRouteTypes {
     | '/preview'
     | '/privacy'
     | '/refund'
+    | '/sitemap.xml'
     | '/success'
     | '/terms'
+    | '/$lang/contact'
+    | '/$lang/input'
+    | '/$lang/preview'
+    | '/$lang/privacy'
+    | '/$lang/refund'
+    | '/$lang/success'
+    | '/$lang/terms'
     | '/_admin/dashboard'
     | '/_affiliate/portal'
     | '/dashboard/login'
+    | '/$lang/'
     | '/_admin/dashboard/affiliates'
     | '/_admin/dashboard/coupons'
     | '/_admin/dashboard/failures'
@@ -355,6 +473,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LangRoute: typeof LangRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AffiliateRoute: typeof AffiliateRouteWithChildren
   ContactRoute: typeof ContactRoute
@@ -362,6 +481,7 @@ export interface RootRouteChildren {
   PreviewRoute: typeof PreviewRoute
   PrivacyRoute: typeof PrivacyRoute
   RefundRoute: typeof RefundRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuccessRoute: typeof SuccessRoute
   TermsRoute: typeof TermsRoute
   DashboardLoginRoute: typeof DashboardLoginRoute
@@ -385,6 +505,13 @@ declare module '@tanstack/react-router' {
       path: '/success'
       fullPath: '/success'
       preLoaderRoute: typeof SuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/refund': {
@@ -436,12 +563,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$lang': {
+      id: '/$lang'
+      path: '/$lang'
+      fullPath: '/$lang'
+      preLoaderRoute: typeof LangRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/$lang/': {
+      id: '/$lang/'
+      path: '/'
+      fullPath: '/$lang/'
+      preLoaderRoute: typeof LangIndexRouteImport
+      parentRoute: typeof LangRoute
     }
     '/dashboard/login': {
       id: '/dashboard/login'
@@ -463,6 +604,55 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard'
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/$lang/terms': {
+      id: '/$lang/terms'
+      path: '/terms'
+      fullPath: '/$lang/terms'
+      preLoaderRoute: typeof LangTermsRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/success': {
+      id: '/$lang/success'
+      path: '/success'
+      fullPath: '/$lang/success'
+      preLoaderRoute: typeof LangSuccessRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/refund': {
+      id: '/$lang/refund'
+      path: '/refund'
+      fullPath: '/$lang/refund'
+      preLoaderRoute: typeof LangRefundRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/privacy': {
+      id: '/$lang/privacy'
+      path: '/privacy'
+      fullPath: '/$lang/privacy'
+      preLoaderRoute: typeof LangPrivacyRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/preview': {
+      id: '/$lang/preview'
+      path: '/preview'
+      fullPath: '/$lang/preview'
+      preLoaderRoute: typeof LangPreviewRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/input': {
+      id: '/$lang/input'
+      path: '/input'
+      fullPath: '/$lang/input'
+      preLoaderRoute: typeof LangInputRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/contact': {
+      id: '/$lang/contact'
+      path: '/contact'
+      fullPath: '/$lang/contact'
+      preLoaderRoute: typeof LangContactRouteImport
+      parentRoute: typeof LangRoute
     }
     '/_affiliate/portal/': {
       id: '/_affiliate/portal/'
@@ -572,6 +762,30 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface LangRouteChildren {
+  LangContactRoute: typeof LangContactRoute
+  LangInputRoute: typeof LangInputRoute
+  LangPreviewRoute: typeof LangPreviewRoute
+  LangPrivacyRoute: typeof LangPrivacyRoute
+  LangRefundRoute: typeof LangRefundRoute
+  LangSuccessRoute: typeof LangSuccessRoute
+  LangTermsRoute: typeof LangTermsRoute
+  LangIndexRoute: typeof LangIndexRoute
+}
+
+const LangRouteChildren: LangRouteChildren = {
+  LangContactRoute: LangContactRoute,
+  LangInputRoute: LangInputRoute,
+  LangPreviewRoute: LangPreviewRoute,
+  LangPrivacyRoute: LangPrivacyRoute,
+  LangRefundRoute: LangRefundRoute,
+  LangSuccessRoute: LangSuccessRoute,
+  LangTermsRoute: LangTermsRoute,
+  LangIndexRoute: LangIndexRoute,
+}
+
+const LangRouteWithChildren = LangRoute._addFileChildren(LangRouteChildren)
+
 interface AdminDashboardRouteChildren {
   AdminDashboardAffiliatesRoute: typeof AdminDashboardAffiliatesRoute
   AdminDashboardCouponsRoute: typeof AdminDashboardCouponsRoute
@@ -638,6 +852,7 @@ const AffiliateRouteWithChildren = AffiliateRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LangRoute: LangRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AffiliateRoute: AffiliateRouteWithChildren,
   ContactRoute: ContactRoute,
@@ -645,6 +860,7 @@ const rootRouteChildren: RootRouteChildren = {
   PreviewRoute: PreviewRoute,
   PrivacyRoute: PrivacyRoute,
   RefundRoute: RefundRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuccessRoute: SuccessRoute,
   TermsRoute: TermsRoute,
   DashboardLoginRoute: DashboardLoginRoute,

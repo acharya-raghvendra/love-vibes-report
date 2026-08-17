@@ -1,14 +1,38 @@
 import { useEffect, useState } from "react";
+import { useRouterState } from "@tanstack/react-router";
 
-// UI language for the marketing funnel (landing → input → preview).
-// The report language on /input mirrors this value, so a Hindi visitor gets a
-// Hindi report by default without touching the toggle.
+// UI language for the marketing funnel (/hi/… and /en/…).
+// The URL prefix is the single source of truth: localStorage only remembers
+// the last choice so the entry point (/) can send a returning visitor to the
+// tree they used before.
 export type SiteLanguage = "en" | "hi";
 
 const KEY = "ttg_lang";
 const EVENT = "ttg-lang-change";
 
 export const DEFAULT_LANGUAGE: SiteLanguage = "hi";
+
+/** Language carried by the current URL prefix, e.g. /hi/preview -> "hi". */
+export function langFromPath(pathname: string): SiteLanguage | null {
+  const m = /^\/(hi|en)(\/|$)/.exec(pathname);
+  return m ? (m[1] as SiteLanguage) : null;
+}
+
+/**
+ * The page language, read from the URL prefix. Works anywhere in the tree
+ * (including shared chrome rendered by __root) and is identical on the server
+ * and the client, so there is no hydration flip. The prefix is mirrored into
+ * localStorage so it stays the remembered preference.
+ */
+export function usePageLanguage(): SiteLanguage {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const lang = langFromPath(pathname) ?? DEFAULT_LANGUAGE;
+  useEffect(() => {
+    if (readStoredLanguage() !== lang) setSiteLanguage(lang);
+  }, [lang]);
+  return lang;
+}
+
 
 export function readStoredLanguage(): SiteLanguage {
   try {

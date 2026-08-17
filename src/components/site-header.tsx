@@ -3,13 +3,13 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Icon } from "@/components/icon";
 import { LanguageToggle } from "@/components/language-toggle";
 import { CTA_LABEL, HEADER_COPY, NEW_PAIR_LABEL } from "@/lib/site-copy";
-import { useSiteLanguage } from "@/lib/site-language";
+import { usePageLanguage } from "@/lib/site-language";
 import logoAsset from "@/assets/talktoguruji-logo.png.asset.json";
 
 
-function Logo() {
+function Logo({ lang }: { lang: "hi" | "en" }) {
   return (
-    <Link to="/" className="flex items-center" aria-label="Talk To Guruji home">
+    <Link to="/$lang" params={{ lang }} className="flex items-center" aria-label="Talk To Guruji home">
       <img
         src={logoAsset.url}
         alt="Talk To Guruji"
@@ -21,14 +21,14 @@ function Logo() {
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
-  const [lang] = useSiteLanguage();
+  const lang = usePageLanguage();
   const copy = HEADER_COPY[lang];
   const cta = CTA_LABEL[lang];
   const newPair = NEW_PAIR_LABEL[lang];
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // Robust to /preview, /preview/, /success, /success/ so the gold CTA never
   // reappears on trailing-slash variants of the report/success pages.
-  const isNoCtaPage = /^\/(preview|success)\/?$/.test(pathname);
+  const isNoCtaPage = /^\/(hi|en)\/(preview|success)\/?$/.test(pathname);
 
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export function SiteHeader() {
         className="fixed inset-x-0 top-0 z-50 border-b border-primary/15 bg-background/70 backdrop-blur-2xl"
       >
         <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-5 lg:h-[72px] lg:px-6">
-          <Logo />
+          <Logo lang={lang} />
 
           {/* Desktop nav */}
           <nav
@@ -61,7 +61,7 @@ export function SiteHeader() {
             {copy.nav.map((l) => (
               <a
                 key={l.href}
-                href={l.href}
+                href={`/${lang}${l.href.replace(/^\//, "")}`}
                 className="nav-link font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
               >
                 {l.label}
@@ -76,14 +76,16 @@ export function SiteHeader() {
                 the single page goal isn't competing with a gold button. */}
             {isNoCtaPage ? (
               <Link
-                to="/input"
+                to="/$lang/input"
+                params={{ lang }}
                 className="hidden lg:inline-flex items-center font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
               >
                 {newPair}
               </Link>
             ) : (
               <Link
-                to="/input"
+                to="/$lang/input"
+                params={{ lang }}
                 className="hidden lg:inline-flex items-center rounded-xl bg-gradient-to-r from-primary-container to-primary px-5 py-2.5 font-label-md text-label-md text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.25)] hover:scale-[0.98] active:scale-95 transition-transform"
               >
                 {cta}
@@ -126,7 +128,7 @@ export function SiteHeader() {
           }`}
         >
           <div className="flex items-center justify-between border-b border-outline-variant/20 px-5 h-16">
-            <Logo />
+            <Logo lang={lang} />
             <button
               type="button"
               aria-label={copy.closeMenu}
@@ -140,7 +142,7 @@ export function SiteHeader() {
             {copy.nav.map((l) => (
               <a
                 key={l.href}
-                href={l.href}
+                href={`/${lang}${l.href.replace(/^\//, "")}`}
                 onClick={() => setOpen(false)}
                 className="font-label-md text-label-md py-3 text-on-surface hover:text-primary transition-colors border-b border-outline-variant/10"
               >
@@ -154,7 +156,8 @@ export function SiteHeader() {
           <div className="p-5 pb-8">
             {isNoCtaPage ? (
               <Link
-                to="/input"
+                to="/$lang/input"
+                params={{ lang }}
                 onClick={() => setOpen(false)}
                 className="flex w-full items-center justify-center font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
               >
@@ -162,7 +165,8 @@ export function SiteHeader() {
               </Link>
             ) : (
               <Link
-                to="/input"
+                to="/$lang/input"
+                params={{ lang }}
                 onClick={() => setOpen(false)}
                 className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md text-on-primary-fixed shadow-lg"
               >

@@ -360,9 +360,14 @@ function InputPage() {
     // No raw email/phone or names are ever sent as event params.
     const leadKey = `${a.first}|${p1Dob}|${b.first}|${p2Dob}`;
     void initAdvancedMatching({ email: cleanEmail, phone: phone });
-    trackOnce("Lead", leadKey);
+    trackOnce("Lead", leadKey, { language: siteLang });
 
-    navigate({ to: "/preview", search: couponSearch(coupon) });
+    navigate({
+      to: "/$lang/preview",
+      params: { lang: siteLang },
+      search: couponSearch(coupon),
+    });
+
   }
 
 

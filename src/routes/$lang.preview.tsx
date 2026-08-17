@@ -967,7 +967,7 @@ function PreviewPage() {
       {toast && <Toast msg={toast} />}
 
       <div className="hidden">
-        <Link to="/input">back</Link>
+        <Link to="/$lang/input" params={{ lang }}>back</Link>
       </div>
     </div>
   );

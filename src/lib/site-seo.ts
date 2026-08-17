@@ -41,9 +41,9 @@ export function langHead(args: {
   // hreflang is only meaningful for indexable pages.
   if (!noindex) {
     links.push(
-      { rel: "alternate", hreflang: "hi", href: langUrl("hi", page) },
-      { rel: "alternate", hreflang: "en", href: langUrl("en", page) },
-      { rel: "alternate", hreflang: "x-default", href: langUrl("hi", page) },
+      { rel: "alternate", hrefLang: "hi", href: langUrl("hi", page) },
+      { rel: "alternate", hrefLang: "en", href: langUrl("en", page) },
+      { rel: "alternate", hrefLang: "x-default", href: langUrl("hi", page) },
     );
   }
 

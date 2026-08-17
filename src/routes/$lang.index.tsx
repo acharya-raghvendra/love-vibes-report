@@ -4,27 +4,20 @@ import { Icon } from "@/components/icon";
 import { couponSearch, resolveCoupon, validateCouponSearch } from "@/lib/coupon-link";
 import { PriceLine } from "@/components/price-line";
 import { CTA_LABEL, LANDING_COPY, META } from "@/lib/site-copy";
-import { useLocalizedMeta, useSiteLanguage } from "@/lib/site-language";
+import { usePageLanguage, type SiteLanguage } from "@/lib/site-language";
+import { langHead } from "@/lib/site-seo";
 
 export const Route = createFileRoute("/$lang/")({
   validateSearch: validateCouponSearch,
-  // Hindi is the default UI language, so the crawler-visible tags are Hindi.
-  // useLocalizedMeta() swaps them when a visitor picks English.
-  head: () => ({
-    meta: [
-      { title: META.landing.hi.title },
-      { name: "description", content: META.landing.hi.description },
-      { property: "og:title", content: META.landing.hi.title },
-      { property: "og:description", content: META.landing.hi.description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: META.landing.hi.title },
-      { name: "twitter:description", content: META.landing.hi.description },
-    ],
-    links: [{ rel: "canonical", href: "https://love.talktoguruji.com/" }],
-  }),
+  // The URL prefix decides the language, so the crawler sees the right tags
+  // for the exact URL it fetched.
+  head: ({ params }) => {
+    const lang = (params.lang === "en" ? "en" : "hi") as SiteLanguage;
+    return langHead({ lang, page: "", ...META.landing[lang] });
+  },
   component: Index,
 });
+
 
 const AVATARS = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuDt-OKTZVKg6kxtnJP8FqUZ9iLR5dWf6R7J2SDgZs0HmI0mKLWxo3COwxmC7hL-Jltj7gTVERPQl9YzSIZLSU0HvqYwxaZuxPVKp1NB54LDaJoGEkbg7Pa7m50Y1H3VaLCi3hV3aOuFT2F_vURrBPu740hwYGjBMz8BXLJtH8_PI37c44KyacVOVluc5ztf47OkX9WUdEiQiYdpRUu7NYPrcsXqyyBCLNAelq6nW61hOVB9-HQuDn4A",

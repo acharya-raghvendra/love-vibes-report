@@ -481,8 +481,9 @@ function PreviewPage() {
     trackOnce("ViewContent", key, {
       value: Math.round(pricing.finalAmount),
       currency: "INR",
+      language: lang,
     });
-  }, [state, pricing, input]);
+  }, [state, pricing, input, lang]);
 
 
   // Single apply path for the box and for an auto-applied carried coupon.
@@ -598,6 +599,7 @@ function PreviewPage() {
       trackOnce("InitiateCheckout", gatewayOrder.internalOrderId, {
         value: Math.round(gatewayOrder.amount / 100),
         currency: "INR",
+        language: lang,
       });
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

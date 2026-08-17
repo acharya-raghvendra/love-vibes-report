@@ -9,7 +9,7 @@ import logoAsset from "@/assets/talktoguruji-logo.png.asset.json";
 
 function Logo({ lang }: { lang: "hi" | "en" }) {
   return (
-    <Link to="/$lang/" params={{ lang }} className="flex items-center" aria-label="Talk To Guruji home">
+    <Link to="/$lang" params={{ lang }} className="flex items-center" aria-label="Talk To Guruji home">
       <img
         src={logoAsset.url}
         alt="Talk To Guruji"

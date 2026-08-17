@@ -4,7 +4,7 @@ import { FOOTER_COPY } from "@/lib/site-copy";
 import { usePageLanguage } from "@/lib/site-language";
 
 const QUICK_LINKS = [
-  { key: "/", to: "/$lang/" },
+  { key: "/", to: "/$lang" },
   { key: "/privacy", to: "/$lang/privacy" },
   { key: "/terms", to: "/$lang/terms" },
   { key: "/refund", to: "/$lang/refund" },

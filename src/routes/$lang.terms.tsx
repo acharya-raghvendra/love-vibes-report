@@ -16,7 +16,7 @@ function TermsPage() {
   return (
     <div className="relative min-h-screen bg-background text-on-background">
       <main className="mx-auto max-w-[860px] px-5 pt-28 pb-24 lg:px-6">
-        <Link to="/$lang/" params={{ lang }} className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-8 text-body-md">
+        <Link to="/$lang" params={{ lang }} className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-8 text-body-md">
           <Icon name="arrow_back" size={18} />
           Back to Home
         </Link>

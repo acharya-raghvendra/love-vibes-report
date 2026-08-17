@@ -107,7 +107,7 @@ function Index() {
               </p>
               <Link
                 ref={heroCtaRef}
-                to="/input"
+                to="/$lang/input" params={{ lang }}
                 search={ctaSearch}
                 className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-container to-primary py-5 font-label-md text-label-md text-on-primary-fixed shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-transform hover:scale-[0.98] active:scale-95 lg:w-auto lg:px-10"
               >
@@ -250,7 +250,7 @@ function Index() {
                     {copy.previewBody}
                   </p>
                   <Link
-                    to="/input"
+                    to="/$lang/input" params={{ lang }}
                     search={ctaSearch}
                     className="inline-flex rounded-xl bg-primary px-8 py-3 font-label-md text-label-md text-on-primary-fixed"
                   >
@@ -326,7 +326,7 @@ function Index() {
         >
           <div className="mx-auto max-w-container-max">
             <Link
-              to="/input"
+              to="/$lang/input" params={{ lang }}
               search={ctaSearch}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-container to-primary py-4 font-label-md text-label-md text-on-primary-fixed shadow-lg transition-transform active:scale-95"
             >

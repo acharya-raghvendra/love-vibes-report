@@ -160,6 +160,8 @@ Deno.serve(async (req: Request) => {
       logoUrl: typeof branding.logo_url === "string" ? branding.logo_url : undefined,
       footerText: typeof branding.footer_text === "string" ? branding.footer_text : undefined,
       companyName: typeof branding.company_name === "string" ? branding.company_name : undefined,
+      cobrand: branding.cobrand === true,
+      ttgLogoUrl: typeof branding.ttg_logo_url === "string" ? branding.ttg_logo_url : undefined,
       showUpsell,
       fontFaceCss,
     });

@@ -139,6 +139,8 @@ export function buildReportHtml(
     logoUrl?: string;
     footerText?: string;
     companyName?: string;
+    cobrand?: boolean;
+    ttgLogoUrl?: string;
     showUpsell?: boolean;
     /**
      * `@font-face` CSS with the Devanagari woff2 bytes inlined as a data URL
@@ -152,6 +154,8 @@ export function buildReportHtml(
   const logoUrl = opts?.logoUrl ?? LOGO_URL;
   const footerOverride = opts?.footerText;
   const companyName = opts?.companyName ?? "Inno-One Service LLP";
+  const cobrand = opts?.cobrand ?? false;
+  const ttgLogoUrl = opts?.ttgLogoUrl;
   const showUpsell = opts?.showUpsell ?? true;
   const fontFaceCss = opts?.fontFaceCss ?? "";
 
@@ -171,6 +175,7 @@ export function buildReportHtml(
     + `<div class="signoff">`
     + `<div class="byline"><span class="hair"></span><span class="by serif">by</span><span class="hair"></span></div>`
     + `<div class="logo-chip"><img src="${logoUrl}" alt="TalkToGuruji"/></div>`
+    + (cobrand && ttgLogoUrl ? `<div class="powered-by">POWERED BY</div><div class="ttg-logo"><img src="${ttgLogoUrl}" alt="TalkToGuruji"/></div>` : "")
     + `</div>`
     + `<div class="cover-disc">${hi
       ? "यह report सिर्फ़ guidance और self-reflection के लिए numerology पर आधारित है. किसी नतीजे की guarantee नहीं, और professional advice का विकल्प नहीं."
@@ -348,6 +353,9 @@ body.hi .serif{font-family:'Fraunces','Noto Sans Devanagari',serif;}
 .cover .byline .by{font-style:italic;font-size:15px;color:rgba(120,70,64,.75);letter-spacing:.06em;}
 .cover .logo-chip{background:rgba(255,255,255,.92);border-radius:14px;padding:12px 22px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(120,70,64,.10);}
 .cover .signoff img{height:44px;object-fit:contain;opacity:1;}
+.cover .powered-by{color:var(--muted);font-size:10px;letter-spacing:.18em;text-transform:uppercase;margin-top:10px;}
+.cover .ttg-logo{margin-top:4px;}
+.cover .ttg-logo img{height:22px;object-fit:contain;opacity:1;}
 .eyebrow-s{display:flex;align-items:center;gap:8px;color:var(--coral);letter-spacing:.16em;font-size:10px;text-transform:uppercase;font-weight:700;}
 h2.sec{font-size:29px;font-weight:500;margin:10px 0 0;line-height:1.12;color:var(--ink);}
 .rule{width:40px;height:3px;background:var(--coral);margin:14px 0 22px;border-radius:3px;}

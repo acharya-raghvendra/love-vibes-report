@@ -123,6 +123,18 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
         {/* Meta Pixel base code — loads once for every page (async script). */}
         <script async dangerouslySetInnerHTML={{ __html: metaPixelBootstrap }} />
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-CQRS85E6F5" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-CQRS85E6F5');
+            `,
+          }}
+        />
       </head>
       <body>
         <noscript>

@@ -147,7 +147,15 @@ export type Database = {
           status?: string
           whatsapp_sent?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "love_match_orders_language_fkey"
+            columns: ["language"]
+            isOneToOne: false
+            referencedRelation: "report_languages"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       love_match_pricing: {
         Row: {
@@ -188,6 +196,39 @@ export type Database = {
           created_at?: string
           prose_key?: string
           sections?: Json
+        }
+        Relationships: []
+      }
+      report_languages: {
+        Row: {
+          code: string
+          created_at: string
+          enabled: boolean
+          english_label: string
+          native_label: string
+          script: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          enabled?: boolean
+          english_label: string
+          native_label: string
+          script: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          enabled?: boolean
+          english_label?: string
+          native_label?: string
+          script?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }

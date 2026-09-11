@@ -30,7 +30,6 @@ import { Route as HiPreviewRouteImport } from './routes/hi.preview'
 import { Route as HiInputRouteImport } from './routes/hi.input'
 import { Route as HiContactRouteImport } from './routes/hi.contact'
 import { Route as DashboardLoginRouteImport } from './routes/dashboard.login'
-import { Route as ApiSeedIndicFontsRouteImport } from './routes/api/seed-indic-fonts'
 import { Route as AffiliatePortalRouteImport } from './routes/_affiliate.portal'
 import { Route as AdminDashboardRouteImport } from './routes/_admin.dashboard'
 import { Route as AffiliatePortalIndexRouteImport } from './routes/_affiliate.portal.index'
@@ -152,11 +151,6 @@ const DashboardLoginRoute = DashboardLoginRouteImport.update({
   path: '/dashboard/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiSeedIndicFontsRoute = ApiSeedIndicFontsRouteImport.update({
-  id: '/api/seed-indic-fonts',
-  path: '/api/seed-indic-fonts',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AffiliatePortalRoute = AffiliatePortalRouteImport.update({
   id: '/portal',
   path: '/portal',
@@ -260,7 +254,6 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/dashboard': typeof AdminDashboardRouteWithChildren
   '/portal': typeof AffiliatePortalRouteWithChildren
-  '/api/seed-indic-fonts': typeof ApiSeedIndicFontsRoute
   '/dashboard/login': typeof DashboardLoginRoute
   '/hi/contact': typeof HiContactRoute
   '/hi/input': typeof HiInputRoute
@@ -296,7 +289,6 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/terms': typeof TermsRoute
-  '/api/seed-indic-fonts': typeof ApiSeedIndicFontsRoute
   '/dashboard/login': typeof DashboardLoginRoute
   '/hi/contact': typeof HiContactRoute
   '/hi/input': typeof HiInputRoute
@@ -338,7 +330,6 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_admin/dashboard': typeof AdminDashboardRouteWithChildren
   '/_affiliate/portal': typeof AffiliatePortalRouteWithChildren
-  '/api/seed-indic-fonts': typeof ApiSeedIndicFontsRoute
   '/dashboard/login': typeof DashboardLoginRoute
   '/hi/contact': typeof HiContactRoute
   '/hi/input': typeof HiInputRoute
@@ -379,7 +370,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/dashboard'
     | '/portal'
-    | '/api/seed-indic-fonts'
     | '/dashboard/login'
     | '/hi/contact'
     | '/hi/input'
@@ -415,7 +405,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/success'
     | '/terms'
-    | '/api/seed-indic-fonts'
     | '/dashboard/login'
     | '/hi/contact'
     | '/hi/input'
@@ -456,7 +445,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/_admin/dashboard'
     | '/_affiliate/portal'
-    | '/api/seed-indic-fonts'
     | '/dashboard/login'
     | '/hi/contact'
     | '/hi/input'
@@ -496,7 +484,6 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuccessRoute: typeof SuccessRoute
   TermsRoute: typeof TermsRoute
-  ApiSeedIndicFontsRoute: typeof ApiSeedIndicFontsRoute
   DashboardLoginRoute: typeof DashboardLoginRoute
   ApiPublicLoveMatchPriceRoute: typeof ApiPublicLoveMatchPriceRoute
   ApiPublicLoveMatchRetryRoute: typeof ApiPublicLoveMatchRetryRoute
@@ -651,13 +638,6 @@ declare module '@tanstack/react-router' {
       path: '/dashboard/login'
       fullPath: '/dashboard/login'
       preLoaderRoute: typeof DashboardLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/seed-indic-fonts': {
-      id: '/api/seed-indic-fonts'
-      path: '/api/seed-indic-fonts'
-      fullPath: '/api/seed-indic-fonts'
-      preLoaderRoute: typeof ApiSeedIndicFontsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_affiliate/portal': {
@@ -883,7 +863,6 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuccessRoute: SuccessRoute,
   TermsRoute: TermsRoute,
-  ApiSeedIndicFontsRoute: ApiSeedIndicFontsRoute,
   DashboardLoginRoute: DashboardLoginRoute,
   ApiPublicLoveMatchPriceRoute: ApiPublicLoveMatchPriceRoute,
   ApiPublicLoveMatchRetryRoute: ApiPublicLoveMatchRetryRoute,

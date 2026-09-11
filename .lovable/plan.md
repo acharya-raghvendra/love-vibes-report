@@ -1,15 +1,16 @@
-# Seed Indic report fonts
+# Correct and reseed Indic font weights
 
 ## Implementation
-- Create only `supabase/functions/seed-indic-fonts/index.ts`.
-- Require the existing `requireAdmin` check before any download or upload, so anonymous and non-admin callers receive 401/403.
-- For Tamil, Telugu, Kannada, and Malayalam, request Google Fonts CSS with a desktop Chrome user agent, select the WOFF2 source for weights 400 and 600, download each font, and reject any payload smaller than 5,000 bytes.
-- Upload all eight files to the existing private `report-fonts` bucket with the exact requested filenames, `font/woff2`, and `upsert: true`. Do not reference or overwrite either Devanagari filename.
-- Return and log a JSON result listing each uploaded filename and byte size; fail the request immediately with a clear family/weight error if CSS parsing, download, validation, or upload fails.
+- Recreate a temporary admin-only server endpoint for the one-off font seed.
+- Request each family and weight separately from Google Fonts (`400` and `600` get distinct CSS requests).
+- Parse every `@font-face` block in each response, collect its WOFF2 URLs, download all candidates, and select the largest file for that family/weight.
+- Reject any selected file below 5,000 bytes and reject the run if a family's 400 and 600 files are byte-identical.
+- Upload the corrected eight files to the existing private `report-fonts` storage bucket using the exact existing filenames, `font/woff2`, and overwrite enabled.
 
-## Run and verification
-- Check the new function, deploy it, invoke it once with an authenticated admin session, and capture its exact response.
-- Confirm the eight uploaded objects and their sizes, then show the invocation output.
+## Verification and cleanup
+- Run the endpoint once with admin authentication.
+- Report all eight exact byte sizes and confirm each family's 400 and 600 files differ.
+- Delete the temporary endpoint immediately after the successful run. No permanent seeder or new deployed function will remain.
 
 ## Scope
-- No existing source file will be modified. Deployment and the one-time storage uploads are runtime actions, not repository file changes.
+- Do not modify the existing Devanagari files, the Indic font loader, or any report-generation caller.

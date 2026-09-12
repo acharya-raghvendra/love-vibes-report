@@ -229,11 +229,12 @@ Deno.serve(async (req) => {
           names: { a: aFirst, b: bFirst },
           chemistry,
         };
-        // Devanagari face inlined as base64 — no network fetch for Hindi
-        // glyphs at print time; a failed read fails the stage.
+        // Script face inlined as base64 — no network fetch for Indic glyphs
+        // at print time; a failed read fails the stage.
+        const script = scriptFor(language) as ScriptKey;
         let fontFaceCss: string;
         try {
-          fontFaceCss = await loadDevanagariFontFaceCss(supabase);
+          fontFaceCss = await loadFontFaceCss(supabase, script);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error(`[free-report] font_unavailable ${msg}`);

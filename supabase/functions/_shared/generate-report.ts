@@ -519,8 +519,8 @@ export async function runGeneration(
       chemistry,
     };
     const script = scriptFor(language) as ScriptKey;
-    // Indic face, inlined as base64 into the HTML: no network fetch for
-    // non-Latin glyphs at print time. If the bytes can't be read we fail rather
+    // Devanagari face, inlined as base64 into the HTML: no network fetch for
+    // Hindi glyphs at print time. If the bytes can't be read we fail rather
     // than print a report that could come out as tofu.
     let fontFaceCss: string;
     try {

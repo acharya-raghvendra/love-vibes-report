@@ -7,10 +7,12 @@ import { corsHeaders, J, requireAdmin } from "../_shared/admin-auth.ts";
 import { scoreMatch } from "../_shared/engine/scorer.ts";
 import { buildReportHtml } from "../_shared/buildReportHtml.ts";
 import {
-  assertDevanagariRendered,
-  describeProbe,
-  loadDevanagariFontFaceCss,
-} from "../_shared/fonts/devanagari.ts";
+  assertScriptRendered,
+  describeFontProbe,
+  loadFontFaceCss,
+} from "../_shared/fonts/indic.ts";
+import type { ScriptKey } from "../_shared/fonts/indic.ts";
+import { isReportLang, scriptFor } from "../_shared/reportStrings.ts";
 import { generateProse } from "../_shared/prose.ts";
 import { reportFileName } from "../_shared/generate-report.ts";
 import {
@@ -103,7 +105,7 @@ Deno.serve(async (req) => {
     const bFirst = cleanName(body?.person_b?.first);
     const bLast = cleanName(body?.person_b?.last);
     const bDob = validDob(body?.person_b?.dob);
-    const language = body.language === "en" ? "en" : "hi";
+    const language = isReportLang(body.language) ? body.language : "hi";
     const sendEmail = body.send_email !== false;
 
     if (!aFirst || !aDob) return new Response(JSON.stringify({ error: "person_a invalid" }), { status: 422, headers: J });
@@ -227,11 +229,12 @@ Deno.serve(async (req) => {
           names: { a: aFirst, b: bFirst },
           chemistry,
         };
-        // Devanagari face inlined as base64 — no network fetch for Hindi
-        // glyphs at print time; a failed read fails the stage.
+        // Script face inlined as base64 — no network fetch for Indic glyphs
+        // at print time; a failed read fails the stage.
+        const script = scriptFor(language) as ScriptKey;
         let fontFaceCss: string;
         try {
-          fontFaceCss = await loadDevanagariFontFaceCss(supabase);
+          fontFaceCss = await loadFontFaceCss(supabase, script);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error(`[free-report] font_unavailable ${msg}`);
@@ -264,14 +267,14 @@ Deno.serve(async (req) => {
           return;
         }
 
-        // Fail-loud Devanagari backstop for Hindi reports.
-        if (language === "hi") {
-          const probe = await assertDevanagariRendered(html, browserlessKey);
-          console.log(`[free-report] devanagari_probe ${describeProbe(probe)}`);
+        // Fail-loud font backstop for non-Latin scripts.
+        if (script !== "latin") {
+          const probe = await assertScriptRendered(html, browserlessKey, script);
+          console.log(`[free-report] font_probe ${describeFontProbe(probe)}`);
           if (!probe.ok) {
             await markFail(
               "pdf_font_missing",
-              `type=pdf_error stage=font_verify ${describeProbe(probe)}`.slice(0, 600),
+              `type=pdf_error stage=font_verify ${describeFontProbe(probe)}`.slice(0, 600),
             );
             return;
           }

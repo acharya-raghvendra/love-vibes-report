@@ -553,17 +553,13 @@ export async function runGeneration(
       return await fail("pdf_too_small", `type=pdf_error stage=pdf bytes=${pdfBytes.length}`);
     }
 
-    // Fail-loud backstop for Hindi: prove the Devanagari glyphs actually
-    // painted from our embedded face (loaded + covers the sample + real
-    // metrics + conjunct shaping). "Could not verify" counts as a failure,
-    // so a Hindi report can never be delivered as tofu.
-    if (language === "hi") {
-      const probe = await assertDevanagariRendered(html, browserlessKey);
-      console.log(`[generate] order=${orderId} devanagari_probe ${describeProbe(probe)}`);
+    if (script !== "latin") {
+      const probe = await assertScriptRendered(html, browserlessKey, script);
+      console.log(`[generate] order=${orderId} font_probe ${describeFontProbe(probe)}`);
       if (!probe.ok) {
         return await fail(
           "pdf_font_missing",
-          `type=pdf_error stage=font_verify ${describeProbe(probe)}`.slice(0, 600),
+          `type=pdf_error stage=font_verify ${describeFontProbe(probe)}`.slice(0, 600),
         );
       }
     }

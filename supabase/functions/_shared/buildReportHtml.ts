@@ -1,6 +1,19 @@
 // buildReportHtml — Variation B "Soft Romance". Server-side, POSTed to Browserless as html.
 // Structured sections (s1..s13). Band-based score ring color. Mobile-readable:
 // his/her cards stack vertically, large type, generous spacing.
+//
+// MULTILINGUAL: every fixed string comes from _shared/reportStrings.ts. There
+// are no inline language ternaries left in this file. The script (devanagari /
+// tamil / telugu / kannada / malayalam / latin) is derived from facts.language
+// and drives the font family, the line-height and the letter-spacing reset.
+//
+// COMPATIBILITY GUARANTEE: for `en` and `hi` this produces byte-identical
+// output to the previous version. The Indic family resolves to
+// 'Noto Sans Devanagari' for both, and the extra script CSS block is emitted
+// only for tamil/telugu/kannada/malayalam.
+
+import { getStrings, scriptFor } from "./reportStrings.ts";
+import { familyFor, lineHeightFor, type ScriptKey } from "./fonts/indic.ts";
 
 const LOGO_URL =
   "https://love.talktoguruji.com/__l5e/assets-v1/1826ef0e-d66c-48a4-8123-8270594dca3f/talktoguruji-logo.png";
@@ -21,30 +34,7 @@ interface Facts {
   chemistry?: ChemPair[]; names?: { a?: string; b?: string };
 }
 
-const SECTION_TITLES_EN: Record<string, string> = {
-  s1: "How compatible are you two", s2: "Your core numbers",
-  s3: "Life Path: how you each move through life", s4: "Soul Urge: how you each love",
-  s5: "Chemistry & attraction", s6: "Intimacy & closeness",
-  s7: "Personality: how you come across", s8: "Conflict & repair",
-  s9: "Maturity: how you grow over time", s10: "Right now: the timing",
-  s11: "At a glance: strengths & what to watch", s12: "What you can do",
-  s13: "One honest note",
-};
-const SECTION_TITLES_HI: Record<string, string> = {
-  s1: "आप दोनों कितने compatible हैं",
-  s2: "आपके core numbers",
-  s3: "Life Path: आप दोनों ज़िंदगी कैसे जीते हैं",
-  s4: "Soul Urge: आप दोनों प्यार कैसे करते हैं",
-  s5: "Chemistry और attraction",
-  s6: "नज़दीकी और intimacy",
-  s7: "Personality: आप बाहर से कैसे दिखते हैं",
-  s8: "टकराव और repair",
-  s9: "Maturity: वक़्त के साथ आप कैसे बदलते हैं",
-  s10: "अभी का वक़्त",
-  s11: "एक नज़र में: strengths और ध्यान रखने वाली बातें",
-  s12: "आप क्या कर सकते हैं",
-  s13: "एक honest बात",
-};
+type Strings = ReturnType<typeof getStrings>;
 
 function esc(s: unknown): string {
   return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
@@ -65,18 +55,16 @@ function relationDot(rel: string): string {
   return "#C9A25E";
 }
 
-function numRows(c: CoreNumbers, hi: boolean): string {
-  const L = hi
-    ? { lp: "लाइफ़ पाथ", de: "डेस्टिनी", su: "सोल अर्ज", pe: "पर्सनैलिटी", master: "मास्टर" }
-    : { lp: "Life Path", de: "Destiny", su: "Soul Urge", pe: "Personality", master: "Master" };
+function numRows(c: CoreNumbers, S: Strings): string {
+  const L = S.num;
   const row = (label: string, f: NumFact) => {
     const compound = f.compound !== f.display ? `${f.compound}/${f.display}` : `${f.display}`;
     const shown = f.isMaster ? `${f.score} (${L.master} ${f.display})` : compound;
     return `<div class="nrow"><span class="v">${esc(f.display)}</span>`
       + `<span class="meta"><b>${label}</b><span>${esc(shown)}</span></span></div>`;
   };
-  return row(L.lp, c.lifePath) + row(L.de, c.destiny)
-    + row(L.su, c.soulUrge) + row(L.pe, c.personality);
+  return row(L.lifePath, c.lifePath) + row(L.destiny, c.destiny)
+    + row(L.soulUrge, c.soulUrge) + row(L.personality, c.personality);
 }
 
 function pairStrip(chem: ChemPair[]): string {
@@ -95,20 +83,19 @@ function ringSvg(score: number): string {
     + `transform="rotate(-90 90 90)"/></svg>`;
 }
 
-function frun(pg: number, hi: boolean, footerOverride?: string): string {
-  const title = hi ? "लव मैच रिपोर्ट" : "Love Match Report";
-  const text = footerOverride ?? `TalkToGuruji &nbsp;•&nbsp; ${title}`;
+function frun(pg: number, S: Strings, footerOverride?: string): string {
+  const text = footerOverride ?? `TalkToGuruji &nbsp;•&nbsp; ${S.reportTitle}`;
   return `<div class="frun"><span>${text}</span><span class="pg">${pg}</span></div>`;
 }
 
-function eyebrow(n: string, hi: boolean): string {
+function eyebrow(n: string, S: Strings): string {
   const nn = n.length < 2 ? "0" + n : n;
-  const label = hi ? "सेक्शन" : "Section";
-  return `<div class="eyebrow-s"><span class="rings"><i></i><i></i></span> ${label} ${nn}</div>`;
+  return `<div class="eyebrow-s"><span class="rings"><i></i><i></i></span> ${S.sectionWord} ${nn}</div>`;
 }
-function head(id: string, hi: boolean): string {
-  const titles = hi ? SECTION_TITLES_HI : SECTION_TITLES_EN;
-  return eyebrow(id.replace("s", ""), hi) + `<h2 class="sec serif">${esc(titles[id])}</h2><div class="rule"></div>`;
+
+function head(id: string, S: Strings): string {
+  return eyebrow(id.replace("s", ""), S)
+    + `<h2 class="sec serif">${esc(S.sections[id])}</h2><div class="rule"></div>`;
 }
 
 function cards2(nameA: string, nameB: string, s: AnalyticalSection): string {
@@ -116,6 +103,7 @@ function cards2(nameA: string, nameB: string, s: AnalyticalSection): string {
   return `<div class="mcard his"><div class="who"><span class="d"></span>${esc(nameA)}</div><p>${esc(s.a_card || "")}</p></div>`
     + `<div class="mcard hers"><div class="who"><span class="d"></span>${esc(nameB)}</div><p>${esc(s.b_card || "")}</p></div>`;
 }
+
 function blocks(bl?: SectionBlock[]): string {
   if (!bl || !bl.length) return "";
   return bl.map((b) =>
@@ -123,13 +111,16 @@ function blocks(bl?: SectionBlock[]): string {
   ).join("");
 }
 
-function analyticalPage(id: string, nameA: string, nameB: string, s: AnalyticalSection, pg: number, hi: boolean, extra = "", footerOverride?: string): string {
-  let inner = head(id, hi) + cards2(nameA, nameB, s);
+function analyticalPage(
+  id: string, nameA: string, nameB: string, s: AnalyticalSection,
+  pg: number, S: Strings, extra = "", footerOverride?: string,
+): string {
+  let inner = head(id, S) + cards2(nameA, nameB, s);
   if (s.tag) inner += `<div class="verdict">${esc(s.tag)}</div>`;
   inner += extra;
   if (s.intro) inner += `<div class="hero-quote">${esc(s.intro)}</div>`;
   inner += blocks(s.blocks);
-  return `<div class="page">${inner}${frun(pg, hi, footerOverride)}</div>`;
+  return `<div class="page">${inner}${frun(pg, S, footerOverride)}</div>`;
 }
 
 export function buildReportHtml(
@@ -143,10 +134,11 @@ export function buildReportHtml(
     ttgLogoUrl?: string;
     showUpsell?: boolean;
     /**
-     * `@font-face` CSS with the Devanagari woff2 bytes inlined as a data URL
-     * (see _shared/fonts/devanagari.ts). Inlined so Chrome needs no network
-     * access for Hindi glyphs at print time. Callers rendering Hindi MUST pass
-     * it; without it there is no Devanagari face in the document at all.
+     * `@font-face` CSS with the script's woff2 bytes inlined as a data URL
+     * (see _shared/fonts/indic.ts → loadFontFaceCss). Inlined so Chrome needs
+     * no network access for Indic glyphs at print time. Callers rendering any
+     * non-Latin language MUST pass it; without it there is no matching face in
+     * the document at all and the report prints as tofu.
      */
     fontFaceCss?: string;
   },
@@ -159,105 +151,116 @@ export function buildReportHtml(
   const showUpsell = opts?.showUpsell ?? true;
   const fontFaceCss = opts?.fontFaceCss ?? "";
 
-  const hi = facts.language === "hi";
+  const S = getStrings(facts.language);
+  const script = scriptFor(facts.language) as ScriptKey;
+
+  // For `latin` and `devanagari` this is 'Noto Sans Devanagari', exactly the
+  // string the previous version hardcoded — so en/hi output is unchanged.
+  const IND = familyFor(script) ?? "Noto Sans Devanagari";
+  const isIndic = script !== "latin";
+  // Scripts whose typography needs adjusting away from the Devanagari
+  // defaults. Devanagari itself is excluded so Hindi stays pixel-identical.
+  const needsScriptCss = isIndic && script !== "devanagari";
+  const bodyClass = isIndic ? "ind" : "";
+
   const nameA = facts.person_a?.first || facts.names?.a || "Person A";
   const nameB = facts.person_b?.first || facts.names?.b || "Person B";
-  const S = sections as Record<string, unknown>;
+  const Sx = sections as Record<string, unknown>;
   let pg = 1;
 
   // Cover
   let pages = `<div class="page cover">`
     + `<div class="badge"><span class="cring"><i></i><i></i></span></div>`
-    + `<div class="eyebrow">${hi ? "कम्पैटिबिलिटी analysis" : "Compatibility Analysis"}</div>`
-    + `<h1 class="serif">${hi ? "लव मैच रिपोर्ट" : "Love Match Report"}</h1>`
+    + `<div class="eyebrow">${esc(S.cover.eyebrow)}</div>`
+    + `<h1 class="serif">${esc(S.reportTitle)}</h1>`
     + `<div class="names serif">${esc(nameA)} <span class="amp">&amp;</span> ${esc(nameB)}</div>`
-    + `<div class="pill">${hi ? "Honest, सिर्फ़ तारीफ़ नहीं." : "Honest, not just flattering."}</div>`
+    + `<div class="pill">${esc(S.cover.pill)}</div>`
     + `<div class="signoff">`
-    + `<div class="byline"><span class="hair"></span><span class="by serif">by</span><span class="hair"></span></div>`
+    + `<div class="byline"><span class="hair"></span><span class="by serif">${esc(S.cover.by)}</span><span class="hair"></span></div>`
     + `<div class="logo-chip"><img src="${logoUrl}" alt="TalkToGuruji"/></div>`
-    + (cobrand && ttgLogoUrl ? `<div class="powered-by">POWERED BY</div><div class="ttg-logo"><img src="${ttgLogoUrl}" alt="TalkToGuruji"/></div>` : "")
+    + (cobrand && ttgLogoUrl
+      ? `<div class="powered-by">POWERED BY</div><div class="ttg-logo"><img src="${ttgLogoUrl}" alt="TalkToGuruji"/></div>`
+      : "")
     + `</div>`
-    + `<div class="cover-disc">${hi
-      ? "यह report सिर्फ़ guidance और self-reflection के लिए numerology पर आधारित है. किसी नतीजे की guarantee नहीं, और professional advice का विकल्प नहीं."
-      : "This report is based on numerology for guidance and self-reflection only. It is not a guarantee of any outcome, nor a substitute for professional advice."}</div>`
+    + `<div class="cover-disc">${esc(S.cover.disclaimer)}</div>`
     + `</div>`;
 
   // s1 score
-  const s1 = (S.s1 || {}) as { headline?: string; what_it_means?: string; honest_note?: string };
+  const s1 = (Sx.s1 || {}) as { headline?: string; what_it_means?: string; honest_note?: string };
   let sharedHtml = "";
   if (facts.shared && facts.shared.length) {
-    sharedHtml = `<div class="shared">${hi ? "आप दोनों में common: " : "You share: "}${facts.shared.map((x) => `<b>${esc(x)}</b>`).join(", ")}.</div>`;
+    sharedHtml = `<div class="shared">${esc(S.sharedPrefix)}`
+      + `${facts.shared.map((x) => `<b>${esc(x)}</b>`).join(", ")}.</div>`;
   }
-  pages += `<div class="page">${head("s1", hi)}`
+  pages += `<div class="page">${head("s1", S)}`
     + `<div class="score-hero"><div class="ring">${ringSvg(facts.score)}`
-    + `<div class="lbl"><b>${facts.score}</b><span>${hi ? "में से 100" : "out of 100"}</span></div></div>`
+    + `<div class="lbl"><b>${facts.score}</b><span>${esc(S.score.outOf)}</span></div></div>`
     + `<div class="band-pill">${esc(facts.band)}</div>`
     + (s1.headline ? `<div class="band-sub">${esc(s1.headline)}</div>` : "")
     + `</div>`
     + sharedHtml
-    + (s1.what_it_means ? `<div class="hero-quote"><b>${hi ? "Score का मतलब." : "What the score means."}</b> ${esc(s1.what_it_means)}</div>` : "")
+    + (s1.what_it_means
+      ? `<div class="hero-quote"><b>${esc(S.score.meansLabel)}</b> ${esc(s1.what_it_means)}</div>`
+      : "")
     + (s1.honest_note ? `<p class="body">${esc(s1.honest_note)}</p>` : "")
-    + frun(++pg, hi, footerOverride) + `</div>`;
+    + frun(++pg, S, footerOverride) + `</div>`;
 
   // s2 core numbers (stacked person cards = mobile-readable)
-  const s2 = (S.s2 || {}) as { shared_note?: string };
-  pages += `<div class="page">${head("s2", hi)}`
-    + `<div class="pcol his"><h3>${esc(nameA)}</h3>${numRows(facts.person_a, hi)}</div>`
-    + `<div class="pcol hers"><h3>${esc(nameB)}</h3>${numRows(facts.person_b, hi)}</div>`
+  const s2 = (Sx.s2 || {}) as { shared_note?: string };
+  pages += `<div class="page">${head("s2", S)}`
+    + `<div class="pcol his"><h3>${esc(nameA)}</h3>${numRows(facts.person_a, S)}</div>`
+    + `<div class="pcol hers"><h3>${esc(nameB)}</h3>${numRows(facts.person_b, S)}</div>`
     + (s2.shared_note ? `<div class="shared">${esc(s2.shared_note)}</div>` : "")
-    + frun(++pg, hi, footerOverride) + `</div>`;
+    + frun(++pg, S, footerOverride) + `</div>`;
 
   // s3-s10 analytical
   for (const id of ["s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10"]) {
-    const sec = (S[id] || { blocks: [] }) as AnalyticalSection;
+    const sec = (Sx[id] || { blocks: [] }) as AnalyticalSection;
     const extra = id === "s5" && facts.chemistry ? pairStrip(facts.chemistry) : "";
-    pages += analyticalPage(id, nameA, nameB, sec, ++pg, hi, extra, footerOverride);
+    pages += analyticalPage(id, nameA, nameB, sec, ++pg, S, extra, footerOverride);
   }
 
   // s11 lists
-  const s11 = (S.s11 || {}) as { strengths?: SectionBlock[]; watch?: SectionBlock[]; overall?: string };
+  const s11 = (Sx.s11 || {}) as {
+    strengths?: SectionBlock[]; watch?: SectionBlock[]; overall?: string;
+  };
   const li = (items: SectionBlock[] | undefined, cls: string) =>
-    (items || []).map((i) => `<div class="li ${cls}"><span class="b">&#10022;</span><span class="t"><b>${esc(i.label)}.</b> <span>${esc(i.text)}</span></span></div>`).join("");
-  pages += `<div class="page">${head("s11", hi)}`
-    + `<div class="listcol"><h4>${hi ? "आपकी strengths" : "Your strengths"}</h4>${li(s11.strengths, "good")}</div>`
-    + `<div class="listcol watch"><h4>${hi ? "ध्यान रखने वाली बातें" : "What to watch"}</h4>${li(s11.watch, "watch")}</div>`
-    + (s11.overall ? `<div class="hero-quote"><b>${hi ? "कुल मिलाकर." : "Overall."}</b> ${esc(s11.overall)}</div>` : "")
-    + frun(++pg, hi, footerOverride) + `</div>`;
+    (items || []).map((i) =>
+      `<div class="li ${cls}"><span class="b">&#10022;</span>`
+      + `<span class="t"><b>${esc(i.label)}.</b> <span>${esc(i.text)}</span></span></div>`
+    ).join("");
+  pages += `<div class="page">${head("s11", S)}`
+    + `<div class="listcol"><h4>${esc(S.s11.strengths)}</h4>${li(s11.strengths, "good")}</div>`
+    + `<div class="listcol watch"><h4>${esc(S.s11.watch)}</h4>${li(s11.watch, "watch")}</div>`
+    + (s11.overall
+      ? `<div class="hero-quote"><b>${esc(S.s11.overallLabel)}</b> ${esc(s11.overall)}</div>`
+      : "")
+    + frun(++pg, S, footerOverride) + `</div>`;
 
   // s12 advice
-  const s12 = (S.s12 || {}) as { intro?: string; items?: SectionBlock[] };
-  pages += `<div class="page">${head("s12", hi)}`
+  const s12 = (Sx.s12 || {}) as { intro?: string; items?: SectionBlock[] };
+  pages += `<div class="page">${head("s12", S)}`
     + (s12.intro ? `<p class="body intro-line">${esc(s12.intro)}</p>` : "")
-    + (s12.items || []).map((i) => `<div class="blk-row"><div class="lab">${esc(i.label)}</div><p>${esc(i.text)}</p></div>`).join("")
-    + frun(++pg, hi, footerOverride) + `</div>`;
+    + (s12.items || []).map((i) =>
+      `<div class="blk-row"><div class="lab">${esc(i.label)}</div><p>${esc(i.text)}</p></div>`
+    ).join("")
+    + frun(++pg, S, footerOverride) + `</div>`;
 
   // s13 closing letter
-  const s13 = (S.s13 || {}) as { text?: string };
-  const letterParas = esc(s13.text || "").split("\n").filter(Boolean).map((p) => `<p>${p}</p>`).join("");
+  const s13 = (Sx.s13 || {}) as { text?: string };
+  const letterParas = esc(s13.text || "").split("\n").filter(Boolean)
+    .map((p) => `<p>${p}</p>`).join("");
   const signoff = opts?.showUpsell === false
     ? ""
-    : `<div class="sign"><img src="${logoUrl}" alt="TalkToGuruji"/><span>${hi ? "सादर, TalkToGuruji" : "With warm regards, TalkToGuruji"}</span></div>`;
-  pages += `<div class="page">${head("s13", hi)}`
+    : `<div class="sign"><img src="${logoUrl}" alt="TalkToGuruji"/><span>${esc(S.signoff)}</span></div>`;
+  pages += `<div class="page">${head("s13", S)}`
     + `<div class="letter">${letterParas}</div>`
     + signoff
-    + frun(++pg, hi, footerOverride) + `</div>`;
-
+    + frun(++pg, S, footerOverride) + `</div>`;
 
   // Upsell page (Numerology Report), love-framed, language-aware.
   if (showUpsell) {
-    const up = hi ? {
-      eyebrow: "एक और बात",
-      title: "आपके numbers सिर्फ़ love तक नहीं रुकते",
-      body: "इस report ने आपके नाम से Soul Urge और Destiny पढ़ा. पर क्या आपके नाम की spelling आपका साथ दे रही है, या चुपके से रोक रही है? आपकी पूरी Numerology Report आपका Name Correction और Mobile Number analysis खोलती है, वो रोज़मर्रा के numbers जो आपके पैसे, काम और रिश्तों को चला रहे हैं.",
-      card: "Numerology Report", sub: "Name Correction + Mobile Number Analysis",
-      cta: "अपनी report पाएं", note: "Code LOVE आपके link में पहले से लगा है.",
-    } : {
-      eyebrow: "One more thing",
-      title: "Your numbers don't stop at love",
-      body: "This report read your Soul Urge and Destiny straight from your name. But is your name spelling quietly helping you, or holding you back? Your full Numerology Report reveals your Name Correction and Mobile Number analysis, the everyday numbers steering your money, work, and relationships.",
-      card: "Numerology Report", sub: "Name Correction + Mobile Number Analysis",
-      cta: "Get your report", note: "Code LOVE is already applied in your link.",
-    };
+    const up = S.upsell;
     pages += `<div class="page">`
       + `<div class="eyebrow-s"><span class="rings"><i></i><i></i></span> ${esc(up.eyebrow)}</div>`
       + `<h2 class="sec serif">${esc(up.title)}</h2><div class="rule"></div>`
@@ -268,54 +271,42 @@ export function buildReportHtml(
       + `<a class="up-cta" href="https://numerology.talktoguruji.com?coupon=LOVE">${esc(up.cta)}</a>`
       + `<div class="up-note">${esc(up.note)}</div>`
       + `</div>`
-      + frun(++pg, hi, footerOverride) + `</div>`;
+      + frun(++pg, S, footerOverride) + `</div>`;
   }
 
   // Final disclaimer page
-  const dc = hi ? {
-    title: "ज़रूरी Disclaimer",
-    lead: "यह आपकी personalized Love Match reading है, जो आप दोनों की numerology को दर्शाती है.",
-    items: [
-      "यह report numerology के सिद्धांतों और symbolic व्याख्या पर आधारित है.",
-      "इसकी insights सिर्फ़ समझ, awareness और guidance के लिए हैं.",
-      "यह आपके रिश्ते में किसी guaranteed नतीजे की भविष्यवाणी नहीं है.",
-      "नतीजे आपकी अपनी choices, actions और परिस्थितियों पर निर्भर करते हैं.",
-      "Accuracy आपके दिए गए नामों और जन्म तिथियों पर निर्भर करती है.",
-      "यह legal, medical, financial या psychological सलाह नहीं है.",
-      "बड़े रिश्ते के फ़ैसले आपकी अपनी समझ या किसी qualified professional पर आधारित होने चाहिए.",
-      "इस report के आधार पर लिए गए फ़ैसलों के लिए creators और brand ज़िम्मेदार नहीं हैं.",
-      "Digital report deliver होने के बाद कोई refund नहीं मिलेगा.",
-    ],
-    close: "Numerology self-reflection के लिए एक पारंपरिक framework है. इस reading को एक tool की तरह इस्तेमाल करें ताकि आप ख़ुद को और एक-दूसरे को ज़्यादा awareness के साथ समझ सकें.",
-    co: companyName,
-  } : {
-    title: "Important Disclaimer",
-    lead: "This is your personalized Love Match reading, reflecting the numerology of you both.",
-    items: [
-      "This report is based on numerology principles and symbolic interpretation.",
-      "The insights are meant for understanding, awareness, and guidance only.",
-      "This is not a prediction of guaranteed outcomes in your relationship.",
-      "Results may vary based on your own choices, actions, and circumstances.",
-      "Accuracy depends on the names and birth dates you provided.",
-      "This is not legal, medical, financial, or psychological advice.",
-      "Major relationship decisions should rest on your own judgment or a qualified professional.",
-      "The creators and brand are not responsible for decisions taken solely based on this report.",
-      "No refunds once the digital report has been delivered.",
-    ],
-    close: "Numerology is a traditional framework for self-reflection. Use this reading as a tool to understand yourselves and each other with greater awareness.",
-    co: companyName,
-  };
+  const dc = S.disclaimer;
   pages += `<div class="page">`
     + `<div class="disc-card">`
     + `<div class="disc-title">${esc(dc.title)}</div>`
     + `<div class="disc-lead">${esc(dc.lead)}</div>`
     + `<ul class="disc-list">${dc.items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>`
     + `<div class="disc-close">${esc(dc.close)}</div>`
-    + `<div class="disc-co">${esc(dc.co)}</div>`
+    + `<div class="disc-co">${esc(companyName)}</div>`
     + `</div>`
-    + frun(++pg, hi, footerOverride) + `</div>`;
+    + frun(++pg, S, footerOverride) + `</div>`;
 
-  return `<!DOCTYPE html><html lang="${hi ? "hi" : "en"}"><head><meta charset="UTF-8"/>
+  // Typography adjustments for the scripts added after Devanagari. Tall
+  // stacked conjuncts (Kannada, Malayalam) clip at the Devanagari leading, and
+  // the uppercase-eyebrow letter-spacing pulls Indic clusters apart, so both
+  // are reset. Scoped by class so Hindi and English are untouched.
+  const scriptCss = needsScriptCss
+    ? `
+body.ind{letter-spacing:normal;}
+body.ind .eyebrow-s,body.ind .cover .eyebrow,body.ind .ring .lbl span,
+body.ind .powered-by,body.ind .disc-co,body.ind .upsell .up-cta{letter-spacing:normal;}
+body.ind p.body,body.ind .hero-quote,body.ind .mcard p,body.ind .blk-row p,
+body.ind .shared,body.ind .li .t span,body.ind .disc-list li,
+body.ind .disc-close,body.ind .disc-lead{line-height:${lineHeightFor(script)};}
+body.ind .letter{line-height:${(lineHeightFor(script) + 0.08).toFixed(2)};}
+body.ind .cover h1{font-size:44px;line-height:1.18;}
+body.ind .cover .names{font-size:26px;}
+body.ind h2.sec{font-size:26px;line-height:1.22;}
+body.ind .nrow{align-items:center;}
+`
+    : "";
+
+  return `<!DOCTYPE html><html lang="${S.htmlLang}"><head><meta charset="UTF-8"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -323,10 +314,10 @@ export function buildReportHtml(
 ${fontFaceCss}
 :root{--ink:#3D2B2E;--muted:#9C8A8C;--soft:#6E5A5D;--coral:#D8746B;--coral-dk:#C25A50;--coral-lt:#F3D4CF;--coral-wash:#FBEDEA;--gold:#C9A25E;--blush:#F7E9E6;--cream:#FDF6F3;--line:#F0E2DE;--peach1:#F9E0D6;--peach2:#F3CBC5;}
 *{box-sizing:border-box;margin:0;padding:0;}html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-body{font-family:'Inter','Noto Sans Devanagari',sans-serif;color:var(--ink);}
-body.hi{font-family:'Noto Sans Devanagari',sans-serif;}
-.serif{font-family:'Fraunces','Noto Sans Devanagari',serif;}
-body.hi .serif{font-family:'Fraunces','Noto Sans Devanagari',serif;}
+body{font-family:'Inter','${IND}',sans-serif;color:var(--ink);}
+body.ind{font-family:'${IND}',sans-serif;}
+.serif{font-family:'Fraunces','${IND}',serif;}
+body.ind .serif{font-family:'Fraunces','${IND}',serif;}
 @page{size:A4;margin:0;}
 .page{width:210mm;min-height:297mm;padding:26mm 24mm 22mm;position:relative;page-break-after:always;background:var(--cream);display:flex;flex-direction:column;}
 .page:last-child{page-break-after:auto;}
@@ -365,9 +356,9 @@ p.body b{color:var(--ink);}
 .score-hero{display:flex;flex-direction:column;align-items:center;text-align:center;margin:6px 0 18px;}
 .ring{position:relative;width:180px;height:180px;}
 .ring .lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.ring .lbl b{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:50px;font-weight:500;line-height:1;color:var(--ink);}
+.ring .lbl b{font-family:'Fraunces','${IND}',serif;font-size:50px;font-weight:500;line-height:1;color:var(--ink);}
 .ring .lbl span{font-size:10.5px;color:var(--muted);letter-spacing:.16em;margin-top:4px;text-transform:uppercase;}
-.band-pill{margin-top:16px;background:#fff;border:1.5px solid var(--coral-lt);color:var(--coral-dk);font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:16px;padding:6px 20px;border-radius:24px;}
+.band-pill{margin-top:16px;background:#fff;border:1.5px solid var(--coral-lt);color:var(--coral-dk);font-family:'Fraunces','${IND}',serif;font-size:16px;padding:6px 20px;border-radius:24px;}
 .band-sub{font-size:12.5px;color:var(--muted);margin-top:8px;max-width:80%;}
 .hero-quote{background:var(--coral-wash);border-radius:16px;padding:15px 18px;font-size:13px;line-height:1.76;color:var(--soft);margin-bottom:16px;}
 .hero-quote b{color:var(--ink);}
@@ -376,10 +367,10 @@ p.body b{color:var(--ink);}
 .pcol{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 20px 8px;margin-bottom:14px;box-shadow:0 2px 0 var(--blush);position:relative;overflow:hidden;}
 .pcol::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;}
 .pcol.his::before{background:var(--gold);}.pcol.hers::before{background:var(--coral);}
-.pcol h3{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:19px;font-weight:500;margin-bottom:8px;}
+.pcol h3{font-family:'Fraunces','${IND}',serif;font-size:19px;font-weight:500;margin-bottom:8px;}
 .nrow{display:flex;align-items:baseline;gap:14px;padding:9px 0;border-bottom:1px solid var(--line);}
 .nrow:last-child{border-bottom:0;}
-.nrow .v{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:24px;font-weight:500;color:var(--gold);min-width:48px;line-height:1;}
+.nrow .v{font-family:'Fraunces','${IND}',serif;font-size:24px;font-weight:500;color:var(--gold);min-width:48px;line-height:1;}
 .pcol.hers .nrow .v{color:var(--coral);}
 .nrow .meta b{display:block;font-size:12.5px;color:var(--ink);}
 .nrow .meta span{font-size:10.5px;color:var(--muted);}
@@ -388,7 +379,7 @@ p.body b{color:var(--ink);}
 .mcard .who .d{width:8px;height:8px;border-radius:50%;}
 .mcard.his .who .d{background:var(--gold);}.mcard.hers .who .d{background:var(--coral);}
 .mcard p{font-size:12.5px;line-height:1.64;color:var(--soft);}
-.verdict{display:inline-block;background:#fff;color:var(--coral-dk);border:1.5px solid var(--coral-lt);font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:14px;padding:6px 18px;border-radius:24px;margin:4px 0 16px;}
+.verdict{display:inline-block;background:#fff;color:var(--coral-dk);border:1.5px solid var(--coral-lt);font-family:'Fraunces','${IND}',serif;font-size:14px;padding:6px 18px;border-radius:24px;margin:4px 0 16px;}
 .blk-row{background:#fff;border-radius:14px;padding:13px 16px;margin-bottom:10px;border:1px solid var(--line);}
 .blk-row .lab{font-weight:700;font-size:11px;color:var(--coral);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
 .blk-row p{font-size:12.5px;line-height:1.7;color:var(--soft);}
@@ -397,12 +388,12 @@ p.body b{color:var(--ink);}
 .pair .pdot{width:8px;height:8px;border-radius:50%;}
 .pair small{color:var(--muted);}
 .listcol{margin-bottom:16px;}
-.listcol h4{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:17px;font-weight:500;margin-bottom:10px;color:var(--ink);}
+.listcol h4{font-family:'Fraunces','${IND}',serif;font-size:17px;font-weight:500;margin-bottom:10px;color:var(--ink);}
 .li{display:flex;gap:10px;padding:8px 0;border-bottom:1px dotted var(--line);}
 .li .b{font-size:13px;line-height:1.4;}
 .li.good .b{color:var(--gold);}.li.watch .b{color:var(--coral);}
 .li .t b{font-size:12.5px;color:var(--ink);}.li .t span{font-size:12px;color:var(--soft);}
-.letter{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:14.5px;line-height:1.9;color:var(--soft);font-style:italic;}
+.letter{font-family:'Fraunces','${IND}',serif;font-size:14.5px;line-height:1.9;color:var(--soft);font-style:italic;}
 .letter p{margin-bottom:14px;}
 .sign{margin-top:18px;display:flex;flex-direction:column;gap:6px;}
 .sign img{height:38px;object-fit:contain;opacity:1;}
@@ -410,7 +401,7 @@ p.body b{color:var(--ink);}
 .upsell{background:linear-gradient(160deg,#fff,var(--coral-wash));border:1px solid var(--coral-lt);border-radius:20px;padding:24px 24px 22px;margin-top:8px;box-shadow:0 3px 0 var(--blush);}
 .upsell .up-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
 .upsell .up-title{font-size:22px;font-weight:600;color:var(--ink);}
-.upsell .up-price{font-family:'Fraunces','Noto Sans Devanagari',serif;font-size:24px;font-weight:600;color:var(--coral-dk);}
+.upsell .up-price{font-family:'Fraunces','${IND}',serif;font-size:24px;font-weight:600;color:var(--coral-dk);}
 .upsell .up-sub{font-size:12.5px;color:var(--soft);margin-top:4px;}
 .upsell .up-cta{display:inline-block;margin-top:16px;background:var(--coral);color:#fff;font-weight:600;font-size:13px;text-decoration:none;padding:11px 26px;border-radius:24px;letter-spacing:.02em;}
 .upsell .up-note{font-size:10.5px;color:var(--muted);margin-top:10px;}
@@ -423,5 +414,5 @@ p.body b{color:var(--ink);}
 .disc-list li::before{content:"•";position:absolute;left:2px;color:var(--coral);}
 .disc-close{margin-top:14px;font-size:11.5px;line-height:1.7;color:var(--soft);font-style:italic;}
 .disc-co{margin-top:14px;font-size:10px;color:var(--muted);letter-spacing:.04em;}
-</style></head><body class="${hi ? "hi" : ""}">${pages}</body></html>`;
+${scriptCss}</style></head><body class="${bodyClass}">${pages}</body></html>`;
 }

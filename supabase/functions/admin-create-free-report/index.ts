@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
     const bFirst = cleanName(body?.person_b?.first);
     const bLast = cleanName(body?.person_b?.last);
     const bDob = validDob(body?.person_b?.dob);
-    const language = body.language === "en" ? "en" : "hi";
+    const language = isReportLang(body.language) ? body.language : "hi";
     const sendEmail = body.send_email !== false;
 
     if (!aFirst || !aDob) return new Response(JSON.stringify({ error: "person_a invalid" }), { status: 422, headers: J });

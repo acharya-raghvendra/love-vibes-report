@@ -17,10 +17,12 @@ import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { scoreMatch } from "./engine/scorer.ts";
 import { buildReportHtml } from "./buildReportHtml.ts";
 import {
-  assertDevanagariRendered,
-  describeProbe,
-  loadDevanagariFontFaceCss,
-} from "./fonts/devanagari.ts";
+  assertScriptRendered,
+  describeFontProbe,
+  loadFontFaceCss,
+} from "./fonts/indic.ts";
+import { scriptFor } from "./reportStrings.ts";
+import type { ScriptKey } from "./fonts/indic.ts";
 import { sha256, generateProse } from "./prose.ts";
 import {
   buildCoreClaims,

@@ -17,10 +17,12 @@ import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { scoreMatch } from "./engine/scorer.ts";
 import { buildReportHtml } from "./buildReportHtml.ts";
 import {
-  assertDevanagariRendered,
-  describeProbe,
-  loadDevanagariFontFaceCss,
-} from "./fonts/devanagari.ts";
+  assertScriptRendered,
+  describeFontProbe,
+  loadFontFaceCss,
+} from "./fonts/indic.ts";
+import { scriptFor } from "./reportStrings.ts";
+import type { ScriptKey } from "./fonts/indic.ts";
 import { sha256, generateProse } from "./prose.ts";
 import {
   buildCoreClaims,
@@ -516,12 +518,13 @@ export async function runGeneration(
       names: { a: a.first, b: b.first },
       chemistry,
     };
+    const script = scriptFor(language) as ScriptKey;
     // Devanagari face, inlined as base64 into the HTML: no network fetch for
     // Hindi glyphs at print time. If the bytes can't be read we fail rather
     // than print a report that could come out as tofu.
     let fontFaceCss: string;
     try {
-      fontFaceCss = await loadDevanagariFontFaceCss(supabase);
+      fontFaceCss = await loadFontFaceCss(supabase, script);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`[generate] order=${orderId} font_unavailable ${msg}`);
@@ -550,17 +553,13 @@ export async function runGeneration(
       return await fail("pdf_too_small", `type=pdf_error stage=pdf bytes=${pdfBytes.length}`);
     }
 
-    // Fail-loud backstop for Hindi: prove the Devanagari glyphs actually
-    // painted from our embedded face (loaded + covers the sample + real
-    // metrics + conjunct shaping). "Could not verify" counts as a failure,
-    // so a Hindi report can never be delivered as tofu.
-    if (language === "hi") {
-      const probe = await assertDevanagariRendered(html, browserlessKey);
-      console.log(`[generate] order=${orderId} devanagari_probe ${describeProbe(probe)}`);
+    if (script !== "latin") {
+      const probe = await assertScriptRendered(html, browserlessKey, script);
+      console.log(`[generate] order=${orderId} font_probe ${describeFontProbe(probe)}`);
       if (!probe.ok) {
         return await fail(
           "pdf_font_missing",
-          `type=pdf_error stage=font_verify ${describeProbe(probe)}`.slice(0, 600),
+          `type=pdf_error stage=font_verify ${describeFontProbe(probe)}`.slice(0, 600),
         );
       }
     }

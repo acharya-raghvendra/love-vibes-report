@@ -518,12 +518,13 @@ export async function runGeneration(
       names: { a: a.first, b: b.first },
       chemistry,
     };
-    // Devanagari face, inlined as base64 into the HTML: no network fetch for
-    // Hindi glyphs at print time. If the bytes can't be read we fail rather
+    const script = scriptFor(language) as ScriptKey;
+    // Indic face, inlined as base64 into the HTML: no network fetch for
+    // non-Latin glyphs at print time. If the bytes can't be read we fail rather
     // than print a report that could come out as tofu.
     let fontFaceCss: string;
     try {
-      fontFaceCss = await loadDevanagariFontFaceCss(supabase);
+      fontFaceCss = await loadFontFaceCss(supabase, script);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`[generate] order=${orderId} font_unavailable ${msg}`);

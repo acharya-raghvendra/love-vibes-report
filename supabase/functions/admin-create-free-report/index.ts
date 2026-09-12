@@ -267,14 +267,14 @@ Deno.serve(async (req) => {
           return;
         }
 
-        // Fail-loud Devanagari backstop for Hindi reports.
-        if (language === "hi") {
-          const probe = await assertDevanagariRendered(html, browserlessKey);
-          console.log(`[free-report] devanagari_probe ${describeProbe(probe)}`);
+        // Fail-loud font backstop for non-Latin scripts.
+        if (script !== "latin") {
+          const probe = await assertScriptRendered(html, browserlessKey, script);
+          console.log(`[free-report] font_probe ${describeFontProbe(probe)}`);
           if (!probe.ok) {
             await markFail(
               "pdf_font_missing",
-              `type=pdf_error stage=font_verify ${describeProbe(probe)}`.slice(0, 600),
+              `type=pdf_error stage=font_verify ${describeFontProbe(probe)}`.slice(0, 600),
             );
             return;
           }

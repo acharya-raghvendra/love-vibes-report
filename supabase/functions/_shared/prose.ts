@@ -149,7 +149,7 @@ export function allowedNumberSet(r: MatchResult): Set<string> {
 }
 
 // Build the exact prose cache key used by love-match-finalize:
-// sha256("prose:v3:" + language + ":" + JSON.stringify({language, score, band,
+// sha256("prose:v4:" + language + ":" + JSON.stringify({language, score, band,
 // shared, person_a, person_b, names: { a, b } })). No chemistry. No DOBs.
 export function buildProseKey(
   language: string,
@@ -163,5 +163,5 @@ export function buildProseKey(
     names: { a?: string; b?: string };
   },
 ): Promise<string> {
-  return sha256(`prose:v3:${language}:${JSON.stringify(facts)}`);
+  return sha256(`prose:v4:${language}:${JSON.stringify(facts)}`);
 }

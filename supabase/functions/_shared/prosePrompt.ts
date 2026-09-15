@@ -55,15 +55,15 @@ const NATIVE_DIGITS: Record<string, string> = {
   ml: "Malayalam digits (൦൧൨൩൪൫൬൭൮൯)",
 };
 
-/** Good and bad `tag` examples, per language. */
+/** Style references for `tag`. These are shapes to imitate, never text to reuse. */
 const TAG_EXAMPLES: Record<string, string> = {
-  en: `Good examples: "Different wiring, real pull", "Worth the effort".`,
-  hi: `Good examples: "अलग राहें, एक मंज़िल", "समझ जाओ तो कमाल".`,
-  mr: `Good examples: "वेगळ्या वाटा, एकच दिशा", "समजलं तर कमाल".`,
-  ta: `Good examples: "வேறு வழிகள், ஒரே இலக்கு", "புரிஞ்சா அருமை".`,
-  te: `Good examples: "వేరే దారులు, ఒకే గమ్యం", "అర్థమైతే అద్భుతం".`,
-  kn: `Good examples: "ಬೇರೆ ದಾರಿ, ಒಂದೇ ಗುರಿ", "ಅರ್ಥವಾದರೆ ಅದ್ಭುತ".`,
-  ml: `Good examples: "വേറെ വഴികൾ, ഒരേ ലക്ഷ്യം", "മനസ്സിലായാൽ ഗംഭീരം".`,
+  en: `For shape and register only, never reuse these words: "Different wiring, real pull", "Worth the effort".`,
+  hi: `For shape and register only, never reuse these words: "अलग राहें, एक मंज़िल", "समझ जाओ तो कमाल".`,
+  mr: `For shape and register only, never reuse these words: "वेगळ्या वाटा, एकच दिशा", "समजलं तर कमाल".`,
+  ta: `For shape and register only, never reuse these words: "வேறு வழிகள், ஒரே இலக்கு", "புரிஞ்சா அருமை".`,
+  te: `For shape and register only, never reuse these words: "వేరే దారులు, ఒకే గమ్యం", "అర్థమైతే అద్భుతం".`,
+  kn: `For shape and register only, never reuse these words: "ಬೇರೆ ದಾರಿ, ಒಂದೇ ಗುರಿ", "ಅರ್ಥವಾದರೆ ಅದ್ಭುತ".`,
+  ml: `For shape and register only, never reuse these words: "വേറെ വഴികൾ, ഒരേ ലക്ഷ്യം", "മനസ്സിലായാൽ ഗംഭീരം".`,
 };
 
 /**
@@ -156,6 +156,7 @@ export function buildSystemPrompt(A: string, B: string, language: string): strin
     // --- TAG RULE ---
     `TAG RULE: every "tag" is a short 3 to 6 word phrase, written in ONE language only (${langName}), that a warm honest friend would actually say out loud about this pairing. It must feel inviting, curious, or gently honest, NEVER ominous or negative. NEVER a bare or alarming word such as goodbye, "the end", "misunderstanding", or "warning" in any language. Do NOT mash two languages together (no ${langName} word glued to a stray English word). Do NOT create awkward word-joins or run words together without spaces. If in doubt, keep it simple, specific to these two, and kind. ${tagExamples}`,
     "TAG SELF-CHECK: before finalising each tag, re-read it as the paying couple would. If it reads as a threat, a breakup omen, a half-and-half language mash, or gibberish, rewrite it.",
+    "NO COPIED TAGS: the example tags above are style references, not content. Never output an example tag verbatim or near-verbatim. Every tag must be built from THIS pairing's specific numbers and tension, and the nine tags in this report must all differ from one another. If a tag you wrote could be pasted unchanged into a report about a different couple, it is too generic, rewrite it.",
     "Return ONE JSON object with EXACTLY this shape and these keys:",
     `{"sections":{`,
     `"s1":{"headline":"one line under the score, e.g. works beautifully with effort","what_it_means":"3-4 sentences explaining what the score measures and does not promise","honest_note":"4-6 sentences of honest framing of this specific pairing, what is genuinely strong and where they are built differently"},`,

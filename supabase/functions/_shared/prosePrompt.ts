@@ -139,7 +139,8 @@ export function buildSystemPrompt(A: string, B: string, language: string): strin
 
   return [
     `You are writing a premium numerology Love Match report for ${A} and ${B}. They paid for this. It must feel personal, sharp, and real, like it was written by someone who actually gets them, never generic, never a horoscope.`,
-    `ALWAYS use their names, ${A} and ${B}. NEVER write "Person A" or "Person B". Write their names in Latin script exactly as given, do not transliterate them into another script.`,
+    `ALWAYS use their names, ${A} and ${B}. NEVER write "Person A" or "Person B".`,
+    `NAME RULE, THIS IS ABSOLUTE: the two names are written exactly as these Latin characters, ${A} and ${B}. Copy those characters verbatim every single time you write a name, in every a_card, b_card, tag, label, text and in the s13 letter. NEVER transliterate, translate, respell or convert a name into ${langName} script or any other script. The names stay in Latin letters even when the entire surrounding sentence is in ${langName} script, and even when that looks inconsistent to you. It is not inconsistent, it is required: the printed cover of this report shows the names in Latin letters, so any other spelling inside the report contradicts the cover the reader is holding. Before you output, search your own text for every occurrence of a name and confirm it reads exactly ${A} or exactly ${B}.`,
     voice,
     // --- HARD LANGUAGE RULE (fixes English labels/headings leaking through) ---
     `LANGUAGE RULE: The entire report is in ${langName}. EVERY visible string you output, without exception, must be in ${langName}. This includes a_card, b_card, tag, intro, every block "label", every block "text", every s11 strength/watch label, every s12 item label, and the s13 letter. The English key names and the English label examples in the schema below (for example "Day to day", "In love", "Long term", "Closeness", "The pull", "The spark or friction", "Getting close", "What blocks it", "When you clash", "How to repair", "Where you are heading", "Right now", "But it is also a strength") are STRUCTURAL PLACEHOLDERS that describe what the block is about. Translate every one of them into ${langName}. Never copy an English label verbatim into a ${langName} report. The JSON keys (s1, a_card, tag, label, text, etc.) stay in English; only the VALUES are ${langName}.`,
@@ -171,7 +172,7 @@ export function buildSystemPrompt(A: string, B: string, language: string): strin
     `"s12":{"intro":"one line: this advice comes from your numbers, not generic tips","items":[{"label":"For the <specific gap>","text":"one concrete habit or agreement, tied to their numbers, 2-3 sentences"} for each of 3-4 gaps found in this pairing]},`,
     `"s13":{"text":"a closing letter of 3 short paragraphs to ${A} and ${B}: what they have that many couples do not, the small everyday work each one specifically must do, and an honest warm send-off. No author name."}`,
     `}}`,
-    `REMINDER before you output: re-scan every "label", "tag", a_card, b_card, intro, text and the s13 letter and confirm they are all in ${langName}. Any English placeholder label left untranslated is a failure.`,
+    `REMINDER before you output: re-scan every "label", "tag", a_card, b_card, intro, text and the s13 letter and confirm two things. First, they are all in ${langName}. Any English placeholder label left untranslated is a failure. Second, every name reads exactly ${A} or exactly ${B} in Latin letters. Any name written in ${langName} script is a failure.`,
     "Output nothing outside that JSON.",
   ].join(" ");
 }

@@ -79,16 +79,26 @@ Deno.serve(async (req) => {
 
 
 
-    // Report language is required to be exactly "en" or "hi"; anything else
-    // is a client bug, so reject rather than silently guessing.
-    const rawLanguage = body.language ?? "hi";
-    if (rawLanguage !== "en" && rawLanguage !== "hi") {
-      return new Response(JSON.stringify({ error: "language must be 'en' or 'hi'" }), { status: 422, headers: J });
+    // Report language is validated against report_languages (enabled rows only).
+    // Default stays "hi" when the client sends nothing. The enabled list is
+    // cached in module scope for 60s; if the lookup itself fails we fall back
+    // to accepting only "en" and "hi" — a DB blip must never widen what's accepted.
+    const rawLanguage = typeof body.language === "string" ? body.language : "hi";
+
+    let enabledCodes = await getEnabledLanguageCodes(supabase);
+    if (!enabledCodes) {
+      console.warn("[create-love-match-order] language lookup failed; falling back to en/hi");
+      enabledCodes = ["en", "hi"];
     }
-    const language: "en" | "hi" = rawLanguage;
+    if (!enabledCodes.includes(rawLanguage)) {
+      return new Response(JSON.stringify({
+        error: "unsupported language",
+        enabled: enabledCodes,
+      }), { status: 422, headers: J });
+    }
+    const language: string = rawLanguage;
     const couponCode = typeof body.couponCode === "string" ? body.couponCode.toUpperCase() : null;
 
-    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     // Server-authoritative price from love_match_pricing (single row).
     // Offer price applies only while offer_ends_at is in the future.

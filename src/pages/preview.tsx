@@ -27,7 +27,7 @@ export const PREVIEW_META: Record<SiteLanguage, { title: string; description: st
 type InputPayload = {
   person_a: { first: string; last: string; dob: string; phone: string; email?: string };
   person_b: { first: string; last: string; dob: string };
-  language?: "en" | "hi";
+  language?: string; // report language code from report_languages (en, hi, ta, ...)
 };
 
 type PreviewDimension = {

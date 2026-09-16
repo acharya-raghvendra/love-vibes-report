@@ -284,6 +284,7 @@ export function InputPage() {
   // someone on the Hindi site may still want an English report.
   const [language, setLanguage] = useState<ReportLanguage>(siteLang);
   const languageTouched = useRef(false);
+  const languageOptions = useReportLanguages();
   useEffect(() => {
     if (!languageTouched.current) setLanguage(siteLang);
   }, [siteLang]);

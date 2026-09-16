@@ -9,12 +9,45 @@ import { LangLink } from "@/components/lang-link";
 import { langPath } from "@/lib/lang-path";
 import { usePageLanguage, type SiteLanguage } from "@/lib/site-language";
 import { langHead } from "@/lib/site-seo";
+import { supabase } from "@/integrations/supabase/client";
 
 
 
 
 type Gender = "MALE" | "FEMALE";
-type ReportLanguage = "en" | "hi";
+// Any enabled code from report_languages (en, hi, mr, ta, te, kn, ml, ...).
+type ReportLanguage = string;
+
+type LanguageOption = { code: string; native_label: string };
+
+// Fallback while the list loads or if the fetch fails: the buyer must never
+// see an empty language control. These two match the pre-database behaviour.
+const FALLBACK_LANGUAGES: LanguageOption[] = [
+  { code: "hi", native_label: "हिंदी" },
+  { code: "en", native_label: "English" },
+];
+
+// Loads the enabled report languages from the backend at runtime. Labels are
+// rendered exactly as stored in native_label — never translated in code.
+function useReportLanguages(): LanguageOption[] {
+  const [options, setOptions] = useState<LanguageOption[]>(FALLBACK_LANGUAGES);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("report_languages")
+        .select("code, native_label, sort_order")
+        .eq("enabled", true)
+        .order("sort_order");
+      if (cancelled || error || !data || data.length === 0) return;
+      setOptions(data.map((r) => ({ code: r.code, native_label: r.native_label })));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return options;
+}
 
 function GenderToggle({
   value,

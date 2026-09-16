@@ -105,7 +105,22 @@ Deno.serve(async (req) => {
     const bFirst = cleanName(body?.person_b?.first);
     const bLast = cleanName(body?.person_b?.last);
     const bDob = validDob(body?.person_b?.dob);
-    const language = isReportLang(body.language) ? body.language : "hi";
+    // Admin may test ANY language present in report_languages, enabled or not
+    // (buyers are restricted to enabled rows in create-love-match-order).
+    // Default "hi" when nothing is sent; on lookup failure accept only en/hi —
+    // a DB blip must never widen what is accepted.
+    let language = "hi";
+    if (typeof body.language === "string" && body.language) {
+      const { data: langRows, error: langErr } = await supabase
+        .from("report_languages").select("code");
+      if (!langErr && langRows && langRows.some((r) => r.code === body.language)) {
+        language = body.language;
+      } else if (langErr) {
+        console.warn(`[free-report] language lookup failed: ${langErr.message}`);
+        language = body.language === "en" ? "en" : "hi";
+      }
+      // Known-table miss: silently falls back to "hi" as before.
+    }
     const sendEmail = body.send_email !== false;
 
     if (!aFirst || !aDob) return new Response(JSON.stringify({ error: "person_a invalid" }), { status: 422, headers: J });

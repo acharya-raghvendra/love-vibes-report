@@ -12,6 +12,21 @@ const J = { ...corsHeaders, "Content-Type": "application/json" };
 
 // Price is loaded per-request from love_match_pricing (see handler).
 
+// Enabled report languages, cached in module scope for 60s so order creation
+// is not a DB round trip every time. Returns null when the lookup fails so
+// the caller can fall back to the safe en/hi set.
+let langCache: { codes: string[]; at: number } | null = null;
+async function getEnabledLanguageCodes(supabase: ReturnType<typeof createClient>): Promise<string[] | null> {
+  if (langCache && Date.now() - langCache.at < 60_000) return langCache.codes;
+  const { data, error } = await supabase
+    .from("report_languages").select("code").eq("enabled", true);
+  if (error || !data) return null;
+  const codes = data.map((r: { code: string }) => r.code);
+  langCache = { codes, at: Date.now() };
+  return codes;
+}
+
+
 function cleanName(v: unknown): string {
   return typeof v === "string" ? v.replace(/[<>]/g, "").replace(/[\u0000-\u001F]/g, "").trim().slice(0, 60) : "";
 }
@@ -78,6 +93,8 @@ Deno.serve(async (req) => {
     if (!email) return new Response(JSON.stringify({ error: "email required" }), { status: 422, headers: J });
 
 
+
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     // Report language is validated against report_languages (enabled rows only).
     // Default stays "hi" when the client sends nothing. The enabled list is

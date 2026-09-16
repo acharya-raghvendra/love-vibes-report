@@ -16,7 +16,8 @@ const J = { ...corsHeaders, "Content-Type": "application/json" };
 // is not a DB round trip every time. Returns null when the lookup fails so
 // the caller can fall back to the safe en/hi set.
 let langCache: { codes: string[]; at: number } | null = null;
-async function getEnabledLanguageCodes(supabase: ReturnType<typeof createClient>): Promise<string[] | null> {
+// deno-lint-ignore no-explicit-any
+async function getEnabledLanguageCodes(supabase: any): Promise<string[] | null> {
   if (langCache && Date.now() - langCache.at < 60_000) return langCache.codes;
   const { data, error } = await supabase
     .from("report_languages").select("code").eq("enabled", true);

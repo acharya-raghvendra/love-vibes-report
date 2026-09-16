@@ -3,6 +3,38 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { supabase } from "@/integrations/supabase/client";
 
+type LanguageOption = { code: string; label: string };
+
+const FALLBACK_LANGUAGES: LanguageOption[] = [
+  { code: "hi", label: "हिंदी" },
+  { code: "en", label: "English" },
+];
+
+// Admins use the signed-in browser session; an admin RLS policy on
+// report_languages exposes ALL rows (enabled or not) so disabled
+// languages can be tested before going live.
+function useReportLanguages(): { options: LanguageOption[] } {
+  const [options, setOptions] = useState<LanguageOption[]>(FALLBACK_LANGUAGES);
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("report_languages")
+      .select("code, native_label, enabled, sort_order")
+      .order("sort_order")
+      .then(({ data, error }) => {
+        if (cancelled || error || !data || data.length === 0) return;
+        setOptions(
+          data.map((r) => ({
+            code: r.code,
+            label: r.enabled ? r.native_label : `${r.native_label} (off)`,
+          }))
+        );
+      });
+    return () => { cancelled = true; };
+  }, []);
+  return { options };
+}
+
 export const Route = createFileRoute("/_admin/dashboard/free-report")({
   component: FreeReportPage,
 });
@@ -25,7 +57,8 @@ function FreeReportPage() {
   const [bFirst, setBFirst] = useState("");
   const [bLast, setBLast] = useState("");
   const [bDob, setBDob] = useState("");
-  const [language, setLanguage] = useState<"en" | "hi">("en");
+  const [language, setLanguage] = useState<string>("en");
+  const { options: languageOptions } = useReportLanguages();
   const [sendEmail, setSendEmail] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -145,12 +178,13 @@ function FreeReportPage() {
           <label className="flex flex-col gap-1">
             <span className="text-label-md text-on-surface-variant">Language</span>
             <select
-              className="rounded-lg border border-border bg-surface px-3 py-2 text-body-md"
               value={language}
-              onChange={(e) => setLanguage(e.target.value as "en" | "hi")}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="min-h-[44px] rounded-lg border border-border bg-surface px-3 py-2 text-body-md"
             >
-              <option value="en">English</option>
-              <option value="hi">Hindi</option>
+              {languageOptions.map((opt) => (
+                <option key={opt.code} value={opt.code}>{opt.label}</option>
+              ))}
             </select>
           </label>
           <label className="mt-6 flex items-center gap-2 text-body-md text-on-surface">

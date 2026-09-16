@@ -9,12 +9,45 @@ import { LangLink } from "@/components/lang-link";
 import { langPath } from "@/lib/lang-path";
 import { usePageLanguage, type SiteLanguage } from "@/lib/site-language";
 import { langHead } from "@/lib/site-seo";
+import { supabase } from "@/integrations/supabase/client";
 
 
 
 
 type Gender = "MALE" | "FEMALE";
-type ReportLanguage = "en" | "hi";
+// Any enabled code from report_languages (en, hi, mr, ta, te, kn, ml, ...).
+type ReportLanguage = string;
+
+type LanguageOption = { code: string; native_label: string };
+
+// Fallback while the list loads or if the fetch fails: the buyer must never
+// see an empty language control. These two match the pre-database behaviour.
+const FALLBACK_LANGUAGES: LanguageOption[] = [
+  { code: "hi", native_label: "हिंदी" },
+  { code: "en", native_label: "English" },
+];
+
+// Loads the enabled report languages from the backend at runtime. Labels are
+// rendered exactly as stored in native_label — never translated in code.
+function useReportLanguages(): LanguageOption[] {
+  const [options, setOptions] = useState<LanguageOption[]>(FALLBACK_LANGUAGES);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("report_languages")
+        .select("code, native_label, sort_order")
+        .eq("enabled", true)
+        .order("sort_order");
+      if (cancelled || error || !data || data.length === 0) return;
+      setOptions(data.map((r) => ({ code: r.code, native_label: r.native_label })));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return options;
+}
 
 function GenderToggle({
   value,
@@ -251,6 +284,7 @@ export function InputPage() {
   // someone on the Hindi site may still want an English report.
   const [language, setLanguage] = useState<ReportLanguage>(siteLang);
   const languageTouched = useRef(false);
+  const languageOptions = useReportLanguages();
   useEffect(() => {
     if (!languageTouched.current) setLanguage(siteLang);
   }, [siteLang]);
@@ -528,35 +562,24 @@ export function InputPage() {
                 {copy.languageHelp}
               </span>
             </span>
-            <div
-              role="radiogroup"
-              aria-labelledby="language-label"
-              className="flex rounded-full border border-outline-variant/30 bg-surface-container/60 p-1"
-            >
-              {(
-                [
-                  { value: "hi", label: "हिंदी (Hindi)" },
-                  { value: "en", label: "English" },
-                ] as const
-              ).map((opt) => {
-                const active = language === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    role="radio"
-                    aria-checked={active}
-                    onClick={() => chooseLanguage(opt.value)}
-                    className={`flex-1 rounded-full py-3 font-label-md text-label-md transition-all ${
-                      active
-                        ? "bg-primary text-on-primary-fixed shadow-lg"
-                        : "text-on-surface-variant hover:text-on-surface"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                );
-              })}
+            <div className="relative">
+              <select
+                aria-labelledby="language-label"
+                value={language}
+                onChange={(e) => chooseLanguage(e.target.value)}
+                className="min-h-[44px] w-full appearance-none rounded-lg border border-outline-variant/30 bg-surface-container px-4 py-3 pr-11 font-body-lg text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              >
+                {languageOptions.map((opt) => (
+                  <option key={opt.code} value={opt.code}>
+                    {opt.native_label}
+                  </option>
+                ))}
+              </select>
+              <Icon
+                name="expand_more"
+                size={20}
+                className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant"
+              />
             </div>
           </div>
 

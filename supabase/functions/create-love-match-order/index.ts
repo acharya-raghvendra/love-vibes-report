@@ -12,6 +12,22 @@ const J = { ...corsHeaders, "Content-Type": "application/json" };
 
 // Price is loaded per-request from love_match_pricing (see handler).
 
+// Enabled report languages, cached in module scope for 60s so order creation
+// is not a DB round trip every time. Returns null when the lookup fails so
+// the caller can fall back to the safe en/hi set.
+let langCache: { codes: string[]; at: number } | null = null;
+// deno-lint-ignore no-explicit-any
+async function getEnabledLanguageCodes(supabase: any): Promise<string[] | null> {
+  if (langCache && Date.now() - langCache.at < 60_000) return langCache.codes;
+  const { data, error } = await supabase
+    .from("report_languages").select("code").eq("enabled", true);
+  if (error || !data) return null;
+  const codes = data.map((r: { code: string }) => r.code);
+  langCache = { codes, at: Date.now() };
+  return codes;
+}
+
+
 function cleanName(v: unknown): string {
   return typeof v === "string" ? v.replace(/[<>]/g, "").replace(/[\u0000-\u001F]/g, "").trim().slice(0, 60) : "";
 }
@@ -79,16 +95,28 @@ Deno.serve(async (req) => {
 
 
 
-    // Report language is required to be exactly "en" or "hi"; anything else
-    // is a client bug, so reject rather than silently guessing.
-    const rawLanguage = body.language ?? "hi";
-    if (rawLanguage !== "en" && rawLanguage !== "hi") {
-      return new Response(JSON.stringify({ error: "language must be 'en' or 'hi'" }), { status: 422, headers: J });
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // Report language is validated against report_languages (enabled rows only).
+    // Default stays "hi" when the client sends nothing. The enabled list is
+    // cached in module scope for 60s; if the lookup itself fails we fall back
+    // to accepting only "en" and "hi" — a DB blip must never widen what's accepted.
+    const rawLanguage = typeof body.language === "string" ? body.language : "hi";
+
+    let enabledCodes = await getEnabledLanguageCodes(supabase);
+    if (!enabledCodes) {
+      console.warn("[create-love-match-order] language lookup failed; falling back to en/hi");
+      enabledCodes = ["en", "hi"];
     }
-    const language: "en" | "hi" = rawLanguage;
+    if (!enabledCodes.includes(rawLanguage)) {
+      return new Response(JSON.stringify({
+        error: "unsupported language",
+        enabled: enabledCodes,
+      }), { status: 422, headers: J });
+    }
+    const language: string = rawLanguage;
     const couponCode = typeof body.couponCode === "string" ? body.couponCode.toUpperCase() : null;
 
-    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     // Server-authoritative price from love_match_pricing (single row).
     // Offer price applies only while offer_ends_at is in the future.

@@ -9,10 +9,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { scoreMatch } from "../_shared/engine/scorer.ts";
 import { buildReportHtml } from "../_shared/buildReportHtml.ts";
 import {
-  assertDevanagariRendered,
-  describeProbe,
-  loadDevanagariFontFaceCss,
-} from "../_shared/fonts/devanagari.ts";
+  assertScriptRendered,
+  describeFontProbe,
+  loadFontFaceCss,
+  type ScriptKey,
+} from "../_shared/fonts/indic.ts";
+import { isReportLang, scriptFor, type ReportLang } from "../_shared/reportStrings.ts";
 import { buildProseKey, generateProse } from "../_shared/prose.ts";
 import {
   buildCoreClaims,
@@ -47,7 +49,8 @@ Deno.serve(async (req: Request) => {
     if (!aFirst || !aDob || !bFirst || !bDob) {
       return ok({ error: "invalid_input" }, 400);
     }
-    const language: "en" | "hi" = body?.language === "en" ? "en" : "hi";
+    const language: ReportLang = isReportLang(body?.language) ? body.language : "en";
+    const script = scriptFor(language) as ScriptKey;
     const branding = body?.branding ?? {};
     const showUpsell = body?.show_upsell === true;
     const orderId: string = typeof body?.order_id === "string" && body.order_id.trim()
@@ -146,11 +149,11 @@ Deno.serve(async (req: Request) => {
     }
 
 
-    // 5. HTML — branded, upsell gated. Devanagari face inlined as base64 so
-    // Chrome needs no network access for Hindi glyphs at print time.
+    // 5. HTML — branded, upsell gated. The script's face is inlined as base64
+    // so Chrome needs no network access for its glyphs at print time.
     let fontFaceCss: string;
     try {
-      fontFaceCss = await loadDevanagariFontFaceCss(supabase);
+      fontFaceCss = await loadFontFaceCss(supabase, script);
     } catch (err) {
       console.error("[partner] font_unavailable:", err instanceof Error ? err.message : err);
       return ok({ status: "failed", error: { code: "PDF_FONT_MISSING" } }, 500);
@@ -202,13 +205,13 @@ Deno.serve(async (req: Request) => {
       return ok({ status: "failed", error: { code: "GENERATION_FAILED" } }, 500);
     }
 
-    // 6b. Fail-loud Devanagari backstop for Hindi — proves the glyphs actually
-    // painted from our embedded face. "Could not verify" is a failure.
-    if (language === "hi") {
-      const probe = await assertDevanagariRendered(html, browserlessKey);
-      console.log(`[partner] devanagari_probe ${describeProbe(probe)}`);
+    // 6b. Fail-loud render probe for non-Latin scripts — proves the glyphs
+    // actually painted from our embedded face. "Could not verify" is a failure.
+    if (script !== "latin") {
+      const probe = await assertScriptRendered(html, browserlessKey, script);
+      console.log(`[partner] font_probe ${describeFontProbe(probe)}`);
       if (!probe.ok) {
-        console.error(`[partner] pdf_font_missing ${describeProbe(probe)}`);
+        console.error(`[partner] pdf_font_missing ${describeFontProbe(probe)}`);
         return ok({ status: "failed", error: { code: "PDF_FONT_MISSING" } }, 500);
       }
     }

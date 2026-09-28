@@ -123,6 +123,10 @@ function analyticalPage(
   return `<div class="page">${inner}${frun(pg, S, footerOverride)}</div>`;
 }
 
+// Overflow guard: a section taller than one A4 page used to spill its last lines (or just its page
+// number) onto an almost-blank extra page. The inline script at the end of <body> scales ONLY such a
+// page's content (CSS zoom, 3% steps, floor 78%) until it fits; pages that fit are left untouched. A section too
+// long even at 78% is left at normal size and continues on a full second page.
 export function buildReportHtml(
   facts: Facts,
   sections: Record<string, unknown>,
@@ -414,5 +418,5 @@ p.body b{color:var(--ink);}
 .disc-list li::before{content:"•";position:absolute;left:2px;color:var(--coral);}
 .disc-close{margin-top:14px;font-size:11.5px;line-height:1.7;color:var(--soft);font-style:italic;}
 .disc-co{margin-top:14px;font-size:10px;color:var(--muted);letter-spacing:.04em;}
-${scriptCss}</style></head><body class="${bodyClass}">${pages}</body></html>`;
+${scriptCss}</style></head><body class="${bodyClass}">${pages}<script>(function(){var H=297*96/25.4+1;function fit(){var ps=document.querySelectorAll('.page');for(var i=0;i<ps.length;i++){var p=ps[i],k=[];for(var c=p.firstElementChild;c;c=c.nextElementSibling){if(!c.classList.contains('frun'))k.push(c);}if(p.getAttribute('data-fit')){k.forEach(function(e){e.style.zoom='';});p.removeAttribute('data-fit');}if(p.getBoundingClientRect().height<=H)continue;var ok=false;for(var z=0.97;z>=0.78;z-=0.03){k.forEach(function(e){e.style.zoom=z.toFixed(2);});p.setAttribute('data-fit',z.toFixed(2));if(p.getBoundingClientRect().height<=H){ok=true;break;}}if(!ok){k.forEach(function(e){e.style.zoom='';});p.removeAttribute('data-fit');}}}fit();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);window.addEventListener('load',fit);})();</script></body></html>`;
 }

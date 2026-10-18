@@ -1,11 +1,13 @@
 // partner-generate-full — stateless branded Love Match PDF for partner API.
-// Gated by shared-secret header (x-partner-secret). Does NOT write to
-// love_match_orders. Does NOT send email. Reuses prose cache (brand-agnostic
-// key) so partner + consumer traffic warm the same cache.
-//
-// verify_jwt = false (see supabase/config.toml). Auth is the shared secret.
+// Gated by the TalkToGuruji gateway's Ed25519 signature (x-ttg-ts, x-ttg-sig;
+// see _shared/gatewayAuth.ts). Until 2026-10-18 the header comment claimed a
+// shared secret but nothing was checked, so anyone with the public anon key
+// could generate paid PDFs. Does NOT write to love_match_orders. Does NOT send
+// email. Reuses prose cache (brand-agnostic key) so partner + consumer traffic
+// warm the same cache.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { verifyGatewayRequest } from "../_shared/gatewayAuth.ts";
 import { scoreMatch } from "../_shared/engine/scorer.ts";
 import { buildReportHtml } from "../_shared/buildReportHtml.ts";
 import {
@@ -33,11 +35,18 @@ function ok(body: unknown, status = 200): Response {
 
 Deno.serve(async (req: Request) => {
   try {
-    // Auth: verify_jwt=true in config.toml — Supabase gateway validates the
-    // caller's anon Bearer before this handler runs. No extra check here.
+    // Auth: the platform checks the anon Bearer (verify_jwt=true), which is
+    // public; only the gateway's signature proves the caller is the gateway.
+    const rawBody = await req.text();
+    const auth = await verifyGatewayRequest(req, rawBody);
+    if (!auth.ok) {
+      console.warn("gateway_auth_refused", auth.reason);
+      return ok({ error: "unauthorized" }, 401);
+    }
 
     // 1. Parse + validate body.
-    const body = await req.json().catch(() => ({}));
+    let body: any = {};
+    try { body = rawBody ? JSON.parse(rawBody) : {}; } catch { body = {}; }
     const a = body?.person_a ?? {};
     const b = body?.person_b ?? {};
     const aFirst = typeof a.first === "string" ? a.first.trim() : "";

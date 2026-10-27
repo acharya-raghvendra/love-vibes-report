@@ -1,0 +1,17 @@
+# TalkToGuruji Love Match
+
+> Love Match Numerology Compatibility Report: a 12-page PDF for two people, made from both partners' names and dates of birth, with an overall compatibility (affinity) score, each person's Life Path / destiny and soul-urge numbers, how the two numbers interact, and guidance for the relationship. Available in English, Hindi, Marathi, Tamil, Telugu, Kannada and Malayalam.
+
+The site's pages are built with JavaScript. For the full information in plain HTML (what the report contains, price, how to buy, delivery, refund summary, FAQ and contact), read [info.html](/info.html).
+
+Start with a free compatibility score. The full report costs Rs 599, is paid through Razorpay, and is delivered instantly as a PDF on WhatsApp and by email. Run by Inno-One Service LLP, Noida, India.
+
+## Pages
+- [Information page (plain HTML)](/info.html): Report contents, price, steps, delivery, refund summary, FAQ, contact.
+- [Home](/): Landing page, free compatibility score and order form.
+- [Contact](/contact): Email and support details.
+
+## Optional
+- [Privacy Policy](/privacy)
+- [Terms](/terms)
+- [Refund & Cancellation](/refund)

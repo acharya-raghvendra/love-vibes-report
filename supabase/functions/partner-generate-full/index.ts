@@ -10,6 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { verifyGatewayRequest } from "../_shared/gatewayAuth.ts";
 import { scoreMatch } from "../_shared/engine/scorer.ts";
 import { buildReportHtml } from "../_shared/buildReportHtml.ts";
+import { addShreyaBanner } from "../_shared/shreyaBanner.ts";
 import {
   assertScriptRendered,
   describeFontProbe,
@@ -168,7 +169,7 @@ Deno.serve(async (req: Request) => {
       return ok({ status: "failed", error: { code: "PDF_FONT_MISSING" } }, 500);
     }
     const pdfFacts = { ...keyFacts, chemistry };
-    const html = buildReportHtml(pdfFacts, sections, {
+    const html = addShreyaBanner(buildReportHtml(pdfFacts, sections, {
       logoUrl: typeof branding.logo_url === "string" ? branding.logo_url : undefined,
       footerText: typeof branding.footer_text === "string" ? branding.footer_text : undefined,
       companyName: typeof branding.company_name === "string" ? branding.company_name : undefined,
@@ -176,7 +177,7 @@ Deno.serve(async (req: Request) => {
       ttgLogoUrl: typeof branding.ttg_logo_url === "string" ? branding.ttg_logo_url : undefined,
       showUpsell,
       fontFaceCss,
-    });
+    }), language, branding);
 
     // 6. Browserless PDF — same call as love-match-finalize (timeout=60000).
     const browserlessKey = Deno.env.get("BROWSERLESS_API_KEY");

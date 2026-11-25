@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
         let guardNote: string | null = null;
         if (!sections) {
           const claims = buildCoreClaims(result, { a: aFirst, b: bFirst });
-          const MAX_CONTENT_RETRIES = 2;
+          const MAX_CONTENT_RETRIES = 0; // a wrong number is corrected by code (correctCoreNumbers), never by a second AI call
           let corrective: string | undefined;
 
           for (let attempt = 0; attempt <= MAX_CONTENT_RETRIES; attempt++) {

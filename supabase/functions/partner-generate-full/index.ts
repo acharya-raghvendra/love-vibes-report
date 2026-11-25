@@ -116,7 +116,7 @@ Deno.serve(async (req: Request) => {
 
     if (!sections) {
       const claims = buildCoreClaims(result, { a: aFirst, b: bFirst });
-      const MAX_CONTENT_RETRIES = 2;
+      const MAX_CONTENT_RETRIES = 0; // a wrong number is corrected by code (correctCoreNumbers), never by a second AI call
       let corrective: string | undefined;
       let truncatedCount = 0;
       let overloaded = false;

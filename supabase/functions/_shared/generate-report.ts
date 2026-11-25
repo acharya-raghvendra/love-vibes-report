@@ -454,7 +454,7 @@ export async function runGeneration(
     let guardNote: string | null = null;
     if (!sections) {
       const claims = buildCoreClaims(result, { a: a.first, b: b.first });
-      const MAX_CONTENT_RETRIES = 2; // corrective regenerations after the first call
+      const MAX_CONTENT_RETRIES = 0; // a wrong number is corrected by code (correctCoreNumbers), never by a second AI call
       let corrective: string | undefined;
       let lastMismatchNote = "";
 
